@@ -1,11 +1,17 @@
-// Firebaseを使う場合は、Firebase Consoleで取得した設定に置き換えてください。
+// Firebase Consoleで取得した設定です。
+// この設定情報はFirebaseのWebアプリ接続に使う公開情報です。
 export const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyDiaAHF0iceYJNlSDKFKtHKnCETeMCW8IA",
+  authDomain: "no32-player-stats.firebaseapp.com",
+  projectId: "no32-player-stats",
+  storageBucket: "no32-player-stats.firebasestorage.app",
+  messagingSenderId: "934416639889",
+  appId: "1:934416639889:web:cd0e319fa86c1acb3fdc30"
 };
 
-export const useFirebase = false; // Firebase設定後に true へ変更
+// Firebaseクラウド保存を有効化
+export const useFirebase = true;
+
+// Firestore上の保存場所。通常は変更不要です。
+export const firestoreCollection = "teams";
+export const firestoreDocument = "no32";
