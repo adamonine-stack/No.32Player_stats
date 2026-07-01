@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1290" height="2796" viewBox="0 0 1290 2796">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#090909"/>
+      <stop offset="0.48" stop-color="#08101b"/>
+      <stop offset="1" stop-color="#030407"/>
+    </linearGradient>
+    <radialGradient id="purple" cx="0" cy="0" r="1">
+      <stop offset="0" stop-color="#7A2FFF" stop-opacity="0.78"/>
+      <stop offset="0.42" stop-color="#7A2FFF" stop-opacity="0.20"/>
+      <stop offset="1" stop-color="#7A2FFF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="orange" cx="1" cy="0" r="1">
+      <stop offset="0" stop-color="#F47A20" stop-opacity="0.64"/>
+      <stop offset="0.36" stop-color="#F47A20" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#F47A20" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="blur"><feGaussianBlur stdDeviation="34"/></filter>
+  </defs>
+  <rect width="1290" height="2796" fill="url(#bg)"/>
+  <g opacity="0.07" fill="none" stroke="#ffffff" stroke-width="5">
+    <path d="M106 432h1078v1880H106z"/>
+    <path d="M106 1378h1078"/>
+    <circle cx="645" cy="1378" r="164"/>
+    <path d="M366 432v306h558V432M366 2312v-306h558v306"/>
+    <path d="M488 432a157 157 0 0 0 314 0M488 2312a157 157 0 0 1 314 0"/>
+  </g>
+  <g filter="url(#blur)">
+    <ellipse cx="42" cy="120" rx="330" ry="250" fill="url(#purple)"/>
+    <ellipse cx="1240" cy="238" rx="300" ry="210" fill="url(#orange)"/>
+    <ellipse cx="66" cy="2670" rx="250" ry="190" fill="url(#orange)" opacity="0.65"/>
+    <ellipse cx="1248" cy="2630" rx="280" ry="230" fill="url(#purple)" opacity="0.65"/>
+  </g>
+</svg>
