@@ -41,6 +41,61 @@
 @media(max-width:800px){.tabbar{grid-template-columns:repeat(6,1fr)}.analysis-title h2{font-size:26px}.analysis-filter{grid-template-columns:1fr;gap:12px}.analysis-filter .wide{grid-column:auto}.analysis-target-row{grid-template-columns:1fr}.analysis-info{grid-template-columns:1fr}.analysis-match-line{font-size:18px;align-items:flex-start}.analysis-score{text-align:left;font-size:30px}.analysis-record{border-left:0;border-top:1px solid var(--line);padding:14px 0 0}.analysis-basic-card{min-height:92px;padding:12px 6px}.analysis-basic-card b{font-size:32px}.analysis-shot-grid{grid-template-columns:repeat(2,1fr)}.analysis-break-grid{grid-template-columns:1fr}.analysis-game-list{overflow-x:auto}.seg button{font-size:12px;padding:10px 6px}.analysis-filter .seg{overflow-x:auto}.analysis-filter .seg button{min-width:82px}.analysis-shot{padding:10px}.analysis-break{padding:10px}}
 .analysis-title h2:before{content:"▟";color:var(--purple);font-size:30px;margin-right:8px}.analysis-title .pill{background:transparent;border:0;color:var(--txt);font-weight:900}.analysis-filter.card,.card:has(.analysis-filter){border-radius:6px;padding:12px 14px;background:rgba(2,6,23,.42);box-shadow:none}.analysis-filter label{font-size:14px;color:var(--txt);margin-bottom:7px;display:block}.analysis-filter select{border-radius:5px;background:rgba(2,6,23,.76);font-size:16px;padding:11px 12px}.analysis-filter{grid-template-columns:265px minmax(280px,1fr);align-items:end}.analysis-filter .wide{grid-column:1/-1}.seg{border-radius:5px}.seg button{border-radius:0;font-size:15px}.analysis-info.card,.card:has(.analysis-basic),.card:has(.analysis-shot-grid),.card:has(.analysis-break-grid),.card:has(.analysis-game-list){border-radius:6px;background:rgba(2,6,23,.36);box-shadow:none}.analysis-basic,.analysis-shot,.analysis-break,.analysis-game-list{border-radius:5px}.analysis-basic-card{min-height:118px}.analysis-shot h3,.analysis-break h3{font-size:16px}.analysis-break-total b,.analysis-shot-values .pct b{color:var(--orange)!important}.analysis-break-total span{color:var(--txt)}.analysis-target-row{margin-top:10px}.analysis-target-row label{max-width:360px}
 @media(max-width:800px){.analysis-filter{grid-template-columns:1fr}.analysis-title{margin-top:4px}.analysis-title .pill{font-size:13px}.analysis-filter label{font-size:13px}.analysis-filter select{font-size:15px}.analysis-basic{grid-template-columns:repeat(3,1fr)}.analysis-shot-grid{gap:7px}.analysis-break-values span{font-size:10px}.analysis-break-values b{font-size:20px}.analysis-target-row label{max-width:none}}
+@media(max-width:800px){
+  html,body{width:100%;max-width:100%;overflow-x:hidden}
+  body.bg-stats{background:linear-gradient(180deg,#080b19,#020617 62%)}
+  .app{width:100%;max-width:100%;padding:0 16px 132px!important;overflow-x:hidden}
+  .layout,.content,#view{width:100%;max-width:100%;min-width:0;overflow-x:hidden}
+  .bg-stats .mobile-hero{height:96px;margin:0 -16px 6px;background:linear-gradient(180deg,rgba(9,9,9,.05),rgba(9,9,9,.88));border-bottom:0}
+  .bg-stats .content{margin-top:-68px}
+  .bg-stats.app-bg:before{opacity:.08}
+  .bg-stats.app-bg:after{opacity:.08;background-position:center 1vh;background-size:auto 118px}
+  .analysis-title,.analysis-title h2,.analysis-title .pill{min-width:0}
+  .analysis-title{width:100%;max-width:100%;gap:8px}
+  .analysis-title h2{font-size:25px;white-space:nowrap}
+  .analysis-title small{font-size:11px;margin-left:5px}
+  .analysis-title .pill{font-size:12px;padding:4px 0;white-space:nowrap}
+  .card,.analysis-info.card,.card:has(.analysis-filter),.card:has(.analysis-basic),.card:has(.analysis-shot-grid),.card:has(.analysis-break-grid),.card:has(.analysis-game-list){width:100%;max-width:100%;min-width:0;margin-left:0;margin-right:0;padding:12px;border-radius:6px;box-shadow:none;box-sizing:border-box}
+  .analysis-filter{width:100%;max-width:100%;min-width:0;display:grid;grid-template-columns:minmax(0,1fr)!important;gap:12px;overflow:hidden}
+  .analysis-filter>*{min-width:0;max-width:100%}
+  .analysis-filter label{font-size:13px;margin-bottom:6px}
+  .analysis-filter select,.analysis-target-row input{width:100%;max-width:100%;min-width:0;font-size:14px;padding:10px;border-radius:5px}
+  .seg{width:100%;max-width:100%;min-width:0;box-sizing:border-box}
+  .analysis-filter .seg{display:flex;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .analysis-filter .seg::-webkit-scrollbar{display:none}
+  .analysis-filter .seg button{min-width:0!important;max-width:none;white-space:nowrap;font-size:12px;line-height:1.15;padding:10px 8px;box-sizing:border-box}
+  .analysis-filter>div:not(.wide) .seg button{flex:1 1 0}
+  .analysis-filter .wide .seg button{flex:0 0 auto;min-width:72px!important}
+  .analysis-target-row{width:100%;grid-template-columns:minmax(0,1fr);gap:8px}
+  .analysis-target-row label{width:100%;max-width:100%;min-width:0}
+  .analysis-info{width:100%;max-width:100%;grid-template-columns:minmax(0,1fr);gap:10px}
+  .analysis-info-main,.analysis-match-line,.analysis-score,.analysis-record{min-width:0;max-width:100%}
+  .analysis-match-line{font-size:17px;line-height:1.35;gap:8px;overflow-wrap:anywhere}
+  .analysis-trophy{font-size:27px;flex:0 0 auto}
+  .analysis-score{text-align:left;font-size:30px;white-space:normal}
+  .analysis-record{border-left:0;border-top:1px solid var(--line);padding:12px 0 0}
+  .analysis-record-main{font-size:32px}
+  .analysis-meta{gap:8px;font-size:12px}
+  .analysis-basic{width:100%;grid-template-columns:repeat(3,minmax(0,1fr));border-radius:5px}
+  .analysis-basic-card{min-width:0;min-height:96px;padding:10px 4px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+  .analysis-basic-card span{font-size:9.5px;line-height:1.25;white-space:normal;overflow-wrap:anywhere}
+  .analysis-basic-card small{font-size:9px;line-height:1.2}
+  .analysis-basic-card b{font-size:30px;line-height:1;margin-top:7px}
+  .analysis-shot-grid{width:100%;max-width:100%;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .analysis-shot{min-width:0;padding:10px 7px;border-radius:5px;overflow:hidden}
+  .analysis-shot h3{font-size:12.5px;line-height:1.25;margin-bottom:10px;white-space:normal;overflow-wrap:anywhere}
+  .analysis-shot-values{grid-template-columns:repeat(3,minmax(0,1fr));min-width:0}
+  .analysis-shot-values div{min-width:0;padding:0 2px}
+  .analysis-shot-values span{font-size:9px;line-height:1.15;white-space:nowrap}
+  .analysis-shot-values b{font-size:18px;line-height:1.05;white-space:nowrap;margin-top:6px}
+  .analysis-shot-values .pct b{font-size:17px}
+  .analysis-break-grid{width:100%;grid-template-columns:minmax(0,1fr);gap:8px}
+  .analysis-break{min-width:0;overflow:hidden}
+  .analysis-game-list{max-width:100%;overflow-x:auto}
+  .analysis-game-row{min-width:620px}
+  .tabbar{min-height:66px}
+  #view{padding-bottom:82px}
+}
 </style>
 </head>
 <body class="app-bg">
