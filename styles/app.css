@@ -90,3 +90,6 @@ body{font-family:"Inter","Noto Sans JP",system-ui,-apple-system,sans-serif}.mate
   .analysis-basic-card:nth-child(n+4){border-bottom:0;}
   .analysis-break-grid{grid-template-columns:1fr;}
 }
+.team-screen .analysis-filter>label{margin-bottom:0!important;}
+.team-screen .analysis-filter>label select{margin-top:7px!important;}
+@media(max-width:800px){.team-screen .analysis-filter>label select{margin-top:5px!important;}}
