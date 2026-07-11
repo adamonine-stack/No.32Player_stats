@@ -17,7 +17,8 @@ export const state = {
   analysisReturn: null,
   teamMode: "game",
   teamTargetId: "",
-  teamReturn: null
+  teamReturn: null,
+  teamDetail: null
 };
 
 const listeners = new Set();
