@@ -8,6 +8,7 @@ export const state = {
   stats: [],
   lastPlayerId: getLastPlayerId(),
   statsMode: "game",
+  homeStatsMode: "total",
   targetId: "",
   categoryId: "",
   periodStart: "",
