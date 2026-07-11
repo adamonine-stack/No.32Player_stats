@@ -57,3 +57,36 @@ body{font-family:"Inter","Noto Sans JP",system-ui,-apple-system,sans-serif}.mate
 
 @media(max-width:800px){.analysis-filter>label:first-child{margin-bottom:0!important}.analysis-filter>label:first-child select{margin-top:5px!important}.mode-seg button[data-mode="game"]:after{content:"試合"!important}.mode-seg button[data-mode="tournament"]:after{content:"大会"!important}.mode-seg button[data-mode="all"]:after{content:"全期間"!important}.mode-seg button[data-mode="month"]:after{content:"月"!important}.mode-seg button[data-mode="day"]:after{content:"日"!important}.mode-seg button[data-mode="period"]:after{content:"期間指定"!important}.mode-seg button[data-mode="year"]:after{content:"年"!important}}
 @media(max-width:800px){.mode-seg button[data-mode="game"]:after{content:"\8A66\5408"!important}.mode-seg button[data-mode="tournament"]:after{content:"\5927\4F1A"!important}.mode-seg button[data-mode="all"]:after{content:"\5168\671F\9593"!important}.mode-seg button[data-mode="month"]:after{content:"\6708"!important}.mode-seg button[data-mode="day"]:after{content:"\65E5"!important}.mode-seg button[data-mode="period"]:after{content:"\671F\9593\6307\5B9A"!important}.mode-seg button[data-mode="year"]:after{content:"\5E74"!important}}
+@media(min-width:801px){
+  .app{max-width:1400px;width:calc(100% - 48px);margin:0 auto;}
+  .analysis-screen{width:100%;max-width:100%;overflow-x:hidden;}
+  .home-pc{display:grid;gap:14px;}
+  .home-pc .home-total-card{display:grid;grid-template-columns:1fr 1fr;gap:12px;border:1px solid var(--line);border-radius:10px;background:rgba(16,16,16,.86);padding:14px 18px;font-weight:900;text-align:center;}
+  .home-pc .home-player-card{display:grid!important;grid-template-columns:72px minmax(0,1fr);align-items:center;gap:16px;}
+  .home-pc .home-player-icon{width:56px;height:56px;border:2px solid var(--purple);border-radius:50%;display:grid;place-items:center;color:var(--purple);}
+  .home-pc .home-player-icon .material-symbols-outlined{font-size:34px;}
+  .home-pc .home-player-kicker{color:var(--purple);font-weight:900;font-size:14px;}
+  .home-pc .home-player-name{font-size:30px;font-weight:1000;line-height:1.1;}
+  .home-pc .home-player-meta{color:var(--muted);font-size:16px;font-weight:800;margin-top:5px;}
+  .analysis-basic{grid-template-columns:repeat(6,minmax(0,1fr));}
+  .analysis-basic-card{border-bottom:0;min-height:110px;}
+  .analysis-basic-card:nth-child(3n){border-right:1px solid var(--line);}
+  .analysis-basic-card:nth-child(6n){border-right:0;}
+  .analysis-shot-grid{grid-template-columns:repeat(4,minmax(0,1fr));}
+  .analysis-break-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.35fr);}
+  .analysis-game-list.compact{max-height:270px;overflow-y:auto;overflow-x:hidden;}
+  .analysis-game-item{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1.6fr);gap:12px;width:100%;padding:10px 12px;border:0;border-bottom:1px solid var(--line);background:transparent;color:inherit;text-align:left;font:inherit;}
+  .analysis-game-item:last-child{border-bottom:0;}
+  .analysis-game-item b,.analysis-game-item span,.analysis-game-item em{display:block;min-width:0;}
+  .analysis-game-scoreline{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:12px;align-items:center;}
+  .analysis-game-score{text-align:right;white-space:nowrap;}
+  .pc-detail-analysis .analysis-back-row{display:flex;justify-content:space-between;gap:10px;margin-bottom:12px;}
+  .pc-detail-analysis .mobile-detail-actions .row{display:flex;}
+}
+@media(min-width:801px) and (max-width:1199px){
+  .analysis-basic{grid-template-columns:repeat(3,minmax(0,1fr));}
+  .analysis-basic-card{border-bottom:1px solid var(--line);}
+  .analysis-basic-card:nth-child(3n){border-right:0;}
+  .analysis-basic-card:nth-child(n+4){border-bottom:0;}
+  .analysis-break-grid{grid-template-columns:1fr;}
+}
