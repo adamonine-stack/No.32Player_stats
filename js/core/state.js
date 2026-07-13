@@ -1,10 +1,11 @@
-import { getLastPlayerId } from "./storage.js";
+import { getGameSortDirection, getLastPlayerId } from "./storage.js";
 
 export const state = {
   user: null,
   tab: "home",
   players: [],
   games: [],
+  gameSortDirection: getGameSortDirection(),
   stats: [],
   lastPlayerId: getLastPlayerId(),
   statsMode: "game",
