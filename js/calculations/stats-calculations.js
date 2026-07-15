@@ -10,8 +10,29 @@ export function one(value, games) {
   return games ? (num(value) / games).toFixed(1) : "0.0";
 }
 
-export function sumStats(items, games = []) {
-  const result = {
+export const STAT_KEYS = [
+  "twoPa",
+  "twoPm",
+  "threePa",
+  "threePm",
+  "fta",
+  "ftm",
+  "ast",
+  "blk",
+  "passCut",
+  "dribbleCut",
+  "stealOther",
+  "or",
+  "dr",
+  "passMiss",
+  "dribbleMiss",
+  "catchMiss",
+  "violation",
+  "otherTo"
+];
+
+function blankStats() {
+  return {
     q: 0,
     twoPa: 0,
     twoPm: 0,
@@ -32,11 +53,47 @@ export function sumStats(items, games = []) {
     violation: 0,
     otherTo: 0
   };
+}
+
+function addStatValues(result, source = {}) {
+  for (const key of STAT_KEYS) result[key] += num(source[key]);
+}
+
+export function getStatRegistrationType(stat = {}) {
+  return stat.registrationType === "quarter" ? "quarter" : "game";
+}
+
+export function quarterKey(q) {
+  return `q${num(q) || 1}`;
+}
+
+export function registeredQuarterNumbers(stat = {}) {
+  if (getStatRegistrationType(stat) !== "quarter") return [];
+  const quarters = stat.quarters || {};
+  return Object.keys(quarters)
+    .map(key => ({ key, value: quarters[key], q: num(String(key).replace(/\D/g, "")) }))
+    .filter(item => item.q > 0 && item.value && typeof item.value === "object" && item.value.registered !== false)
+    .sort((a, b) => a.q - b.q)
+    .map(item => item.q);
+}
+
+export function statHasRegisteredData(stat = {}) {
+  if (getStatRegistrationType(stat) === "quarter") return registeredQuarterNumbers(stat).length > 0;
+  return Boolean(stat.id) || STAT_KEYS.some(key => stat[key] !== undefined);
+}
+
+export function sumStats(items, games = []) {
+  const result = blankStats();
   for (const stat of items) {
+    if (!statHasRegisteredData(stat)) continue;
     const game = games.find(item => item.id === stat.gameId);
-    result.q += num(game?.quarters || stat.quarters || 0);
-    for (const key in result) {
-      if (key !== "q") result[key] += num(stat[key]);
+    if (getStatRegistrationType(stat) === "quarter") {
+      const qNumbers = registeredQuarterNumbers(stat);
+      result.q += qNumbers.length;
+      for (const q of qNumbers) addStatValues(result, stat.quarters?.[quarterKey(q)]);
+    } else {
+      result.q += num(game?.quarters || stat.quarters || 0);
+      addStatValues(result, stat);
     }
   }
   return result;
