@@ -67,8 +67,11 @@ export function quarterKey(q) {
   return `q${num(q) || 1}`;
 }
 
+export function getGameStatsRegistrationType(game = {}) {
+  return game?.statsRegistrationType === "quarter" ? "quarter" : "game";
+}
+
 export function registeredQuarterNumbers(stat = {}) {
-  if (getStatRegistrationType(stat) !== "quarter") return [];
   const quarters = stat.quarters || {};
   return Object.keys(quarters)
     .map(key => ({ key, value: quarters[key], q: num(String(key).replace(/\D/g, "")) }))
@@ -77,17 +80,17 @@ export function registeredQuarterNumbers(stat = {}) {
     .map(item => item.q);
 }
 
-export function statHasRegisteredData(stat = {}) {
-  if (getStatRegistrationType(stat) === "quarter") return registeredQuarterNumbers(stat).length > 0;
-  return Boolean(stat.id) || STAT_KEYS.some(key => stat[key] !== undefined);
+export function statHasRegisteredData(stat = {}, game = null) {
+  if (getGameStatsRegistrationType(game) === "quarter") return registeredQuarterNumbers(stat).length > 0;
+  return STAT_KEYS.some(key => stat[key] !== undefined) || (Boolean(stat.id) && getStatRegistrationType(stat) !== "quarter");
 }
 
 export function sumStats(items, games = []) {
   const result = blankStats();
   for (const stat of items) {
-    if (!statHasRegisteredData(stat)) continue;
     const game = games.find(item => item.id === stat.gameId);
-    if (getStatRegistrationType(stat) === "quarter") {
+    if (!statHasRegisteredData(stat, game)) continue;
+    if (getGameStatsRegistrationType(game) === "quarter") {
       const qNumbers = registeredQuarterNumbers(stat);
       result.q += qNumbers.length;
       for (const q of qNumbers) addStatValues(result, stat.quarters?.[quarterKey(q)]);
