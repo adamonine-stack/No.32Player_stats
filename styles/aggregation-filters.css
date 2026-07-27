@@ -1,0 +1,12 @@
+.upper-filter-layout{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+.upper-filter-layout>label{display:block;min-width:0}
+.upper-filter-layout>label select{margin-top:7px}
+.analysis-screen .mode-seg{display:grid!important;grid-template-columns:repeat(7,minmax(0,1fr))!important}
+.analysis-screen .mode-seg button[data-mode="year"],.analysis-screen .mode-seg button[data-team-mode="year"]{display:block!important}
+.analysis-game-item small{display:block;color:var(--muted);font-size:10px;font-weight:700;line-height:1.35;margin-top:4px}
+@media(max-width:800px){
+  .upper-filter-layout{grid-template-columns:1fr!important}
+  .upper-filter-layout .wide{grid-column:1!important}
+  .analysis-screen .mode-seg{display:flex!important;overflow-x:auto!important;scrollbar-width:thin}
+  .analysis-screen .mode-seg button{flex:0 0 76px!important;padding:10px 6px!important;white-space:nowrap}
+}

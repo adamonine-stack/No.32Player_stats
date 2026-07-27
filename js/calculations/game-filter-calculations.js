@@ -1,0 +1,74 @@
+export const ALL_FILTER_VALUE = "";
+export const UNSET_FILTER_VALUE = "__unset__";
+
+export function normalizeOpponentName(value = "") {
+  return String(value).normalize("NFKC").trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+function opponentNames(team = {}) {
+  const aliases = [team.aliases, team.alias, team.alternateNames].flat().filter(Boolean);
+  return [team.teamName, team.normalizedTeamName, ...aliases].map(normalizeOpponentName).filter(Boolean);
+}
+
+export function resolveOpponentTeam(game = {}, opponentTeams = []) {
+  if (game.opponentTeamId) {
+    const byId = opponentTeams.find(team => team.id === game.opponentTeamId);
+    if (byId) return byId;
+  }
+  const gameName = normalizeOpponentName(game.opponentTeamName || game.opponent || "");
+  if (!gameName) return null;
+  return opponentTeams.find(team => opponentNames(team).includes(gameName)) || null;
+}
+
+export function opponentCategoryForGame(game, opponentTeams = []) {
+  const team = resolveOpponentTeam(game, opponentTeams);
+  return String(team?.category || team?.categories?.[0] || "").trim();
+}
+
+export function opponentRankForGame(game, opponentTeams = []) {
+  const team = resolveOpponentTeam(game, opponentTeams);
+  return String(team?.calculatedRank || team?.teamRank || team?.rank || "").trim();
+}
+
+export function getOpponentCategoryOptions(opponentTeams = []) {
+  return [...new Set(opponentTeams.flatMap(team => [team.category, ...(team.categories || [])]).map(value => String(value || "").trim()).filter(Boolean))]
+    .sort((a, b) => a.localeCompare(b, "ja", { numeric: true }));
+}
+
+export function getOpponentRankOptions(opponentTeams = [], rankDefinitions = []) {
+  const values = opponentTeams.flatMap(team => [team.calculatedRank, team.teamRank, team.rank]);
+  const available = new Set(values.map(value => String(value || "").trim()).filter(Boolean));
+  const defined = rankDefinitions.filter(rank => available.has(rank));
+  const extra = [...available].filter(rank => !rankDefinitions.includes(rank)).sort((a, b) => a.localeCompare(b, "ja", { numeric: true }));
+  return [...defined, ...extra];
+}
+
+export function filterByOpponentCategory(games = [], selected = ALL_FILTER_VALUE, opponentTeams = []) {
+  if (selected === ALL_FILTER_VALUE) return games;
+  return games.filter(game => {
+    const category = opponentCategoryForGame(game, opponentTeams);
+    return selected === UNSET_FILTER_VALUE ? !category : category === selected;
+  });
+}
+
+export function filterByOpponentRank(games = [], selected = ALL_FILTER_VALUE, opponentTeams = []) {
+  if (selected === ALL_FILTER_VALUE) return games;
+  return games.filter(game => {
+    const rank = opponentRankForGame(game, opponentTeams);
+    return selected === UNSET_FILTER_VALUE ? !rank : rank === selected;
+  });
+}
+
+export function filterByOpponentFilters(games = [], category = ALL_FILTER_VALUE, rank = ALL_FILTER_VALUE, opponentTeams = []) {
+  return filterByOpponentRank(filterByOpponentCategory(games, category, opponentTeams), rank, opponentTeams);
+}
+
+export function filterByAggregationCondition(games = [], mode = "all", target = "", periodStart = "", periodEnd = "") {
+  if (mode === "game") return target ? games.filter(game => game.id === target) : [];
+  if (mode === "tournament") return target ? games.filter(game => game.tournament === target) : [];
+  if (mode === "day") return target ? games.filter(game => game.date === target) : [];
+  if (mode === "month") return target ? games.filter(game => (game.date || "").slice(0, 7) === target) : [];
+  if (mode === "year") return target ? games.filter(game => (game.date || "").slice(0, 4) === target) : [];
+  if (mode === "period") return games.filter(game => (!periodStart || game.date >= periodStart) && (!periodEnd || game.date <= periodEnd));
+  return games;
+}
