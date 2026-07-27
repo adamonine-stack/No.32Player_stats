@@ -18,6 +18,7 @@ export const state = {
   periodStart: "",
   periodEnd: "",
   selectedGameId: "",
+  gameListReturnPosition: null,
   analysisReturn: null,
   teamMode: "game",
   teamTargetId: "",
