@@ -36,6 +36,7 @@ assert.deepEqual(filterByAggregationCondition(games, "month", "2026-07").map(gam
 assert.deepEqual(filterByAggregationCondition(games, "year", "2026").map(game => game.id), ["g1", "g2", "g3"], "年別を抽出する");
 assert.deepEqual(filterByAggregationCondition(games, "period", "", "2026-07-02", "2026-08-01").map(game => game.id), ["g2", "g3"], "期間指定を抽出する");
 assert.deepEqual(getOpponentCategoryOptions(teams), ["U14", "U15"]);
+assert.deepEqual(getOpponentCategoryOptions([{ category: "U15男子" }, { category: "U15" }]), ["U15"], "U15男子をU15候補へ統合する");
 assert.deepEqual(getOpponentRankOptions(teams, ["D", "C", "B", "A", "S"]), ["B", "A"]);
 
 console.log("game filter calculations: ok");

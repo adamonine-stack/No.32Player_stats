@@ -31,7 +31,7 @@ export function opponentRankForGame(game, opponentTeams = []) {
 }
 
 export function getOpponentCategoryOptions(opponentTeams = []) {
-  return [...new Set(opponentTeams.flatMap(team => [team.category, ...(team.categories || [])]).map(value => String(value || "").trim()).filter(Boolean))]
+  return [...new Set(opponentTeams.flatMap(team => [team.category, ...(team.categories || [])]).map(normalizeCategoryKey).filter(Boolean))]
     .sort((a, b) => a.localeCompare(b, "ja", { numeric: true }));
 }
 
@@ -47,7 +47,7 @@ export function filterByOpponentCategory(games = [], selected = ALL_FILTER_VALUE
   if (selected === ALL_FILTER_VALUE) return games;
   return games.filter(game => {
     const category = opponentCategoryForGame(game, opponentTeams);
-    return selected === UNSET_FILTER_VALUE ? !category : category === selected;
+    return selected === UNSET_FILTER_VALUE ? !category : normalizeCategoryKey(category) === normalizeCategoryKey(selected);
   });
 }
 
