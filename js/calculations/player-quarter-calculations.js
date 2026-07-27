@@ -1,0 +1,2 @@
+import { getGameStatsRegistrationType, registeredQuarterNumbers } from "./stats-calculations.js";
+export function getPlayerTargetQuarterCount(playerId,games=[],stats=[]){const ids=new Set(games.map(game=>game.id));return stats.filter(stat=>stat.playerId===playerId&&ids.has(stat.gameId)).reduce((total,stat)=>{const game=games.find(item=>item.id===stat.gameId);if(!game)return total;if(getGameStatsRegistrationType(game)!=="quarter")return total+Math.max(0,Number(game.quarters||stat.quarters||0));return total+new Set(registeredQuarterNumbers(stat)).size},0)}
