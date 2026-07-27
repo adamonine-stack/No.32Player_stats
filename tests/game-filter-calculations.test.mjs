@@ -3,6 +3,7 @@ import {
   UNSET_FILTER_VALUE,
   resolveOpponentTeam,
   filterByOpponentFilters,
+  filterByOpponentRankRange,
   filterByAggregationCondition,
   getOpponentCategoryOptions,
   getOpponentRankOptions
@@ -24,6 +25,8 @@ assert.equal(resolveOpponentTeam(games[0], teams)?.id, "a", "IDを優先して�
 assert.equal(resolveOpponentTeam(games[1], teams)?.id, "a", "正規化名とaliasで解決する");
 assert.deepEqual(filterByOpponentFilters(games, "U15", "A", teams).map(game => game.id), ["g1", "g2"], "カテゴリーとランクをAND適用する");
 assert.deepEqual(filterByOpponentFilters(games, UNSET_FILTER_VALUE, UNSET_FILTER_VALUE, teams).map(game => game.id), ["g4"], "未照合試合を未設定として抽出する");
+assert.deepEqual(filterByOpponentRankRange(games, "B", "A", teams, ["D", "C", "B", "B+", "A", "A+", "S"]).map(game => game.id), ["g1", "g2", "g3"], "指定ランク範囲を両端を含めて抽出する");
+assert.deepEqual(filterByOpponentRankRange(games, "A", "B", teams, ["D", "C", "B", "B+", "A", "A+", "S"]).map(game => game.id), ["g1", "g2", "g3"], "上下限を逆に指定しても同じ範囲を抽出する");
 assert.deepEqual(filterByAggregationCondition(games, "month", "2026-07").map(game => game.id), ["g1", "g2"], "月別を抽出する");
 assert.deepEqual(filterByAggregationCondition(games, "year", "2026").map(game => game.id), ["g1", "g2", "g3"], "年別を抽出する");
 assert.deepEqual(filterByAggregationCondition(games, "period", "", "2026-07-02", "2026-08-01").map(game => game.id), ["g2", "g3"], "期間指定を抽出する");

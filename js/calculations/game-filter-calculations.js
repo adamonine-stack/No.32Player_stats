@@ -59,8 +59,25 @@ export function filterByOpponentRank(games = [], selected = ALL_FILTER_VALUE, op
   });
 }
 
+export function filterByOpponentRankRange(games = [], minimum = ALL_FILTER_VALUE, maximum = ALL_FILTER_VALUE, opponentTeams = [], rankDefinitions = []) {
+  if (!minimum && !maximum) return games;
+  const order = [...rankDefinitions];
+  const minimumIndex = minimum ? order.indexOf(minimum) : 0;
+  const maximumIndex = maximum ? order.indexOf(maximum) : order.length - 1;
+  const low = Math.min(minimumIndex < 0 ? 0 : minimumIndex, maximumIndex < 0 ? order.length - 1 : maximumIndex);
+  const high = Math.max(minimumIndex < 0 ? 0 : minimumIndex, maximumIndex < 0 ? order.length - 1 : maximumIndex);
+  return games.filter(game => {
+    const rankIndex = order.indexOf(opponentRankForGame(game, opponentTeams));
+    return rankIndex >= low && rankIndex <= high;
+  });
+}
+
 export function filterByOpponentFilters(games = [], category = ALL_FILTER_VALUE, rank = ALL_FILTER_VALUE, opponentTeams = []) {
   return filterByOpponentRank(filterByOpponentCategory(games, category, opponentTeams), rank, opponentTeams);
+}
+
+export function filterByOpponentFilterRange(games = [], category = ALL_FILTER_VALUE, minimumRank = ALL_FILTER_VALUE, maximumRank = ALL_FILTER_VALUE, opponentTeams = [], rankDefinitions = []) {
+  return filterByOpponentRankRange(filterByOpponentCategory(games, category, opponentTeams), minimumRank, maximumRank, opponentTeams, rankDefinitions);
 }
 
 export function filterByAggregationCondition(games = [], mode = "all", target = "", periodStart = "", periodEnd = "") {
