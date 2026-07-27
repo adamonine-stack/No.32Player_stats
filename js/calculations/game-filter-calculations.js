@@ -43,6 +43,10 @@ export function getOpponentRankOptions(opponentTeams = [], rankDefinitions = [])
 }
 
 export function filterByOpponentCategory(games = [], selected = ALL_FILTER_VALUE, opponentTeams = []) {
+  return filterByRegisteredGameCategory(games, selected);
+}
+
+export function filterByRegisteredGameCategory(games = [], selected = ALL_FILTER_VALUE) {
   if (selected === ALL_FILTER_VALUE) return games;
   return games.filter(game => {
     const category = opponentCategoryForGame(game);
