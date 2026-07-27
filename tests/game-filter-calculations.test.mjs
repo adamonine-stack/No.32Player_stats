@@ -5,6 +5,7 @@ import {
   opponentCategoriesMatch,
   resolveOpponentTeam,
   filterByOpponentFilters,
+  filterByRegisteredGameCategory,
   filterByOpponentRankRange,
   filterByAggregationCondition,
   getOpponentCategoryOptions,
@@ -31,6 +32,7 @@ assert.equal(opponentCategoriesMatch("U14", "U15男子"), false, "異なるカ�
 assert.deepEqual(filterByOpponentFilters(games, "U15", "A", teams).map(game => game.id), ["g1"], "試合登録時のU15だけを抽出する");
 assert.deepEqual(filterByOpponentFilters(games, "U14", "A", teams).map(game => game.id), ["g2"], "対戦チームがU15でも試合登録時のU14で抽出する");
 assert.deepEqual(filterByOpponentFilters(games, "U13", "B", teams).map(game => game.id), ["g3"], "試合登録時のU13を抽出する");
+assert.deepEqual(filterByRegisteredGameCategory(games, "U15").map(game => game.id), ["g1"], "集計直前の再検証でもU15だけを残す");
 assert.deepEqual(filterByOpponentFilters(games, UNSET_FILTER_VALUE, UNSET_FILTER_VALUE, teams).map(game => game.id), ["g4"], "未照合試合を未設定として抽出する");
 assert.deepEqual(filterByOpponentRankRange(games, "B", "A", teams, ["D", "C", "B", "B+", "A", "A+", "S"]).map(game => game.id), ["g1", "g2", "g3"], "指定ランク範囲を両端を含めて抽出する");
 assert.deepEqual(filterByOpponentRankRange(games, "A", "B", teams, ["D", "C", "B", "B+", "A", "A+", "S"]).map(game => game.id), ["g1", "g2", "g3"], "上下限を逆に指定しても同じ範囲を抽出する");
