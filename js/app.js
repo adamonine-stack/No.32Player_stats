@@ -7,7 +7,7 @@ import { filterGamesByDate, filterGamesByMonth } from "./calculations/analysis-c
 import { OPPONENT_RANKS, calculateOpponentTeamRank, placementLabelToRank, sortPlayerNumbers } from "./calculations/opponent-team-calculations.js";
 import { getGameDateKey, getDatesWithRegisteredGames, calendarMonthFor, moveCalendarMonth, buildCalendarDays } from "./calculations/calendar-calculations.js";
 import { getPlayerTargetQuarterCount } from "./calculations/player-quarter-calculations.js";
-import { ALL_FILTER_VALUE, UNSET_FILTER_VALUE, resolveOpponentTeam, opponentCategoryForGame, opponentRankForGame, getOpponentCategoryOptions, getOpponentRankOptions, filterByOpponentFilterRange, filterByAggregationCondition } from "./calculations/game-filter-calculations.js";
+import { ALL_FILTER_VALUE, UNSET_FILTER_VALUE, resolveOpponentTeam, opponentCategoryForGame, opponentRankForGame, opponentCategoriesMatch, getOpponentCategoryOptions, getOpponentRankOptions, filterByOpponentFilterRange, filterByAggregationCondition } from "./calculations/game-filter-calculations.js";
 import { TOURNAMENT_2026_HYOGO_U15_MEN, TEAMS_2026_HYOGO_U15_MEN, normalizeImportedTeamName } from "./data/2026-hyogo-u15-men.js";
 import { TOURNAMENT_2026_OSAKA_U15_MEN, TEAMS_2026_OSAKA_U15_MEN, MATCHES_2026_OSAKA_U15_MEN } from "./data/2026-osaka-u15-men.js";
 const nav=[['home','ホーム'],['players','選手'],['opponentTeams','対戦チーム'],['games','試合'],['stats','分析'],['team','チーム'],['settings','設定']];
@@ -346,12 +346,24 @@ function syncFinalScoreInputsFromQuarters(){
   if(last){const own=$('#gOwn'),opp=$('#gOppScore');if(own)own.value=last.team;if(opp)opp.value=last.opponent}
 }
 
+function opponentTeamCategory(team={}){return String(team.category||team.categories?.[0]||'').trim()}
+function opponentRankVisible(team,gameCategory=''){return Boolean(team?.calculatedRank&&opponentCategoriesMatch(gameCategory,opponentTeamCategory(team)))}
+function updateGameOpponentInfo(team,g={},legacy=''){
+  const category=opponentTeamCategory(team)||g.opponentCategoryAtGame||'未設定',showRank=opponentRankVisible(team,$('#gCategory')?.value||g.category||'');
+  $('#gOpponentName').textContent=team?.teamName||legacy||'-';
+  $('#gOpponentPrefecture').textContent=team?.prefecture||g.opponentPrefecture||'-';
+  $('#gOpponentCategory').textContent=category;
+  $('#gOpponentRank').textContent=showRank?team.calculatedRank:'';
+  $('#gOpponentRankRow').classList.toggle('hidden',!showRank);
+}
+
 function gameForm(g={}){
   if(!requireLogin())return;
   const currentType=getGameStatsRegistrationType(g);
   const selectedTeam=state.opponentTeams.find(team=>team.id===g.opponentTeamId),legacy=!selectedTeam&&(g.opponentTeamName||g.opponent||'');
   const opponentOptions=`<option value="">対戦チームを選択</option>${legacy?`<option value="legacy" selected>${escapeHtml(legacy)}（既存データ）</option>`:''}${sortOpponentTeamsForSelect(state.opponentTeams).map(team=>`<option value="${team.id}" ${team.id===selectedTeam?.id?'selected':''}>${escapeHtml(team.teamName)}</option>`).join('')}`;
-  modal(`<h2>${g.id?'試合修正':'試合登録'}</h2><div class="form-grid game-form-grid"><label>年月日<input type="date" id="gDate" value="${g.date||''}"></label><label>Q数${numInput('gQ',g.quarters||4)}</label><label>カテゴリー<input id="gCategory" list="categoryList" value="${g.category||''}"><datalist id="categoryList"><option value="U15"><option value="U14"><option value="中学"><option value="高校"><option value="練習"></datalist></label><label>大会名<input id="gTour" value="${g.tournament||''}"></label><label>対戦相手<select id="gOpponentTeam">${opponentOptions}</select></label><div class="opponent-game-info">対戦チーム：<b id="gOpponentName">${escapeHtml(selectedTeam?.teamName||legacy||'-')}</b><br>都道府県：<b id="gOpponentPrefecture">${selectedTeam?.prefecture||g.opponentPrefecture||'-'}</b><br>チームランク：<b id="gOpponentRank">${selectedTeam?.calculatedRank||g.opponentRankAtGame||'未設定'}</b></div><label>自チーム得点${numInput('gOwn',g.ownScore||0)}</label><label>相手得点${numInput('gOppScore',g.oppScore||0)}</label></div><div class="card"><div class="section-title">スタッツ登録方式</div><div class="seg stats-type-seg"><button type="button" class="stats-type-btn ${currentType==='game'?'active':''}" data-stats-type="game">試合登録</button><button type="button" class="stats-type-btn ${currentType==='quarter'?'active':''}" data-stats-type="quarter">Q登録</button></div></div><div class="card"><div class="section-title">Q別スコア（累積）</div><div id="quarterScoreFields">${gameQuarterScoreFields(g)}</div></div><div class="row game-form-actions"><button class="btn" id="saveGame">保存</button><button class="btn ghost" id="closeModal">閉じる</button>${g.id?'<button class="btn danger delete-right" id="deleteGameFromEdit">削除</button>':''}</div>`);
+  const initialRankVisible=opponentRankVisible(selectedTeam,g.category);
+  modal(`<h2>${g.id?'試合修正':'試合登録'}</h2><div class="form-grid game-form-grid"><label>年月日<input type="date" id="gDate" value="${g.date||''}"></label><label>Q数${numInput('gQ',g.quarters||4)}</label><label>カテゴリー<input id="gCategory" list="categoryList" value="${g.category||''}"><datalist id="categoryList"><option value="U15"><option value="U14"><option value="中学"><option value="高校"><option value="練習"></datalist></label><label>大会名<input id="gTour" value="${g.tournament||''}"></label><label>対戦相手<select id="gOpponentTeam">${opponentOptions}</select></label><div class="opponent-game-info">対戦チーム：<b id="gOpponentName">${escapeHtml(selectedTeam?.teamName||legacy||'-')}</b><br>都道府県：<b id="gOpponentPrefecture">${selectedTeam?.prefecture||g.opponentPrefecture||'-'}</b><br>カテゴリー：<b id="gOpponentCategory">${escapeHtml(opponentTeamCategory(selectedTeam)||g.opponentCategoryAtGame||'未設定')}</b><br><span id="gOpponentRankRow" class="${initialRankVisible?'':'hidden'}">チームランク：<b id="gOpponentRank">${initialRankVisible?selectedTeam.calculatedRank:''}</b></span></div><label>自チーム得点${numInput('gOwn',g.ownScore||0)}</label><label>相手得点${numInput('gOppScore',g.oppScore||0)}</label></div><div class="card"><div class="section-title">スタッツ登録方式</div><div class="seg stats-type-seg"><button type="button" class="stats-type-btn ${currentType==='game'?'active':''}" data-stats-type="game">試合登録</button><button type="button" class="stats-type-btn ${currentType==='quarter'?'active':''}" data-stats-type="quarter">Q登録</button></div></div><div class="card"><div class="section-title">Q別スコア（累積）</div><div id="quarterScoreFields">${gameQuarterScoreFields(g)}</div></div><div class="row game-form-actions"><button class="btn" id="saveGame">保存</button><button class="btn ghost" id="closeModal">閉じる</button>${g.id?'<button class="btn danger delete-right" id="deleteGameFromEdit">削除</button>':''}</div>`);
   let selectedType=currentType;
   const refreshType=()=>document.querySelectorAll('.stats-type-btn').forEach(b=>b.classList.toggle('active',b.dataset.statsType===selectedType));
   const refreshQuarterScores=()=>{$('#quarterScoreFields').innerHTML=gameQuarterScoreFields(g);bindNumberSteppers();document.querySelectorAll('#quarterScoreFields input').forEach(i=>i.oninput=syncFinalScoreInputsFromQuarters)};
@@ -360,7 +372,8 @@ function gameForm(g={}){
   const qInput=$('#gQ');if(qInput)qInput.oninput=refreshQuarterScores;
   document.querySelectorAll('[data-step-for="gQ"]').forEach(b=>b.addEventListener('click',()=>setTimeout(refreshQuarterScores,0)));
   document.querySelectorAll('#quarterScoreFields input').forEach(i=>i.oninput=syncFinalScoreInputsFromQuarters);
-  $('#gOpponentTeam').onchange=e=>{const team=state.opponentTeams.find(item=>item.id===e.target.value);$('#gOpponentName').textContent=team?.teamName||legacy||'-';$('#gOpponentPrefecture').textContent=team?.prefecture||g.opponentPrefecture||'-';$('#gOpponentRank').textContent=team?.calculatedRank||g.opponentRankAtGame||'未設定'};
+  $('#gOpponentTeam').onchange=e=>{const team=state.opponentTeams.find(item=>item.id===e.target.value);updateGameOpponentInfo(team,g,legacy)};
+  $('#gCategory').oninput=()=>{const team=state.opponentTeams.find(item=>item.id===$('#gOpponentTeam').value);updateGameOpponentInfo(team,g,legacy)};
   $('#saveGame').onclick=async()=>{
     const id=g.id||uid(),oldDate=g.date||'',newDate=$('#gDate').value,shouldPromote=!g.id||normalizeGameDate(oldDate)!==normalizeGameDate(newDate);
     const oldType=getGameStatsRegistrationType(g);
@@ -373,7 +386,7 @@ function gameForm(g={}){
     const scoreData=collectQuarterScores(qCount);if(!scoreData)return;
     const finalScore=scoreData.finalScore||{team:num($('#gOwn').value),opponent:num($('#gOppScore').value)};
     const team=state.opponentTeams.find(item=>item.id===$('#gOpponentTeam').value),usingLegacy=$('#gOpponentTeam').value==='legacy';if(!team&&!usingLegacy){toast('対戦チームを選択してください');return}const opponentName=team?.teamName||legacy;
-    const data={date:newDate,quarters:qCount,quarterCount:qCount,statsRegistrationType:selectedType,category:$('#gCategory').value,tournament:$('#gTour').value,opponent:opponentName,opponentTeamId:team?.id||g.opponentTeamId||null,opponentTeamName:opponentName,opponentPrefecture:team?.prefecture||g.opponentPrefecture||null,opponentRankAtGame:team?.calculatedRank||g.opponentRankAtGame||null,ownScore:finalScore.team,oppScore:finalScore.opponent,finalScore:{team:finalScore.team,opponent:finalScore.opponent},sameDateOrder:shouldPromote?0:sameDateOrderValue(g),updatedAt:serverTimestamp()};
+    const gameCategory=$('#gCategory').value,rankMatches=opponentRankVisible(team,gameCategory),data={date:newDate,quarters:qCount,quarterCount:qCount,statsRegistrationType:selectedType,category:gameCategory,tournament:$('#gTour').value,opponent:opponentName,opponentTeamId:team?.id||g.opponentTeamId||null,opponentTeamName:opponentName,opponentPrefecture:team?.prefecture||g.opponentPrefecture||null,opponentCategoryAtGame:opponentTeamCategory(team)||g.opponentCategoryAtGame||null,opponentRankAtGame:rankMatches?team.calculatedRank:null,ownScore:finalScore.team,oppScore:finalScore.opponent,finalScore:{team:finalScore.team,opponent:finalScore.opponent},sameDateOrder:shouldPromote?0:sameDateOrderValue(g),updatedAt:serverTimestamp()};
     if(scoreData.quarterScores)data.quarterScores=scoreData.quarterScores;
     if(!g.id)data.createdAt=serverTimestamp();
     await setDoc(doc(db,'games',id),data,{merge:true});
