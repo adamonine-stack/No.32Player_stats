@@ -204,13 +204,15 @@ async function import2026WakayamaMen(){
   if(!requireLogin())return;
   if(!confirm('和歌山県U15クラブ選手権大会の8チーム・大会実績・7試合を登録しますか？'))return;
   const tournament=TOURNAMENT_2026_WAKAYAMA_U15_MEN;
-  const existingByName=new Map(state.opponentTeams.map(team=>[normalizeImportedTeamName(team.normalizedTeamName||team.teamName),team]));
+  const existingByName=new Map();
+  for(const team of state.opponentTeams){const key=normalizeImportedTeamName(team.teamName||team.normalizedTeamName),items=existingByName.get(key)||[];items.push(team);existingByName.set(key,items)}
   const teamByName=new Map();
-  let created=0,updated=0,resultsCreated=0,resultsUpdated=0,matchesCreated=0,matchesUpdated=0;
+  let created=0,updated=0,resultsCreated=0,resultsUpdated=0,matchesCreated=0,matchesUpdated=0,duplicatesRemoved=0;
   await setDoc(doc(db,'tournaments',tournament.id),{...tournament,updatedAt:serverTimestamp(),createdAt:serverTimestamp()},{merge:true});
   for(let index=0;index<TEAMS_2026_WAKAYAMA_U15_MEN.length;index++){
     const imported=TEAMS_2026_WAKAYAMA_U15_MEN[index];
-    const existing=existingByName.get(imported.normalizedTeamName);
+    const candidates=existingByName.get(imported.normalizedTeamName)||[];
+    const existing=candidates.find(team=>!String(team.id||'').startsWith(`${tournament.id}-`))||candidates[0];
     const id=existing?.id||`${tournament.id}-${String(index+1).padStart(2,'0')}`;
     const current=opponentPlacements(existing);
     const previous=current.find(item=>item.tournamentId===tournament.id&&Number(item.year)===tournament.year);
@@ -221,8 +223,9 @@ async function import2026WakayamaMen(){
     if(existing)updated++;else{created++;data.createdAt=serverTimestamp()}
     if(previous)resultsUpdated++;else resultsCreated++;
     await setDoc(doc(db,'opponentTeams',id),data,{merge:true});
+    for(const duplicate of candidates.filter(team=>team.id!==id&&String(team.id||'').startsWith(`${tournament.id}-`))){await deleteDoc(doc(db,'opponentTeams',duplicate.id));duplicatesRemoved++}
     const team={id,...existing,...data};
-    existingByName.set(imported.normalizedTeamName,team);
+    existingByName.set(imported.normalizedTeamName,[team]);
     teamByName.set(imported.teamName,team);
   }
   for(const item of MATCHES_2026_WAKAYAMA_U15_MEN){
@@ -232,7 +235,7 @@ async function import2026WakayamaMen(){
     if(snapshot.exists())matchesUpdated++;else matchesCreated++;
     await setDoc(ref,{...item,id,tournamentId:tournament.id,tournamentName:tournament.name,teamAId:teamA?.id||null,teamBId:teamB?.id||null,winnerTeamId:winner?.id||null,loserTeamId:loser?.id||null,updatedAt:serverTimestamp(),createdAt:snapshot.exists()?snapshot.data().createdAt||serverTimestamp():serverTimestamp()},{merge:true});
   }
-  modal(`<h2>和歌山県大会登録完了</h2><div class="grid"><p>大会名：${tournament.name}</p><p>登録対象チーム数：${TEAMS_2026_WAKAYAMA_U15_MEN.length}</p><p>新規登録チーム数：${created}</p><p>既存更新チーム数：${updated}</p><p>大会実績新規登録数：${resultsCreated}</p><p>大会実績更新数：${resultsUpdated}</p><p>試合結果新規登録数：${matchesCreated}</p><p>試合結果更新数：${matchesUpdated}</p></div><div class="section-title">大会結果</div><p>${TEAMS_2026_WAKAYAMA_U15_MEN.map(team=>`${escapeHtml(team.teamName)}：${escapeHtml(team.placementLabel)}・${team.wins}勝（${team.rank}）`).join('<br>')}</p><button class="btn" id="closeModal">閉じる</button>`);
+  modal(`<h2>和歌山県大会登録完了</h2><div class="grid"><p>大会名：${tournament.name}</p><p>登録対象チーム数：${TEAMS_2026_WAKAYAMA_U15_MEN.length}</p><p>新規登録チーム数：${created}</p><p>既存更新チーム数：${updated}</p><p>大会実績新規登録数：${resultsCreated}</p><p>大会実績更新数：${resultsUpdated}</p><p>試合結果新規登録数：${matchesCreated}</p><p>試合結果更新数：${matchesUpdated}</p><p>重複統合数：${duplicatesRemoved}</p></div><div class="section-title">大会結果</div><p>${TEAMS_2026_WAKAYAMA_U15_MEN.map(team=>`${escapeHtml(team.teamName)}：${escapeHtml(team.placementLabel)}・${team.wins}勝（${team.rank}）`).join('<br>')}</p><button class="btn" id="closeModal">閉じる</button>`);
   $('#closeModal').onclick=closeModal;
 }
 function openOpponentTeamForm(team={}){if(!requireLogin())return;opponentDraft={...team,tournamentPlacements:opponentPlacements(team).map(item=>({...item})),playerNumbers:sortPlayerNumbers(team.playerNumbers)};renderOpponentTeamForm()}
