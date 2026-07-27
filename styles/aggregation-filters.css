@@ -3,21 +3,21 @@
 .upper-filter-layout>label select{margin-top:7px}
 .rank-range-filter{min-width:0}
 .rank-range-filter>label{display:block}
-.rank-range-selects{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:end;gap:5px}
-.rank-range-selects>label{font-size:11px!important;margin:0!important}
-.rank-range-selects>span{padding-bottom:12px;color:var(--muted);font-weight:900}
+.rank-range-selects{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);align-items:center;gap:5px;margin-top:7px}
+.rank-range-selects>span{color:var(--muted);font-weight:900;text-align:center}
+.rank-range-selects>select{margin:0!important}
 .player-filter{grid-column:1/-1}
-.analysis-screen .mode-seg{display:grid!important;grid-template-columns:repeat(7,minmax(0,1fr))!important}
+.analysis-screen .mode-seg{display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important}
 .analysis-screen .mode-seg button[data-mode="year"],.analysis-screen .mode-seg button[data-team-mode="year"]{display:block!important}
 .analysis-game-item small{display:block;color:var(--muted);font-size:10px;font-weight:700;line-height:1.35;margin-top:4px}
 @media(max-width:800px){
   .upper-filter-layout{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:10px!important}
   .upper-filter-layout .wide,.upper-filter-layout .player-filter{grid-column:1/-1!important}
   .rank-range-selects{gap:3px}
-  .rank-range-selects>label{font-size:9px!important}
-  .rank-range-selects>span{padding-bottom:10px;font-size:10px}
+  .rank-range-selects{margin-top:5px}
+  .rank-range-selects>span{font-size:10px}
   .rank-range-filter select{padding:0 5px!important;font-size:12px!important}
-  .analysis-screen .mode-seg{display:grid!important;grid-template-columns:repeat(7,minmax(0,1fr))!important;width:100%!important;overflow:hidden!important}
+  .analysis-screen .mode-seg{display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;width:100%!important;overflow:hidden!important}
   .analysis-screen .mode-seg button{display:flex!important;min-width:0!important;width:auto!important;padding:0 1px!important;font-size:8px!important;white-space:normal!important;word-break:keep-all!important}
   .analysis-screen .mode-seg button:before,.analysis-screen .mode-seg button:after{display:none!important;content:none!important}
 }
