@@ -10,6 +10,8 @@
 .analysis-screen .mode-seg{display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important}
 .analysis-screen .mode-seg button[data-mode="year"],.analysis-screen .mode-seg button[data-team-mode="year"]{display:block!important}
 .analysis-game-item small{display:block;color:var(--muted);font-size:10px;font-weight:700;line-height:1.35;margin-top:4px}
+.analysis-filter-card{padding-top:12px!important;padding-bottom:12px!important}
+.analysis-filter-card .upper-filter-layout{row-gap:10px!important}
 @media(max-width:800px){
   .upper-filter-layout{grid-template-columns:minmax(0,1fr) minmax(0,1fr)!important;gap:10px!important}
   .upper-filter-layout .wide,.upper-filter-layout .player-filter{grid-column:1/-1!important}
@@ -20,4 +22,7 @@
   .analysis-screen .mode-seg{display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;width:100%!important;overflow:hidden!important}
   .analysis-screen .mode-seg button{display:flex!important;min-width:0!important;width:auto!important;padding:0 1px!important;font-size:8px!important;white-space:normal!important;word-break:keep-all!important}
   .analysis-screen .mode-seg button:before,.analysis-screen .mode-seg button:after{display:none!important;content:none!important}
+  .analysis-screen .analysis-filter-card{padding:8px 12px!important}
+  .analysis-filter-card .upper-filter-layout{row-gap:7px!important}
+  .analysis-filter-card .analysis-target-row{margin-top:6px!important}
 }

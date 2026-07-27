@@ -59,6 +59,18 @@ export function filterByOpponentRank(games = [], selected = ALL_FILTER_VALUE, op
   });
 }
 
+export function normalizeCategoryKey(value = "") {
+  const normalized = String(value).normalize("NFKC").trim().toUpperCase();
+  const ageCategory = normalized.match(/U(?:13|14|15)/)?.[0];
+  return ageCategory || normalized.replace(/\s+/g, "");
+}
+
+export function opponentCategoriesMatch(gameCategory = "", opponentCategory = "") {
+  const gameKey = normalizeCategoryKey(gameCategory);
+  const opponentKey = normalizeCategoryKey(opponentCategory);
+  return Boolean(gameKey && opponentKey && gameKey === opponentKey);
+}
+
 export function filterByOpponentRankRange(games = [], minimum = ALL_FILTER_VALUE, maximum = ALL_FILTER_VALUE, opponentTeams = [], rankDefinitions = []) {
   if (!minimum && !maximum) return games;
   const order = [...rankDefinitions];
