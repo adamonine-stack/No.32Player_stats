@@ -21,8 +21,7 @@ export function resolveOpponentTeam(game = {}, opponentTeams = []) {
 }
 
 export function opponentCategoryForGame(game, opponentTeams = []) {
-  const team = resolveOpponentTeam(game, opponentTeams);
-  return String(team?.category || team?.categories?.[0] || "").trim();
+  return String(game?.category || "").trim();
 }
 
 export function opponentRankForGame(game, opponentTeams = []) {
@@ -30,8 +29,8 @@ export function opponentRankForGame(game, opponentTeams = []) {
   return String(team?.calculatedRank || team?.teamRank || team?.rank || "").trim();
 }
 
-export function getOpponentCategoryOptions(opponentTeams = []) {
-  return [...new Set(opponentTeams.flatMap(team => [team.category, ...(team.categories || [])]).map(normalizeCategoryKey).filter(Boolean))]
+export function getOpponentCategoryOptions(games = []) {
+  return [...new Set(games.map(game => game.category).map(normalizeCategoryKey).filter(Boolean))]
     .sort((a, b) => a.localeCompare(b, "ja", { numeric: true }));
 }
 
@@ -46,7 +45,7 @@ export function getOpponentRankOptions(opponentTeams = [], rankDefinitions = [])
 export function filterByOpponentCategory(games = [], selected = ALL_FILTER_VALUE, opponentTeams = []) {
   if (selected === ALL_FILTER_VALUE) return games;
   return games.filter(game => {
-    const category = opponentCategoryForGame(game, opponentTeams);
+    const category = opponentCategoryForGame(game);
     return selected === UNSET_FILTER_VALUE ? !category : normalizeCategoryKey(category) === normalizeCategoryKey(selected);
   });
 }
