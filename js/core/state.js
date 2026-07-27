@@ -15,6 +15,8 @@ export const state = {
   homeStatsMode: "total",
   targetId: "",
   categoryId: "",
+  opponentRankId: "",
+  analysisPreserveEmptyTarget: false,
   periodStart: "",
   periodEnd: "",
   selectedGameId: "",
@@ -22,6 +24,11 @@ export const state = {
   analysisReturn: null,
   teamMode: "game",
   teamTargetId: "",
+  teamCategoryId: "",
+  teamOpponentRankId: "",
+  teamPreserveEmptyTarget: false,
+  teamPeriodStart: "",
+  teamPeriodEnd: "",
   teamReturn: null,
   teamDetail: null
 };
