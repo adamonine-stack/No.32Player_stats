@@ -1,0 +1,41 @@
+.detail-stats-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+
+.detail-primary-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.detail-stats-actions .btn {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
+@media (max-width: 800px) {
+  .detail-stats-actions {
+    gap: 5px !important;
+    overflow: visible !important;
+  }
+
+  .detail-primary-actions {
+    gap: 4px;
+  }
+
+  .detail-stats-actions .btn {
+    padding: 8px 6px !important;
+    border-radius: 8px !important;
+    font-size: clamp(8px, 2.55vw, 11px) !important;
+    line-height: 1.1 !important;
+  }
+
+  .detail-stats-actions .detail-game-edit {
+    margin-left: auto;
+  }
+}
