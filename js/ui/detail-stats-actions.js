@@ -17,6 +17,11 @@ export function selectedStatsDeleteTarget(registrationType, selectedView) {
 
 export const detailStatsScrollOptions = Object.freeze({ top: 0, behavior: "smooth" });
 
+export function renderDetailAtTop({ render, schedule, scroll }) {
+  render();
+  schedule(() => scroll(detailStatsScrollOptions));
+}
+
 export async function saveStatsAndReturnToTop({ save, onSuccess, onFailure, schedule, scroll }) {
   try {
     await save();

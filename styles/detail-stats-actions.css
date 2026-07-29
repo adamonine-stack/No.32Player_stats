@@ -16,6 +16,8 @@
 .detail-stats-actions .btn {
   flex: 0 0 auto;
   white-space: nowrap;
+  padding: 14px 18px;
+  font-size: 14px;
 }
 
 @media (max-width: 800px) {
@@ -29,9 +31,9 @@
   }
 
   .detail-stats-actions .btn {
-    padding: 8px 6px !important;
+    padding: 10px 7px !important;
     border-radius: 8px !important;
-    font-size: clamp(8px, 2.55vw, 11px) !important;
+    font-size: clamp(9px, 2.8vw, 12px) !important;
     line-height: 1.1 !important;
   }
 
