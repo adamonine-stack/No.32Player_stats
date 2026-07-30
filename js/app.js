@@ -14,6 +14,7 @@ import { TOURNAMENT_2026_OSAKA_U15_MEN, TEAMS_2026_OSAKA_U15_MEN, MATCHES_2026_O
 import { TOURNAMENT_2026_OKAYAMA_U15_MEN, TEAMS_2026_OKAYAMA_U15_MEN } from "./data/2026-okayama-u15-men.js";
 import { TOURNAMENT_2026_NARA_U15_MEN, TEAMS_2026_NARA_U15_MEN, MATCHES_2026_NARA_U15_MEN } from "./data/2026-nara-u15-men.js";
 import { TOURNAMENT_2026_WAKAYAMA_U15_MEN, TEAMS_2026_WAKAYAMA_U15_MEN, MATCHES_2026_WAKAYAMA_U15_MEN } from "./data/2026-wakayama-u15-men.js";
+import { TOURNAMENT_2026_SHIGA_U15_MEN, TEAMS_2026_SHIGA_U15_MEN, MATCHES_2026_SHIGA_U15_MEN } from "./data/2026-shiga-u15-men.js";
 const nav=[['home','ホーム'],['players','選手'],['opponentTeams','対戦チーム'],['games','試合'],['stats','分析'],['team','チーム'],['settings','設定']];
 const navIcons={home:'home',players:'person',opponentTeams:'shield',games:'edit_note',stats:'bar_chart',team:'groups',settings:'settings'};
 const $=s=>document.querySelector(s); const uid=()=>crypto.randomUUID();
@@ -478,6 +479,22 @@ function statsForm(gameId,forcedQuarter=null){
   $('#saveStats').onclick=async()=>{const pid=$('#sfPlayer').value,id=`${gameId}_${pid}`,data={gameId,playerId:pid,updatedAt:serverTimestamp()};if(mode==='quarter'){const q=selectedQuarter,qData={registered:true,quarter:q};keys.forEach(k=>qData[k]=num($('#'+k).value));data.quarters={[quarterKey(q)]:qData}}else{data.quarters=g?.quarters||4;keys.forEach(k=>data[k]=num($('#'+k).value))}await saveStatsAndReturnToTop({save:()=>setDoc(doc(db,'stats',id),data,{merge:true}),onSuccess:()=>{if(mode==='quarter')setDetailStatsView(gameId,`q${selectedQuarter}`);state.lastPlayerId=pid;setLastPlayerId(pid);closeModal();render();toast('保存しました')},onFailure:error=>{console.error(error);toast('保存に失敗しました')},schedule:callback=>requestAnimationFrame(callback),scroll:options=>window.scrollTo(options)})};
   $('#closeModal').onclick=closeModal;
 }
+async function import2026ShigaMen(){
+  if(!requireLogin()||!confirm('滋賀県U15クラブ選手権大会の男子11チーム・大会実績・10試合を登録しますか？'))return;
+  const tournament=TOURNAMENT_2026_SHIGA_U15_MEN,existingByName=new Map(),teamByName=new Map();
+  for(const team of state.opponentTeams){const key=normalizeImportedTeamName(team.normalizedTeamName||team.teamName),items=existingByName.get(key)||[];items.push(team);existingByName.set(key,items)}
+  let created=0,updated=0,resultsCreated=0,resultsUpdated=0,matchesCreated=0,matchesUpdated=0;
+  await setDoc(doc(db,'tournaments',tournament.id),{...tournament,updatedAt:serverTimestamp(),createdAt:serverTimestamp()},{merge:true});
+  for(let index=0;index<TEAMS_2026_SHIGA_U15_MEN.length;index++){
+    const imported=TEAMS_2026_SHIGA_U15_MEN[index],existing=(existingByName.get(imported.normalizedTeamName)||[])[0],id=existing?.id||`${tournament.id}-${String(index+1).padStart(2,'0')}`,current=opponentPlacements(existing),previous=current.find(item=>item.tournamentId===tournament.id&&Number(item.year)===tournament.year);
+    const placement={id:`${id}-${tournament.id}`,tournamentId:tournament.id,tournamentName:tournament.name,year:tournament.year,category:tournament.category,prefecture:tournament.prefecture,startDate:tournament.startDate,endDate:tournament.endDate,placement:imported.placementLabel,placementLabel:imported.placementLabel,numericPlacement:imported.placement,placementRank:imported.rank,rankValue:imported.rank,wins:imported.wins,losses:imported.losses,notes:imported.notes,sortOrder:previous?.sortOrder??current.length,sourceType:'officialTournamentPdf',resultConfirmed:true,updatedAt:new Date().toISOString()};
+    const placements=previous?current.map(item=>item===previous?{...item,...placement}:item):[...current,{...placement,createdAt:new Date().toISOString()}],rank=calculateOpponentTeamRank(placements),data={teamName:imported.teamName,normalizedTeamName:imported.normalizedTeamName,prefecture:tournament.prefecture,region:tournament.prefecture,category:tournament.category,gender:tournament.gender,teamType:'クラブチーム',year:tournament.year,tournamentPlacements:placements,calculatedRank:rank.rank,calculatedRankScore:rank.score,rankCalculatedAt:serverTimestamp(),sourceTournamentId:tournament.id,updatedAt:serverTimestamp()};
+    if(existing)updated++;else{created++;data.createdAt=serverTimestamp()}if(previous)resultsUpdated++;else resultsCreated++;await setDoc(doc(db,'opponentTeams',id),data,{merge:true});const team={id,...existing,...data};existingByName.set(imported.normalizedTeamName,[team]);teamByName.set(imported.teamName,team);
+  }
+  for(const item of MATCHES_2026_SHIGA_U15_MEN){const id=`${tournament.id}-${encodeURIComponent(item.round)}-${item.matchNumber}`,ref=doc(db,'tournamentGames',id),snapshot=await getDoc(ref),teamA=teamByName.get(item.teamA),teamB=teamByName.get(item.teamB),winner=teamByName.get(item.winner),loser=teamByName.get(item.loser);if(snapshot.exists())matchesUpdated++;else matchesCreated++;await setDoc(ref,{...item,id,tournamentId:tournament.id,tournamentName:tournament.name,teamAId:teamA?.id||null,teamBId:teamB?.id||null,winnerTeamId:winner?.id||null,loserTeamId:loser?.id||null,updatedAt:serverTimestamp(),createdAt:snapshot.exists()?snapshot.data().createdAt||serverTimestamp():serverTimestamp()},{merge:true})}
+  modal(`<h2>滋賀県大会登録完了</h2><p>11チーム（新規${created}・既存更新${updated}）、大会成績（新規${resultsCreated}・更新${resultsUpdated}）、試合（新規${matchesCreated}・更新${matchesUpdated}）</p><p>${TEAMS_2026_SHIGA_U15_MEN.map(team=>`${escapeHtml(team.teamName)}：${escapeHtml(team.placementLabel)}（${team.rank}）`).join('<br>')}</p><button class="btn" id="closeModal">閉じる</button>`);$('#closeModal').onclick=closeModal;
+}
+window.import2026ShigaMen=import2026ShigaMen;
 render();
 
 
