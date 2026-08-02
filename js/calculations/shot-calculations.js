@@ -19,13 +19,15 @@ export const SHOT_TYPES = Object.freeze({
   jump_shot: "ジャンプシュート",
   layup: "レイアップ",
   floater: "フローター",
-  under_basket: "ゴール下"
+  tap: "タップ",
+  under_basket: "ジャンプシュート"
 });
 
 export const SHOT_AREA_ORDER = Object.freeze(Object.keys(SHOT_AREAS));
 export const SHOT_TYPE_ORDER = Object.freeze(Object.keys(SHOT_TYPES));
 export const SHOT_COURT_SIZE = Object.freeze({ width: 100, height: 93.333 });
 export const FIBA_COURT = Object.freeze({ basketX: 50, basketY: 10.5, paintLeft: 33.667, paintRight: 66.333, freeThrowY: 38.667, threeRadius: 45, cornerLeft: 6, cornerRight: 94, cornerJoinY: 19.934, noChargeRadius: 8.667 });
+export const UNDER_BASKET_ZONE = Object.freeze({ centerX: 50, centerY: 10.5, radiusX: 14, radiusY: 14 });
 export const SHOT_AREA_MODEL_VERSION = "fiba-2024-r32-v1";
 
 export function detectShotArea(xValue, yValue) {
@@ -42,8 +44,9 @@ export function detectShotArea(xValue, yValue) {
     if (x > rightCenterBoundary) return "right_45_3p";
     return "center_3p";
   }
-  const underCurveY = basketY + Math.sqrt(Math.max(0, noChargeRadius ** 2 - (x - basketX) ** 2));
-  if (x >= basketX - noChargeRadius && x <= basketX + noChargeRadius && y >= basketY && y <= underCurveY) return "under_basket";
+  const under = UNDER_BASKET_ZONE, normalizedX = (x - under.centerX) / under.radiusX;
+  const underCurveY = under.centerY + under.radiusY * Math.sqrt(Math.max(0, 1 - normalizedX ** 2));
+  if (Math.abs(normalizedX) <= 1 && y <= underCurveY) return "under_basket";
   if (x >= paintLeft && x <= paintRight && y <= freeThrowY) return "inside";
   if (y <= 24) return x < paintLeft ? "left_zero_mid" : x > paintRight ? "right_zero_mid" : "inside";
   if (x < paintLeft) return "left_mid";
@@ -78,8 +81,8 @@ export function allowedShotTypes(areaId) {
   const group = SHOT_AREAS[areaId]?.group;
   if (group === "three") return ["jump_shot"];
   if (group === "mid" || group === "other") return ["jump_shot", "floater"];
-  if (group === "inside") return ["layup", "floater", "under_basket"];
-  if (group === "under") return ["layup", "under_basket"];
+  if (group === "inside") return ["layup", "floater", "jump_shot"];
+  if (group === "under") return ["layup", "jump_shot", "floater", "tap"];
   return [];
 }
 
