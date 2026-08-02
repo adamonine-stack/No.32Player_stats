@@ -5,6 +5,9 @@ assert.equal(detectShotArea(3, 10), "left_corner_3p");
 assert.equal(detectShotArea(25, 10), "left_zero_mid");
 assert.equal(detectShotArea(25, 32), "left_mid");
 assert.equal(detectShotArea(50, 12), "under_basket");
+assert.equal(detectShotArea(50, 24), "under_basket");
+assert.equal(detectShotArea(50, 25), "inside");
+assert.equal(detectShotArea(36, 10.5), "under_basket");
 assert.equal(detectShotArea(50, 27), "inside");
 assert.equal(detectShotArea(50, 47), "center_mid");
 assert.equal(detectShotArea(20, 50), "left_45_3p");
@@ -22,15 +25,15 @@ assert.deepEqual(shotTotals([right45Made]), { twoPa: 0, twoPm: 0, threePa: 1, th
 const centerMissed = createShot({ ...base, shotArea: "center_mid", shotType: "floater", result: "missed", createdAt: 2 });
 assert.deepEqual(shotTotals([centerMissed]), { twoPa: 1, twoPm: 0, threePa: 0, threePm: 0 });
 
-const underMade = createShot({ ...base, shotArea: "under_basket", shotType: "under_basket", result: "made", createdAt: 3 });
+const underMade = createShot({ ...base, shotArea: "under_basket", shotType: "jump_shot", result: "made", createdAt: 3 });
 assert.deepEqual(shotTotals([underMade]), { twoPa: 1, twoPm: 1, threePa: 0, threePm: 0 });
 
 const longMade = createShot({ ...base, shotArea: "long_range_3p", shotType: "jump_shot", result: "made", createdAt: 4 });
 assert.equal(longMade.points, 3);
 assert.deepEqual(allowedShotTypes("right_corner_3p"), ["jump_shot"]);
 assert.deepEqual(allowedShotTypes("center_mid"), ["jump_shot", "floater"]);
-assert.deepEqual(allowedShotTypes("inside"), ["layup", "floater", "under_basket"]);
-assert.deepEqual(allowedShotTypes("under_basket"), ["layup", "under_basket"]);
+assert.deepEqual(allowedShotTypes("inside"), ["layup", "floater", "jump_shot"]);
+assert.deepEqual(allowedShotTypes("under_basket"), ["layup", "jump_shot", "floater", "tap"]);
 
 const legacy = { twoPa: 8, twoPm: 4, threePa: 5, threePm: 2 };
 const first = [right45Made, centerMissed];
@@ -62,7 +65,7 @@ const replacement = createLegacyBreakdownShots({
   quarter: 1,
   createdAt: 10,
   rows: [
-    { shotArea: "under_basket", shotType: "under_basket" },
+    { shotArea: "under_basket", shotType: "jump_shot" },
     { shotArea: "inside", shotType: "layup" },
     { shotArea: "center_mid", shotType: "jump_shot" },
     { shotArea: "right_45_3p", shotType: "jump_shot" },
