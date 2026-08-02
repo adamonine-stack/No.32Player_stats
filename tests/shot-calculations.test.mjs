@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { allowedShotTypes, createShot, shotTotals, mergeShotTotals, collectShots, aggregateShots, SHOT_AREA_ORDER, legacyShotSlots, isLegacyShotBreakdownTarget, createLegacyBreakdownShots, detectShotArea, SHOT_AREA_MODEL_VERSION, shotAreaForRecord, reclassifyShots } from "../js/calculations/shot-calculations.js";
+import { allowedShotTypes, createShot, shotTotals, mergeShotTotals, detailedShotTotals, collectShots, aggregateShots, SHOT_AREA_ORDER, legacyShotSlots, isLegacyShotBreakdownTarget, createLegacyBreakdownShots, detectShotArea, SHOT_AREA_MODEL_VERSION, shotAreaForRecord, reclassifyShots } from "../js/calculations/shot-calculations.js";
 
 assert.equal(detectShotArea(3, 10), "left_corner_3p");
 assert.equal(detectShotArea(25, 10), "left_zero_mid");
@@ -39,6 +39,11 @@ const legacy = { twoPa: 8, twoPm: 4, threePa: 5, threePm: 2 };
 const first = [right45Made, centerMissed];
 const next = [centerMissed, underMade];
 assert.deepEqual(mergeShotTotals(legacy, first, next), { twoPa: 9, twoPm: 5, threePa: 4, threePm: 1 });
+assert.deepEqual(detailedShotTotals(legacy, [], [right45Made]), { twoPa: 0, twoPm: 0, threePa: 1, threePm: 1 });
+assert.deepEqual(detailedShotTotals({ ...legacy, shots: first }, first, next), { twoPa: 9, twoPm: 5, threePa: 4, threePm: 1 });
+const madeSummary = shotTotals([underMade, right45Made]);
+assert.equal(madeSummary.twoPm + madeSummary.threePm, 2, "FGM reflects all made field goals");
+assert.equal(madeSummary.threePm, 1, "3PGM reflects made 3-point shots");
 
 const nested = [{ shots: [right45Made], quarters: { q1: { shots: [centerMissed] }, q2: { shots: [underMade] } } }];
 assert.equal(collectShots(nested).length, 3);

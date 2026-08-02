@@ -13,6 +13,7 @@
 .shot-panel { background:#0b1530; border:1px solid #33436a; border-radius:12px; padding:14px; }
 .shot-summary { display:grid; gap:5px; margin-bottom:12px; }
 .shot-type-grid,.shot-result-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:10px; }
+.shot-result-grid[hidden] { display:none; }
 .shot-type { min-height:48px; }.shot-type.selected { outline:3px solid #a78bfa; background:#5b21b6; }
 .shot-result { min-height:58px; font-size:18px; font-weight:800; }.shot-result.made { background:#15803d; }.shot-result.missed { background:#b91c1c; }
 .shot-list { margin-top:18px; }.shot-list-table { width:100%; border-collapse:collapse; font-size:13px; }
