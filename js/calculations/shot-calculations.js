@@ -26,6 +26,7 @@ export const SHOT_AREA_ORDER = Object.freeze(Object.keys(SHOT_AREAS));
 export const SHOT_TYPE_ORDER = Object.freeze(Object.keys(SHOT_TYPES));
 export const SHOT_COURT_SIZE = Object.freeze({ width: 100, height: 93.333 });
 export const FIBA_COURT = Object.freeze({ basketX: 50, basketY: 10.5, paintLeft: 33.667, paintRight: 66.333, freeThrowY: 38.667, threeRadius: 45, cornerLeft: 6, cornerRight: 94, cornerJoinY: 19.934, noChargeRadius: 8.667 });
+export const SHOT_AREA_MODEL_VERSION = "fiba-2024-r32-v1";
 
 export function detectShotArea(xValue, yValue) {
   const x = Number(xValue), y = Number(yValue);
@@ -48,6 +49,25 @@ export function detectShotArea(xValue, yValue) {
   if (x < paintLeft) return "left_mid";
   if (x > paintRight) return "right_mid";
   return "center_mid";
+}
+
+export function hasShotCoordinates(shot = {}) {
+  return shot.shotX !== null && shot.shotX !== undefined && shot.shotY !== null && shot.shotY !== undefined
+    && Number.isFinite(Number(shot.shotX)) && Number.isFinite(Number(shot.shotY));
+}
+
+export function shotAreaForRecord(shot = {}, detector = detectShotArea) {
+  return hasShotCoordinates(shot) ? (detector(shot.shotX, shot.shotY) || shot.shotArea) : shot.shotArea;
+}
+
+export function reclassifyShot(shot = {}, detector = detectShotArea, modelVersion = SHOT_AREA_MODEL_VERSION) {
+  const shotArea = shotAreaForRecord(shot, detector), area = SHOT_AREAS[shotArea];
+  if (!area) return { ...shot };
+  return { ...shot, shotArea, shotAreaLabel: area.label, shotValue: area.value, points: shot.result === "made" ? area.value : 0, shotAreaModelVersion: modelVersion };
+}
+
+export function reclassifyShots(shots = [], detector = detectShotArea, modelVersion = SHOT_AREA_MODEL_VERSION) {
+  return shots.map(shot => reclassifyShot(shot, detector, modelVersion));
 }
 
 export function shotValueForArea(areaId) {
@@ -82,6 +102,7 @@ export function createShot({ id, gameId, playerId, quarter = null, shotArea, sho
     shotAreaLabel: area.label,
     shotX: hasCoordinates && Number.isFinite(Number(shotX)) ? Number(Number(shotX).toFixed(3)) : null,
     shotY: hasCoordinates && Number.isFinite(Number(shotY)) ? Number(Number(shotY).toFixed(3)) : null,
+    shotAreaModelVersion: SHOT_AREA_MODEL_VERSION,
     shotValue,
     shotType,
     shotTypeLabel: SHOT_TYPES[shotType],
@@ -93,10 +114,11 @@ export function createShot({ id, gameId, playerId, quarter = null, shotArea, sho
 
 export function shotTotals(shots = []) {
   return shots.reduce((totals, shot) => {
-    if (shot?.shotValue === 2) {
+    const shotValue = SHOT_AREAS[shotAreaForRecord(shot)]?.value || shot?.shotValue;
+    if (shotValue === 2) {
       totals.twoPa++;
       if (shot.result === "made") totals.twoPm++;
-    } else if (shot?.shotValue === 3) {
+    } else if (shotValue === 3) {
       totals.threePa++;
       if (shot.result === "made") totals.threePm++;
     }
@@ -128,7 +150,7 @@ export function collectShots(items = []) {
 export function aggregateShots(shots = [], field, ids) {
   const result = Object.fromEntries(ids.map(id => [id, { made: 0, attempts: 0 }]));
   for (const shot of shots) {
-    const id = shot?.[field];
+    const id = field === "shotArea" ? shotAreaForRecord(shot) : shot?.[field];
     if (!result[id]) continue;
     result[id].attempts++;
     if (shot.result === "made") result[id].made++;
