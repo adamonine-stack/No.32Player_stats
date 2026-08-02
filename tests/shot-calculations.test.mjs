@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { allowedShotTypes, createShot, shotTotals, mergeShotTotals, collectShots, aggregateShots, SHOT_AREA_ORDER, legacyShotSlots, isLegacyShotBreakdownTarget, createLegacyBreakdownShots, detectShotArea } from "../js/calculations/shot-calculations.js";
+import { allowedShotTypes, createShot, shotTotals, mergeShotTotals, collectShots, aggregateShots, SHOT_AREA_ORDER, legacyShotSlots, isLegacyShotBreakdownTarget, createLegacyBreakdownShots, detectShotArea, SHOT_AREA_MODEL_VERSION, shotAreaForRecord, reclassifyShots } from "../js/calculations/shot-calculations.js";
 
 assert.equal(detectShotArea(3, 10), "left_corner_3p");
 assert.equal(detectShotArea(25, 10), "left_zero_mid");
@@ -16,6 +16,7 @@ const right45Made = createShot({ ...base, shotArea: "right_45_3p", shotX: 80, sh
 assert.equal(right45Made.shotValue, 3);
 assert.equal(right45Made.points, 3);
 assert.equal(right45Made.shotX, 80);
+assert.equal(right45Made.shotAreaModelVersion, SHOT_AREA_MODEL_VERSION);
 assert.deepEqual(shotTotals([right45Made]), { twoPa: 0, twoPm: 0, threePa: 1, threePm: 1 });
 
 const centerMissed = createShot({ ...base, shotArea: "center_mid", shotType: "floater", result: "missed", createdAt: 2 });
@@ -40,6 +41,16 @@ const nested = [{ shots: [right45Made], quarters: { q1: { shots: [centerMissed] 
 assert.equal(collectShots(nested).length, 3);
 const areas = aggregateShots(collectShots(nested), "shotArea", SHOT_AREA_ORDER);
 assert.deepEqual(areas.under_basket, { made: 1, attempts: 1 });
+
+const staleAreaShot = { ...right45Made, shotArea: "center_mid", shotAreaLabel: "正面ミドル", shotValue: 2, points: 2 };
+assert.equal(shotAreaForRecord(staleAreaShot), "right_45_3p");
+assert.deepEqual(shotTotals([staleAreaShot]), { twoPa: 0, twoPm: 0, threePa: 1, threePm: 1 });
+const refreshedAreas = aggregateShots([staleAreaShot], "shotArea", SHOT_AREA_ORDER);
+assert.deepEqual(refreshedAreas.right_45_3p, { made: 1, attempts: 1 });
+const futureBoundary = reclassifyShots([staleAreaShot], () => "center_3p", "future-boundary-v2")[0];
+assert.equal(futureBoundary.shotArea, "center_3p");
+assert.equal(futureBoundary.shotAreaModelVersion, "future-boundary-v2");
+assert.equal(futureBoundary.points, 3);
 
 const legacySource = { twoPa: 3, twoPm: 2, threePa: 2, threePm: 1, ftm: 4 };
 assert.equal(isLegacyShotBreakdownTarget(legacySource), true);
