@@ -24,6 +24,31 @@ export const SHOT_TYPES = Object.freeze({
 
 export const SHOT_AREA_ORDER = Object.freeze(Object.keys(SHOT_AREAS));
 export const SHOT_TYPE_ORDER = Object.freeze(Object.keys(SHOT_TYPES));
+export const SHOT_COURT_SIZE = Object.freeze({ width: 100, height: 93.333 });
+export const FIBA_COURT = Object.freeze({ basketX: 50, basketY: 10.5, paintLeft: 33.667, paintRight: 66.333, freeThrowY: 38.667, threeRadius: 45, cornerLeft: 6, cornerRight: 94, cornerJoinY: 19.934, noChargeRadius: 8.667 });
+
+export function detectShotArea(xValue, yValue) {
+  const x = Number(xValue), y = Number(yValue);
+  if (!Number.isFinite(x) || !Number.isFinite(y) || x < 0 || x > SHOT_COURT_SIZE.width || y < 0 || y > SHOT_COURT_SIZE.height) return null;
+  const { basketX, basketY, paintLeft, paintRight, freeThrowY, threeRadius, cornerLeft, cornerRight, cornerJoinY, noChargeRadius } = FIBA_COURT;
+  if (y <= cornerJoinY && x < cornerLeft) return "left_corner_3p";
+  if (y <= cornerJoinY && x > cornerRight) return "right_corner_3p";
+  const isTwoPoint = x >= cornerLeft && x <= cornerRight && Math.hypot(x - basketX, y - basketY) <= threeRadius;
+  if (!isTwoPoint) {
+    const leftCenterBoundary = paintLeft;
+    const rightCenterBoundary = 100 - leftCenterBoundary;
+    if (x < leftCenterBoundary) return "left_45_3p";
+    if (x > rightCenterBoundary) return "right_45_3p";
+    return "center_3p";
+  }
+  const underCurveY = basketY + Math.sqrt(Math.max(0, noChargeRadius ** 2 - (x - basketX) ** 2));
+  if (x >= basketX - noChargeRadius && x <= basketX + noChargeRadius && y >= basketY && y <= underCurveY) return "under_basket";
+  if (x >= paintLeft && x <= paintRight && y <= freeThrowY) return "inside";
+  if (y <= 24) return x < paintLeft ? "left_zero_mid" : x > paintRight ? "right_zero_mid" : "inside";
+  if (x < paintLeft) return "left_mid";
+  if (x > paintRight) return "right_mid";
+  return "center_mid";
+}
 
 export function shotValueForArea(areaId) {
   return SHOT_AREAS[areaId]?.value || 0;
@@ -38,7 +63,10 @@ export function allowedShotTypes(areaId) {
   return [];
 }
 
-export function createShot({ id, gameId, playerId, quarter = null, shotArea, shotType, result, createdAt = Date.now() }) {
+export function createShot({ id, gameId, playerId, quarter = null, shotArea, shotX = null, shotY = null, shotType, result, createdAt = Date.now() }) {
+  const hasCoordinates = shotX !== null && shotX !== undefined && shotY !== null && shotY !== undefined;
+  const coordinateArea = hasCoordinates ? detectShotArea(shotX, shotY) : null;
+  if (coordinateArea) shotArea = coordinateArea;
   const area = SHOT_AREAS[shotArea];
   if (!gameId || !playerId) throw new Error("試合と選手を選択してください");
   if (!area) throw new Error("シュートエリアを選択してください");
@@ -52,6 +80,8 @@ export function createShot({ id, gameId, playerId, quarter = null, shotArea, sho
     quarter: quarter ? Number(quarter) : null,
     shotArea,
     shotAreaLabel: area.label,
+    shotX: hasCoordinates && Number.isFinite(Number(shotX)) ? Number(Number(shotX).toFixed(3)) : null,
+    shotY: hasCoordinates && Number.isFinite(Number(shotY)) ? Number(Number(shotY).toFixed(3)) : null,
     shotValue,
     shotType,
     shotTypeLabel: SHOT_TYPES[shotType],
@@ -138,6 +168,8 @@ export function createLegacyBreakdownShots({ source = {}, rows = [], gameId, pla
       playerId,
       quarter,
       shotArea: row.shotArea,
+      shotX: row.shotX,
+      shotY: row.shotY,
       shotType: row.shotType,
       result: slot.result,
       createdAt: createdAt + index
