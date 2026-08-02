@@ -49,6 +49,9 @@ const nested = [{ shots: [right45Made], quarters: { q1: { shots: [centerMissed] 
 assert.equal(collectShots(nested).length, 3);
 const areas = aggregateShots(collectShots(nested), "shotArea", SHOT_AREA_ORDER);
 assert.deepEqual(areas.under_basket, { made: 1, attempts: 1 });
+const types = aggregateShots([right45Made, centerMissed, underMade], "shotType", ["jump_shot", "floater"]);
+assert.deepEqual(types.jump_shot, { made: 2, attempts: 2 });
+assert.deepEqual(types.floater, { made: 0, attempts: 1 });
 
 const staleAreaShot = { ...right45Made, shotArea: "center_mid", shotAreaLabel: "正面ミドル", shotValue: 2, points: 2 };
 assert.equal(shotAreaForRecord(staleAreaShot), "right_45_3p");
