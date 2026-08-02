@@ -1,10 +1,21 @@
 import assert from "node:assert/strict";
-import { allowedShotTypes, createShot, shotTotals, mergeShotTotals, collectShots, aggregateShots, SHOT_AREA_ORDER, legacyShotSlots, isLegacyShotBreakdownTarget, createLegacyBreakdownShots } from "../js/calculations/shot-calculations.js";
+import { allowedShotTypes, createShot, shotTotals, mergeShotTotals, collectShots, aggregateShots, SHOT_AREA_ORDER, legacyShotSlots, isLegacyShotBreakdownTarget, createLegacyBreakdownShots, detectShotArea } from "../js/calculations/shot-calculations.js";
+
+assert.equal(detectShotArea(3, 10), "left_corner_3p");
+assert.equal(detectShotArea(25, 10), "left_zero_mid");
+assert.equal(detectShotArea(25, 32), "left_mid");
+assert.equal(detectShotArea(50, 12), "under_basket");
+assert.equal(detectShotArea(50, 27), "inside");
+assert.equal(detectShotArea(50, 47), "center_mid");
+assert.equal(detectShotArea(20, 50), "left_45_3p");
+assert.equal(detectShotArea(50, 60), "center_3p");
+assert.equal(detectShotArea(80, 50), "right_45_3p");
 
 const base = { gameId: "g1", playerId: "p1", quarter: 2 };
-const right45Made = createShot({ ...base, shotArea: "right_45_3p", shotType: "jump_shot", result: "made", createdAt: 1 });
+const right45Made = createShot({ ...base, shotArea: "right_45_3p", shotX: 80, shotY: 50, shotType: "jump_shot", result: "made", createdAt: 1 });
 assert.equal(right45Made.shotValue, 3);
 assert.equal(right45Made.points, 3);
+assert.equal(right45Made.shotX, 80);
 assert.deepEqual(shotTotals([right45Made]), { twoPa: 0, twoPm: 0, threePa: 1, threePm: 1 });
 
 const centerMissed = createShot({ ...base, shotArea: "center_mid", shotType: "floater", result: "missed", createdAt: 2 });
