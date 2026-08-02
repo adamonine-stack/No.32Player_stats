@@ -8,8 +8,8 @@
 .shot-marker { vector-effect:non-scaling-stroke; stroke:#fff; stroke-width:1.2px; pointer-events:none; }.shot-marker.made { fill:#1687ff; }.shot-marker.missed { fill:#ef3028; }.shot-marker.current { fill:#7c3aed; }
 .shot-marker-legend { display:flex; justify-content:center; gap:18px; margin:-5px 0 10px; font-size:13px; }.shot-marker-legend span { display:flex; align-items:center; gap:6px; }.shot-marker-legend i { width:12px; height:12px; border:1px solid #fff; border-radius:50%; }.shot-marker-legend i.made { background:#1687ff; }.shot-marker-legend i.missed { background:#ef3028; }
 .shot-area-label.small { font-size:2.8px; }
-.shot-long-range,.shot-other { width:100%; min-height:48px; margin:6px 0; }
-.shot-long-range.selected,.shot-other.selected { outline:3px solid #a78bfa; }
+.shot-long-range { width:100%; min-height:48px; margin:6px 0; }
+.shot-long-range.selected { outline:3px solid #a78bfa; }
 .shot-panel { background:#0b1530; border:1px solid #33436a; border-radius:12px; padding:14px; }
 .shot-summary { display:grid; gap:5px; margin-bottom:12px; }
 .shot-type-grid,.shot-result-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; margin-top:10px; }
@@ -26,6 +26,7 @@
 .shooting-mode-card { margin:14px 0; }
 .shooting-mode-seg { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
 .shooting-mode-btn { min-height:48px; }
+.shot-total-status input[readonly] { opacity:1; color:#fff; background:#111b36; cursor:default; }
 .legacy-shot-notice { border:1px solid #7c3aed; border-radius:12px; padding:14px; margin:12px 0; background:#15112b; }
 .legacy-shot-sheet { overflow:auto; max-height:60dvh; margin:14px 0; border:1px solid #33436a; border-radius:10px; }
 .legacy-shot-sheet table { width:100%; border-collapse:collapse; min-width:620px; }
