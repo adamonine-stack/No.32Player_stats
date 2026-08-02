@@ -140,6 +140,12 @@ export function mergeShotTotals(source = {}, previousShots = [], nextShots = [])
   return result;
 }
 
+export function detailedShotTotals(source = {}, previousShots = [], nextShots = []) {
+  return Array.isArray(source.shots)
+    ? mergeShotTotals(source, previousShots, nextShots)
+    : shotTotals(nextShots);
+}
+
 export function collectShots(items = []) {
   return items.flatMap(stat => {
     const topLevel = Array.isArray(stat?.shots) ? stat.shots : [];
