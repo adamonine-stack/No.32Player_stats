@@ -86,7 +86,17 @@ export function allowedShotTypes(areaId) {
   return [];
 }
 
-export function createShot({ id, gameId, playerId, quarter = null, shotArea, shotX = null, shotY = null, shotType, result, createdAt = Date.now() }) {
+export function normalizeShot(shot = {}) {
+  return { ...shot, wasFouled: shot.wasFouled === true };
+}
+
+export function countsAsFieldGoalAttempt(shot = {}) {
+  if (shot.result === "made") return true;
+  if (shot.result === "missed" && shot.wasFouled === true) return false;
+  return shot.result === "missed";
+}
+
+export function createShot({ id, gameId, playerId, quarter = null, shotArea, shotX = null, shotY = null, shotType, result, wasFouled = false, createdAt = Date.now() }) {
   const hasCoordinates = shotX !== null && shotX !== undefined && shotY !== null && shotY !== undefined;
   const coordinateArea = hasCoordinates ? detectShotArea(shotX, shotY) : null;
   if (coordinateArea) shotArea = coordinateArea;
@@ -110,6 +120,7 @@ export function createShot({ id, gameId, playerId, quarter = null, shotArea, sho
     shotType,
     shotTypeLabel: SHOT_TYPES[shotType],
     result,
+    wasFouled: wasFouled === true,
     points: result === "made" ? shotValue : 0,
     createdAt
   };
@@ -119,10 +130,10 @@ export function shotTotals(shots = []) {
   return shots.reduce((totals, shot) => {
     const shotValue = SHOT_AREAS[shotAreaForRecord(shot)]?.value || shot?.shotValue;
     if (shotValue === 2) {
-      totals.twoPa++;
+      if (countsAsFieldGoalAttempt(shot)) totals.twoPa++;
       if (shot.result === "made") totals.twoPm++;
     } else if (shotValue === 3) {
-      totals.threePa++;
+      if (countsAsFieldGoalAttempt(shot)) totals.threePa++;
       if (shot.result === "made") totals.threePm++;
     }
     return totals;
@@ -152,16 +163,17 @@ export function collectShots(items = []) {
     const quarterShots = stat?.quarters && typeof stat.quarters === "object"
       ? Object.values(stat.quarters).flatMap(q => Array.isArray(q?.shots) ? q.shots : [])
       : [];
-    return [...topLevel, ...quarterShots];
+    return [...topLevel, ...quarterShots].map(normalizeShot);
   });
 }
 
 export function aggregateShots(shots = [], field, ids) {
-  const result = Object.fromEntries(ids.map(id => [id, { made: 0, attempts: 0 }]));
+  const result = Object.fromEntries(ids.map(id => [id, { made: 0, attempts: 0, registered: 0 }]));
   for (const shot of shots) {
     const id = field === "shotArea" ? shotAreaForRecord(shot) : shot?.[field];
     if (!result[id]) continue;
-    result[id].attempts++;
+    result[id].registered++;
+    if (countsAsFieldGoalAttempt(shot)) result[id].attempts++;
     if (shot.result === "made") result[id].made++;
   }
   return result;
@@ -203,6 +215,7 @@ export function createLegacyBreakdownShots({ source = {}, rows = [], gameId, pla
       shotY: row.shotY,
       shotType: row.shotType,
       result: slot.result,
+      wasFouled: row.wasFouled === true,
       createdAt: createdAt + index
     });
   });
