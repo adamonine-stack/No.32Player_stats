@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 
 const app = readFileSync(new URL("../js/app.js", import.meta.url), "utf8");
 const css = readFileSync(new URL("../styles/shot-registration.css", import.meta.url), "utf8");
+const detailCss = readFileSync(new URL("../styles/detail-stats-actions.css", import.meta.url), "utf8");
 
 assert.match(app, /selectedShotId=normalizedEditing\?\.id\|\|''/);
 assert.match(app, /data-select-shot=/);
@@ -12,12 +13,18 @@ assert.match(app, /event\.stopPropagation\(\)/);
 assert.match(app, /id="shotWasFouled"/);
 assert.doesNotMatch(app, /data-shot-filter-foul/);
 assert.match(app, /\['foul','yes','ファウル'\]/);
+assert.match(app, /\['result','made','Made'\]/);
+assert.match(app, /\['result','missed','Miss'\]/);
 assert.doesNotMatch(app, /analysis-points-tappable/);
 assert.match(app, /court-analysis-button/);
 assert.match(app, />コート分析</);
 assert.doesNotMatch(app, /analysis-shot-filter-details/);
 assert.match(app, /data-shot-analysis-filter/);
 assert.match(app, /analysisQuickFilters/);
+assert.match(app, /shot-analysis-filter-row primary/);
+assert.match(app, /shot-analysis-filter-row types/);
+assert.match(app, /canSelect=\(field,value\)=>/);
+assert.match(app, /if\(button\.disabled\)return/);
 assert.doesNotMatch(app, /analysisActiveFilters/);
 assert.match(app, /filters\[field\]=filters\[field\]===value\?'':value/);
 assert.doesNotMatch(app, /analysisShotTotal/);
@@ -42,7 +49,11 @@ assert.match(css, /\.shot-selection-ring/);
 assert.doesNotMatch(css, /shot-selection-pulse/);
 assert.match(css, /\.analysis-shot-heading/);
 assert.match(css, /\.shot-analysis-quick-filters/);
+assert.match(css, /\.shot-analysis-filter-row/);
+assert.match(css, /\.shot-analysis-quick-filters \.btn:disabled/);
 assert.doesNotMatch(css, /\.shot-analysis-active-filters/);
 assert.doesNotMatch(css, /\.analysis-points-tappable/);
+assert.match(detailCss, /\.detail-stat-view-seg \.detail-stat-view-btn\.active/);
+assert.match(detailCss, /border: 2px solid #ffffff/);
 
 console.log("shot UI contract: ok");
