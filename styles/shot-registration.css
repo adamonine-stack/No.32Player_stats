@@ -29,6 +29,9 @@
 .analysis-shot-heading { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:8px; }.analysis-shot-heading .section-title { margin:0; }.court-analysis-button { min-height:44px; white-space:nowrap; }
 .analysis-shot-total { margin:8px 0 4px; text-align:center; font-size:15px; }
 .analysis-shot-total b { color:#ff9800; font-size:20px; }
+.shot-analysis-conditions { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+.shot-analysis-conditions span { padding:6px 9px; border:1px solid #33436a; border-radius:8px; background:#0b1530; color:#fff; font-size:12px; font-weight:800; }
+.shot-analysis-conditions small { margin-right:5px; color:#aab5d1; font-size:10px; font-weight:700; }
 .analysis-shot-table-head,.analysis-shot-row,.analysis-shot-type-row { display:grid; grid-template-columns:minmax(0,1fr) repeat(3,52px) 64px 68px; align-items:center; gap:4px; }
 .analysis-shot-table-head.type,.analysis-shot-type-row.type { grid-template-columns:minmax(0,1fr) repeat(3,58px) 70px; }
 .analysis-shot-table-head { padding:8px 10px; color:#ff9800; font-size:12px; font-weight:900; border-bottom:1px solid #33436a; }
@@ -37,7 +40,8 @@
 .analysis-shot-row b,.analysis-shot-type-row b { text-align:center; }
 .analysis-shot-row.selected { background:#35166b; box-shadow:inset 4px 0 #a78bfa; }
 .analysis-shot-type-detail { margin-top:18px; padding:12px; background:#0b1530; border:1px solid #33436a; border-radius:12px; }
-.analysis-shot-type-row { min-height:42px; padding:7px 10px; border-bottom:1px solid #33436a; }
+.analysis-shot-type-row { width:100%; min-height:42px; padding:7px 10px; border:0; border-bottom:1px solid #33436a; background:transparent; color:#fff; text-align:left; }
+.analysis-shot-type-row.selected { background:#35166b; box-shadow:inset 4px 0 #a78bfa; }
 .analysis-shot-type-row:last-child { border-bottom:0; }
 .analysis-shot-filter-details { margin:10px 0 14px; border:1px solid #33436a; border-radius:10px; background:#0b1530; }.analysis-shot-filter-details summary { min-height:44px; padding:11px 13px; cursor:pointer; color:#fff; font-weight:900; }.analysis-shot-filter-panel { display:grid; gap:12px; padding:0 12px 12px; }.analysis-shot-filter-panel b { display:block; margin-bottom:6px; color:#ff9800; font-size:13px; }.analysis-shot-filter-panel select { min-height:44px; }.shot-filter-buttons { display:flex; flex-wrap:wrap; gap:7px; }.shot-filter-buttons .btn { min-height:42px; }.shot-filter-buttons .active { background:#5b21b6; border-color:#a78bfa; color:#fff; }
 .shooting-mode-card { margin:14px 0; }
