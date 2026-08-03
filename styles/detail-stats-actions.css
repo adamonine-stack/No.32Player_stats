@@ -20,7 +20,8 @@
   font-size: 14px;
 }
 
-.detail-stat-view-seg .detail-stat-view-btn.active {
+.detail-stat-view-seg .detail-stat-view-btn.unsaved.active {
+  background: #101010 !important;
   border: 2px solid #ffffff !important;
   box-shadow: 0 0 0 2px #7c3aed, 0 0 12px rgba(124, 58, 237, .75) !important;
 }

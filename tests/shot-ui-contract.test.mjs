@@ -53,7 +53,9 @@ assert.match(css, /\.shot-analysis-filter-row/);
 assert.match(css, /\.shot-analysis-quick-filters \.btn:disabled/);
 assert.doesNotMatch(css, /\.shot-analysis-active-filters/);
 assert.doesNotMatch(css, /\.analysis-points-tappable/);
-assert.match(detailCss, /\.detail-stat-view-seg \.detail-stat-view-btn\.active/);
+assert.match(detailCss, /\.detail-stat-view-seg \.detail-stat-view-btn\.unsaved\.active/);
+assert.doesNotMatch(detailCss, /\.detail-stat-view-seg \.detail-stat-view-btn\.active \{/);
 assert.match(detailCss, /border: 2px solid #ffffff/);
+assert.match(css, /\.btn\[aria-pressed="true"\]/);
 
 console.log("shot UI contract: ok");
