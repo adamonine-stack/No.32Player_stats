@@ -20,6 +20,11 @@
   font-size: 14px;
 }
 
+.detail-stat-view-seg .detail-stat-view-btn.active {
+  border: 2px solid #ffffff !important;
+  box-shadow: 0 0 0 2px #7c3aed, 0 0 12px rgba(124, 58, 237, .75) !important;
+}
+
 @media (max-width: 800px) {
   .detail-stats-actions {
     gap: 5px !important;
