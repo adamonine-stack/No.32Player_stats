@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { allowedShotTypes, createShot, shotTotals, mergeShotTotals, detailedShotTotals, collectShots, aggregateShots, SHOT_AREA_ORDER, legacyShotSlots, isLegacyShotBreakdownTarget, createLegacyBreakdownShots, detectShotArea, SHOT_AREA_MODEL_VERSION, shotAreaForRecord, reclassifyShots } from "../js/calculations/shot-calculations.js";
+import { allowedShotTypes, createShot, shotTotals, mergeShotTotals, detailedShotTotals, collectShots, aggregateShots, SHOT_AREA_ORDER, legacyShotSlots, isLegacyShotBreakdownTarget, createLegacyBreakdownShots, detectShotArea, SHOT_AREA_MODEL_VERSION, shotAreaForRecord, reclassifyShots, countsAsFieldGoalAttempt, normalizeShot } from "../js/calculations/shot-calculations.js";
 
 assert.equal(detectShotArea(3, 10), "left_corner_3p");
 assert.equal(detectShotArea(25, 10), "left_zero_mid");
@@ -24,6 +24,16 @@ assert.deepEqual(shotTotals([right45Made]), { twoPa: 0, twoPm: 0, threePa: 1, th
 
 const centerMissed = createShot({ ...base, shotArea: "center_mid", shotType: "floater", result: "missed", createdAt: 2 });
 assert.deepEqual(shotTotals([centerMissed]), { twoPa: 1, twoPm: 0, threePa: 0, threePm: 0 });
+assert.equal(centerMissed.wasFouled, false);
+const fouledTwoMiss = createShot({ ...base, shotArea: "center_mid", shotType: "floater", result: "missed", wasFouled: true, createdAt: 21 });
+const fouledThreeMiss = createShot({ ...base, shotArea: "center_3p", shotType: "jump_shot", result: "missed", wasFouled: true, createdAt: 22 });
+const fouledMade = createShot({ ...base, shotArea: "right_45_3p", shotType: "jump_shot", result: "made", wasFouled: true, createdAt: 23 });
+assert.equal(countsAsFieldGoalAttempt(fouledTwoMiss), false);
+assert.equal(countsAsFieldGoalAttempt(fouledThreeMiss), false);
+assert.equal(countsAsFieldGoalAttempt(fouledMade), true);
+assert.equal(countsAsFieldGoalAttempt(centerMissed), true);
+assert.deepEqual(shotTotals([fouledTwoMiss, fouledThreeMiss, fouledMade]), { twoPa: 0, twoPm: 0, threePa: 1, threePm: 1 });
+assert.equal(normalizeShot({ result: "missed" }).wasFouled, false);
 
 const underMade = createShot({ ...base, shotArea: "under_basket", shotType: "jump_shot", result: "made", createdAt: 3 });
 assert.deepEqual(shotTotals([underMade]), { twoPa: 1, twoPm: 1, threePa: 0, threePm: 0 });
@@ -48,16 +58,18 @@ assert.equal(madeSummary.threePm, 1, "3PGM reflects made 3-point shots");
 const nested = [{ shots: [right45Made], quarters: { q1: { shots: [centerMissed] }, q2: { shots: [underMade] } } }];
 assert.equal(collectShots(nested).length, 3);
 const areas = aggregateShots(collectShots(nested), "shotArea", SHOT_AREA_ORDER);
-assert.deepEqual(areas.under_basket, { made: 1, attempts: 1 });
+assert.deepEqual(areas.under_basket, { made: 1, attempts: 1, registered: 1 });
 const types = aggregateShots([right45Made, centerMissed, underMade], "shotType", ["jump_shot", "floater"]);
-assert.deepEqual(types.jump_shot, { made: 2, attempts: 2 });
-assert.deepEqual(types.floater, { made: 0, attempts: 1 });
+assert.deepEqual(types.jump_shot, { made: 2, attempts: 2, registered: 2 });
+assert.deepEqual(types.floater, { made: 0, attempts: 1, registered: 1 });
+const foulAreas = aggregateShots([fouledTwoMiss, fouledMade], "shotArea", SHOT_AREA_ORDER);
+assert.deepEqual(foulAreas.center_mid, { made: 0, attempts: 0, registered: 1 });
 
 const staleAreaShot = { ...right45Made, shotArea: "center_mid", shotAreaLabel: "正面ミドル", shotValue: 2, points: 2 };
 assert.equal(shotAreaForRecord(staleAreaShot), "right_45_3p");
 assert.deepEqual(shotTotals([staleAreaShot]), { twoPa: 0, twoPm: 0, threePa: 1, threePm: 1 });
 const refreshedAreas = aggregateShots([staleAreaShot], "shotArea", SHOT_AREA_ORDER);
-assert.deepEqual(refreshedAreas.right_45_3p, { made: 1, attempts: 1 });
+assert.deepEqual(refreshedAreas.right_45_3p, { made: 1, attempts: 1, registered: 1 });
 const futureBoundary = reclassifyShots([staleAreaShot], () => "center_3p", "future-boundary-v2")[0];
 assert.equal(futureBoundary.shotArea, "center_3p");
 assert.equal(futureBoundary.shotAreaModelVersion, "future-boundary-v2");
