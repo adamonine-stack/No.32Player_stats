@@ -18,7 +18,7 @@ assert.match(app, />コート分析</);
 assert.doesNotMatch(app, /analysis-shot-filter-details/);
 assert.match(app, /data-shot-analysis-filter/);
 assert.match(app, /analysisQuickFilters/);
-assert.match(app, /analysisActiveFilters/);
+assert.doesNotMatch(app, /analysisActiveFilters/);
 assert.match(app, /filters\[field\]=filters\[field\]===value\?'':value/);
 assert.doesNotMatch(app, /analysisShotTotal/);
 assert.match(app, /data-analysis-shot-type/);
@@ -42,7 +42,7 @@ assert.match(css, /\.shot-selection-ring/);
 assert.doesNotMatch(css, /shot-selection-pulse/);
 assert.match(css, /\.analysis-shot-heading/);
 assert.match(css, /\.shot-analysis-quick-filters/);
-assert.match(css, /\.shot-analysis-active-filters/);
+assert.doesNotMatch(css, /\.shot-analysis-active-filters/);
 assert.doesNotMatch(css, /\.analysis-points-tappable/);
 
 console.log("shot UI contract: ok");
