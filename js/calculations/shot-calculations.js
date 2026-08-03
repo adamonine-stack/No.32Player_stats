@@ -12,7 +12,8 @@ export const SHOT_AREAS = Object.freeze({
   center_3p: { label: "正面3P", value: 3, group: "three" },
   right_45_3p: { label: "右45°3P", value: 3, group: "three" },
   right_corner_3p: { label: "右コーナー3P", value: 3, group: "three" },
-  long_range_3p: { label: "ロング3P", value: 3, group: "three" }
+  backcourt_3p: { label: "バックコート3P", value: 3, group: "three" },
+  long_range_3p: { label: "バックコート3P", value: 3, group: "legacy" }
 });
 
 export const SHOT_TYPES = Object.freeze({
@@ -20,19 +21,21 @@ export const SHOT_TYPES = Object.freeze({
   layup: "レイアップ",
   floater: "フローター",
   tap: "タップ",
-  under_basket: "ジャンプシュート"
+  under_basket: "ゴール下"
 });
 
-export const SHOT_AREA_ORDER = Object.freeze(Object.keys(SHOT_AREAS));
+export const SHOT_AREA_ORDER = Object.freeze(Object.keys(SHOT_AREAS).filter(id => id !== "long_range_3p"));
 export const SHOT_TYPE_ORDER = Object.freeze(Object.keys(SHOT_TYPES));
-export const SHOT_COURT_SIZE = Object.freeze({ width: 100, height: 93.333 });
+export const HALF_COURT_HEIGHT = 93.333;
+export const SHOT_COURT_SIZE = Object.freeze({ width: 100, height: 108 });
 export const FIBA_COURT = Object.freeze({ basketX: 50, basketY: 10.5, paintLeft: 33.667, paintRight: 66.333, freeThrowY: 38.667, threeRadius: 45, cornerLeft: 6, cornerRight: 94, cornerJoinY: 19.934, noChargeRadius: 8.667 });
 export const UNDER_BASKET_ZONE = Object.freeze({ centerX: 50, centerY: 10.5, radiusX: 14, radiusY: 14 });
-export const SHOT_AREA_MODEL_VERSION = "fiba-2024-r32-v1";
+export const SHOT_AREA_MODEL_VERSION = "fiba-2024-r32-v2-backcourt";
 
 export function detectShotArea(xValue, yValue) {
   const x = Number(xValue), y = Number(yValue);
   if (!Number.isFinite(x) || !Number.isFinite(y) || x < 0 || x > SHOT_COURT_SIZE.width || y < 0 || y > SHOT_COURT_SIZE.height) return null;
+  if (y > HALF_COURT_HEIGHT) return "backcourt_3p";
   const { basketX, basketY, paintLeft, paintRight, freeThrowY, threeRadius, cornerLeft, cornerRight, cornerJoinY, noChargeRadius } = FIBA_COURT;
   if (y <= cornerJoinY && x < cornerLeft) return "left_corner_3p";
   if (y <= cornerJoinY && x > cornerRight) return "right_corner_3p";
@@ -60,13 +63,22 @@ export function hasShotCoordinates(shot = {}) {
 }
 
 export function shotAreaForRecord(shot = {}, detector = detectShotArea) {
-  return hasShotCoordinates(shot) ? (detector(shot.shotX, shot.shotY) || shot.shotArea) : shot.shotArea;
+  return hasShotCoordinates(shot) ? (detector(shot.shotX, shot.shotY) || normalizedShotArea(shot)) : normalizedShotArea(shot);
+}
+
+export function normalizedShotArea(shot = {}) {
+  return shot.shotArea === "long_range_3p" ? "backcourt_3p" : shot.shotArea;
+}
+
+export function normalizedShotType(shot = {}) {
+  const area = normalizedShotArea(shot);
+  return area === "under_basket" && shot.shotType === "jump_shot" ? "under_basket" : shot.shotType;
 }
 
 export function reclassifyShot(shot = {}, detector = detectShotArea, modelVersion = SHOT_AREA_MODEL_VERSION) {
-  const shotArea = shotAreaForRecord(shot, detector), area = SHOT_AREAS[shotArea];
+  const shotArea = shotAreaForRecord(shot, detector), shotType = normalizedShotType({ ...shot, shotArea }), area = SHOT_AREAS[shotArea];
   if (!area) return { ...shot };
-  return { ...shot, shotArea, shotAreaLabel: area.label, shotValue: area.value, points: shot.result === "made" ? area.value : 0, shotAreaModelVersion: modelVersion };
+  return { ...shot, shotArea, shotAreaLabel: area.label, shotType, shotTypeLabel: SHOT_TYPES[shotType] || shot.shotTypeLabel, shotValue: area.value, points: shot.result === "made" ? area.value : 0, shotAreaModelVersion: modelVersion };
 }
 
 export function reclassifyShots(shots = [], detector = detectShotArea, modelVersion = SHOT_AREA_MODEL_VERSION) {
@@ -80,14 +92,15 @@ export function shotValueForArea(areaId) {
 export function allowedShotTypes(areaId) {
   const group = SHOT_AREAS[areaId]?.group;
   if (group === "three") return ["jump_shot"];
-  if (group === "mid" || group === "other") return ["jump_shot", "floater"];
+  if (group === "mid") return ["jump_shot", "floater"];
   if (group === "inside") return ["layup", "floater", "jump_shot"];
-  if (group === "under") return ["layup", "jump_shot", "floater", "tap"];
+  if (group === "under") return ["under_basket", "layup", "floater", "tap"];
   return [];
 }
 
 export function normalizeShot(shot = {}) {
-  return { ...shot, wasFouled: shot.wasFouled === true };
+  const shotArea = shotAreaForRecord(shot), shotType = normalizedShotType({ ...shot, shotArea });
+  return { ...shot, shotArea, shotAreaLabel: SHOT_AREAS[shotArea]?.label || shot.shotAreaLabel, shotType, shotTypeLabel: SHOT_TYPES[shotType] || shot.shotTypeLabel, wasFouled: shot.wasFouled === true };
 }
 
 export function countsAsFieldGoalAttempt(shot = {}) {
@@ -97,12 +110,16 @@ export function countsAsFieldGoalAttempt(shot = {}) {
 }
 
 export function createShot({ id, gameId, playerId, quarter = null, shotArea, shotX = null, shotY = null, shotType, result, wasFouled = false, createdAt = Date.now() }) {
+  const requestedArea = shotArea;
   const hasCoordinates = shotX !== null && shotX !== undefined && shotY !== null && shotY !== undefined;
   const coordinateArea = hasCoordinates ? detectShotArea(shotX, shotY) : null;
   if (coordinateArea) shotArea = coordinateArea;
+  shotArea = shotArea === "long_range_3p" ? "backcourt_3p" : shotArea;
+  if (shotArea === "under_basket" && shotType === "jump_shot") shotType = "under_basket";
   const area = SHOT_AREAS[shotArea];
   if (!gameId || !playerId) throw new Error("試合と選手を選択してください");
   if (!area) throw new Error("シュートエリアを選択してください");
+  if (!coordinateArea && ["other_2p", "long_range_3p"].includes(requestedArea)) throw new Error("コート上のシュート位置を選択してください");
   if (!allowedShotTypes(shotArea).includes(shotType)) throw new Error("シュート種類を選択してください");
   if (!['made', 'missed'].includes(result)) throw new Error("成功または失敗を選択してください");
   const shotValue = area.value;
@@ -167,10 +184,36 @@ export function collectShots(items = []) {
   });
 }
 
+export function filterShots(shots = [], { shotValueFilter = "", resultFilter = "", shotTypeFilter = "", foulFilter = "" } = {}) {
+  return shots.map(normalizeShot).filter(shot => {
+    const value = SHOT_AREAS[shotAreaForRecord(shot)]?.value || shot.shotValue;
+    return (!shotValueFilter || Number(shotValueFilter) === Number(value))
+      && (!resultFilter || shot.result === resultFilter)
+      && (!shotTypeFilter || normalizedShotType(shot) === shotTypeFilter)
+      && (!foulFilter || (foulFilter === "yes") === (shot.wasFouled === true));
+  });
+}
+
+export function shotSequence(shots = [], quarterMode = false) {
+  const ordered = shots.map((shot, index) => ({ shot, index })).sort((a, b) => {
+    if (quarterMode && Number(a.shot.quarter || 0) !== Number(b.shot.quarter || 0)) return Number(a.shot.quarter || 0) - Number(b.shot.quarter || 0);
+    const aTime = Number(a.shot.createdAt), bTime = Number(b.shot.createdAt);
+    if (Number.isFinite(aTime) && Number.isFinite(bTime) && aTime !== bTime) return aTime - bTime;
+    return a.index - b.index;
+  });
+  const counters = new Map();
+  return ordered.map(({ shot }) => {
+    const key = quarterMode ? Number(shot.quarter || 0) : "game";
+    const number = (counters.get(key) || 0) + 1;
+    counters.set(key, number);
+    return { shot, number };
+  });
+}
+
 export function aggregateShots(shots = [], field, ids) {
   const result = Object.fromEntries(ids.map(id => [id, { made: 0, attempts: 0, registered: 0 }]));
   for (const shot of shots) {
-    const id = field === "shotArea" ? shotAreaForRecord(shot) : shot?.[field];
+    const id = field === "shotArea" ? shotAreaForRecord(shot) : field === "shotType" ? normalizedShotType(shot) : shot?.[field];
     if (!result[id]) continue;
     result[id].registered++;
     if (countsAsFieldGoalAttempt(shot)) result[id].attempts++;
