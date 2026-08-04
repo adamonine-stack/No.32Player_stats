@@ -7,6 +7,10 @@ const css = readFileSync(new URL("../styles/shot-registration.css", import.meta.
 const detailCss = readFileSync(new URL("../styles/detail-stats-actions.css", import.meta.url), "utf8");
 
 assert.match(app, /selectedShotId=normalizedEditing\?\.id\|\|''/);
+assert.match(app, /function lockModalBackground\(\)/);
+assert.match(app, /document\.body\.style\.top=`-\$\{modalBackgroundScrollY\}px`/);
+assert.match(app, /function unlockModalBackground\(\)/);
+assert.match(app, /window\.scrollTo\(0,modalBackgroundScrollY\)/);
 assert.match(app, /data-select-shot=/);
 assert.match(app, /shot-selection-ring/);
 assert.match(app, /shot-foul-ring/);
@@ -45,6 +49,9 @@ assert.match(app, /button\.disabled=!\(shotX!=null&&shotY!=null&&areaId&&typeId\
 assert.match(app, /row\.onclick=\(\)=>onMark\?\./);
 assert.match(app, /await persistShotCollections\(gameId,playerId,collections\);statsForm\(gameId,quarter\)/);
 assert.match(css, /\.shot-list-row\.selected/);
+assert.match(css, /html\.modal-open,body\.modal-open \{ overflow:hidden; overscroll-behavior:none; \}/);
+assert.match(css, /body\.modal-open \{ position:fixed;/);
+assert.match(css, /\.modal \.card \{ overscroll-behavior:contain; -webkit-overflow-scrolling:touch; touch-action:pan-y; \}/);
 assert.match(css, /\.shot-foul-ring/);
 assert.match(css, /\.shot-selection-ring/);
 assert.doesNotMatch(css, /shot-selection-pulse/);
