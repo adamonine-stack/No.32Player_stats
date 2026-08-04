@@ -18,10 +18,10 @@ export const SHOT_AREAS = Object.freeze({
 
 export const SHOT_TYPES = Object.freeze({
   jump_shot: "ジャンプシュート",
+  running_shot: "ランニングシュート",
   layup: "レイアップ",
   floater: "フローター",
-  tap: "タップ",
-  under_basket: "ゴール下"
+  tap: "タップ"
 });
 
 export const SHOT_AREA_ORDER = Object.freeze(Object.keys(SHOT_AREAS).filter(id => id !== "long_range_3p"));
@@ -71,8 +71,7 @@ export function normalizedShotArea(shot = {}) {
 }
 
 export function normalizedShotType(shot = {}) {
-  const area = normalizedShotArea(shot);
-  return area === "under_basket" && shot.shotType === "jump_shot" ? "under_basket" : shot.shotType;
+  return shot.shotType === "under_basket" ? "jump_shot" : shot.shotType;
 }
 
 export function reclassifyShot(shot = {}, detector = detectShotArea, modelVersion = SHOT_AREA_MODEL_VERSION) {
@@ -91,10 +90,10 @@ export function shotValueForArea(areaId) {
 
 export function allowedShotTypes(areaId) {
   const group = SHOT_AREAS[areaId]?.group;
-  if (group === "three") return ["jump_shot"];
-  if (group === "mid") return ["jump_shot", "floater"];
-  if (group === "inside") return ["layup", "floater", "jump_shot"];
-  if (group === "under") return ["under_basket", "layup", "floater", "tap"];
+  if (areaId === "backcourt_3p") return ["jump_shot"];
+  if (group === "three") return ["jump_shot", "running_shot"];
+  if (group === "mid") return ["jump_shot", "running_shot", "floater"];
+  if (group === "inside" || group === "under") return ["jump_shot", "running_shot", "layup", "floater", "tap"];
   return [];
 }
 
@@ -115,7 +114,7 @@ export function createShot({ id, gameId, playerId, quarter = null, shotArea, sho
   const coordinateArea = hasCoordinates ? detectShotArea(shotX, shotY) : null;
   if (coordinateArea) shotArea = coordinateArea;
   shotArea = shotArea === "long_range_3p" ? "backcourt_3p" : shotArea;
-  if (shotArea === "under_basket" && shotType === "jump_shot") shotType = "under_basket";
+  if (shotType === "under_basket") shotType = "jump_shot";
   const area = SHOT_AREAS[shotArea];
   if (!gameId || !playerId) throw new Error("試合と選手を選択してください");
   if (!area) throw new Error("シュートエリアを選択してください");

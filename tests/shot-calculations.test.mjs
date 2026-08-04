@@ -41,21 +41,21 @@ assert.equal(normalizeShot({ result: "missed" }).wasFouled, false);
 
 const underMade = createShot({ ...base, shotArea: "under_basket", shotType: "jump_shot", result: "made", createdAt: 3 });
 assert.deepEqual(shotTotals([underMade]), { twoPa: 1, twoPm: 1, threePa: 0, threePm: 0 });
-assert.equal(underMade.shotType, "under_basket", "legacy under-basket jump shot is normalized on save");
-for (const shotType of ["under_basket", "layup", "floater", "tap"]) {
+assert.equal(underMade.shotType, "jump_shot");
+for (const shotType of ["jump_shot", "running_shot", "layup", "floater", "tap"]) {
   assert.equal(createShot({ ...base, shotArea: "under_basket", shotType, result: "made" }).shotType, shotType);
 }
+assert.equal(createShot({ ...base, shotArea: "under_basket", shotType: "under_basket", result: "made" }).shotType, "jump_shot", "legacy under-basket type is normalized on save");
 
 const backcourtMade = createShot({ ...base, shotArea: "backcourt_3p", shotX: 50, shotY: 100, shotType: "jump_shot", result: "made", createdAt: 4 });
 assert.equal(backcourtMade.points, 3);
 assert.equal(backcourtMade.shotArea, "backcourt_3p");
 assert.deepEqual(shotTotals([backcourtMade]), { twoPa: 0, twoPm: 0, threePa: 1, threePm: 1 });
-assert.deepEqual(allowedShotTypes("right_corner_3p"), ["jump_shot"]);
+assert.deepEqual(allowedShotTypes("right_corner_3p"), ["jump_shot", "running_shot"]);
 assert.deepEqual(allowedShotTypes("backcourt_3p"), ["jump_shot"]);
-assert.deepEqual(allowedShotTypes("center_mid"), ["jump_shot", "floater"]);
-assert.deepEqual(allowedShotTypes("inside"), ["layup", "floater", "jump_shot"]);
-assert.deepEqual(allowedShotTypes("under_basket"), ["under_basket", "layup", "floater", "tap"]);
-assert.equal(allowedShotTypes("under_basket").includes("jump_shot"), false);
+assert.deepEqual(allowedShotTypes("center_mid"), ["jump_shot", "running_shot", "floater"]);
+assert.deepEqual(allowedShotTypes("inside"), ["jump_shot", "running_shot", "layup", "floater", "tap"]);
+assert.deepEqual(allowedShotTypes("under_basket"), ["jump_shot", "running_shot", "layup", "floater", "tap"]);
 assert.deepEqual(allowedShotTypes("other_2p"), []);
 assert.throws(() => createShot({ ...base, shotArea: "other_2p", shotType: "jump_shot", result: "made" }), /位置を選択/);
 assert.throws(() => createShot({ ...base, shotArea: "long_range_3p", shotType: "jump_shot", result: "made" }), /位置を選択/);
@@ -63,7 +63,7 @@ const legacyLong = { ...right45Made, shotArea: "long_range_3p", shotX: null, sho
 assert.equal(normalizedShotArea(legacyLong), "backcourt_3p");
 assert.equal(normalizeShot(legacyLong).shotAreaLabel, "バックコート3P");
 assert.deepEqual(shotTotals([legacyLong]), { twoPa: 0, twoPm: 0, threePa: 1, threePm: 1 });
-assert.equal(normalizedShotType({ shotArea: "under_basket", shotType: "jump_shot" }), "under_basket");
+assert.equal(normalizedShotType({ shotArea: "under_basket", shotType: "under_basket" }), "jump_shot");
 
 const legacy = { twoPa: 8, twoPm: 4, threePa: 5, threePm: 2 };
 const first = [right45Made, centerMissed];
@@ -80,7 +80,7 @@ assert.equal(collectShots(nested).length, 3);
 const areas = aggregateShots(collectShots(nested), "shotArea", SHOT_AREA_ORDER);
 assert.deepEqual(areas.under_basket, { made: 1, attempts: 1, registered: 1 });
 const types = aggregateShots([right45Made, centerMissed, underMade], "shotType", ["jump_shot", "floater"]);
-assert.deepEqual(types.jump_shot, { made: 1, attempts: 1, registered: 1 });
+assert.deepEqual(types.jump_shot, { made: 2, attempts: 2, registered: 2 });
 assert.deepEqual(types.floater, { made: 0, attempts: 1, registered: 1 });
 const foulAreas = aggregateShots([fouledTwoMiss, fouledMade], "shotArea", SHOT_AREA_ORDER);
 assert.deepEqual(foulAreas.center_mid, { made: 0, attempts: 0, registered: 1 });
@@ -113,6 +113,7 @@ const replacement = createLegacyBreakdownShots({
   ]
 });
 assert.deepEqual(shotTotals(replacement), { twoPa: 3, twoPm: 2, threePa: 2, threePm: 1 });
+assert.equal(replacement[0].shotType, "jump_shot");
 assert.equal(replacement.every(shot => shot.quarter === 1), true);
 assert.throws(() => createLegacyBreakdownShots({ source: legacySource, gameId: "g1", playerId: "p1", rows: [] }), /全シュート内訳/);
 
@@ -131,9 +132,9 @@ assert.equal(filterShots(filterTargets, { shotValueFilter: "2" }).length, 3);
 assert.equal(filterShots(filterTargets, { shotValueFilter: "3" }).length, 2);
 assert.equal(filterShots(filterTargets, { resultFilter: "made" }).length, 3);
 assert.equal(filterShots(filterTargets, { resultFilter: "missed" }).length, 2);
-assert.equal(filterShots(filterTargets, { shotTypeFilter: "jump_shot" }).length, 2);
+assert.equal(filterShots(filterTargets, { shotTypeFilter: "jump_shot" }).length, 3);
 assert.equal(filterShots(filterTargets, { shotTypeFilter: "floater" }).length, 2);
-assert.equal(filterShots(filterTargets, { shotTypeFilter: "under_basket" }).length, 1);
+assert.equal(filterShots(filterTargets, { shotTypeFilter: "under_basket" }).length, 0);
 assert.equal(filterShots(filterTargets, { foulFilter: "yes" }).length, 1);
 assert.equal(filterShots(filterTargets, { shotValueFilter: "2", resultFilter: "missed", shotTypeFilter: "floater", foulFilter: "yes" }).length, 1);
 const filteredThrees = filterShots(filterTargets, { shotValueFilter: "3" });
