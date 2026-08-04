@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 const app = readFileSync(new URL("../js/app.js", import.meta.url), "utf8");
+const calculations = readFileSync(new URL("../js/calculations/shot-calculations.js", import.meta.url), "utf8");
 const css = readFileSync(new URL("../styles/shot-registration.css", import.meta.url), "utf8");
 const detailCss = readFileSync(new URL("../styles/detail-stats-actions.css", import.meta.url), "utf8");
 
@@ -57,5 +58,11 @@ assert.match(detailCss, /\.detail-stat-view-seg \.detail-stat-view-btn\.unsaved\
 assert.doesNotMatch(detailCss, /\.detail-stat-view-seg \.detail-stat-view-btn\.active \{/);
 assert.match(detailCss, /border: 2px solid #ffffff/);
 assert.match(css, /\.btn\[aria-pressed="true"\]/);
+assert.match(calculations, /running_shot: "ランニングシュート"/);
+assert.match(calculations, /shot\.shotType === "under_basket" \? "jump_shot"/);
+assert.match(calculations, /if \(areaId === "backcourt_3p"\) return \["jump_shot"\]/);
+assert.match(calculations, /if \(group === "three"\) return \["jump_shot", "running_shot"\]/);
+assert.match(calculations, /if \(group === "mid"\) return \["jump_shot", "running_shot", "floater"\]/);
+assert.match(calculations, /if \(group === "inside" \|\| group === "under"\) return \["jump_shot", "running_shot", "layup", "floater", "tap"\]/);
 
 console.log("shot UI contract: ok");
