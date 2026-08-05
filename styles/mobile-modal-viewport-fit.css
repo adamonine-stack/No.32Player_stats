@@ -1,0 +1,95 @@
+@media (max-width: 600px) {
+  /* iPhoneのステータスバー／Dynamic Islandと重ならないよう、モーダル全体を少し下へ配置 */
+  #modalRoot > .modal {
+    align-items: start;
+    justify-items: center;
+    padding-top: max(12px, calc(env(safe-area-inset-top) + 8px));
+    padding-right: 8px;
+    padding-bottom: max(8px, env(safe-area-inset-bottom));
+    padding-left: 8px;
+  }
+
+  #modalRoot > .modal > .card {
+    width: 100%;
+    max-width: 100%;
+    max-height: calc(100dvh - max(12px, calc(env(safe-area-inset-top) + 8px)) - max(8px, env(safe-area-inset-bottom)));
+    min-height: 0;
+    margin: 0;
+    border-radius: 18px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  /* スタッツ入力画面は既存レイアウトを維持し、上部だけ確実に見える位置へ */
+  #modalRoot > .modal.stats-entry-modal > .card {
+    padding-top: 12px !important;
+    scroll-padding-top: 12px;
+  }
+
+  #modalRoot > .modal.stats-entry-modal > .card > h2 {
+    margin-top: 0 !important;
+  }
+
+  /* シュート登録画面：コート図面自体には一切変更を加えない */
+  #modalRoot > .modal.shot-entry-viewport > .card {
+    padding: 10px !important;
+  }
+
+  #modalRoot > .modal.shot-entry-viewport .shot-modal-head {
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  #modalRoot > .modal.shot-entry-viewport .shot-modal-head h2 {
+    margin: 0;
+    font-size: clamp(24px, 7vw, 32px);
+    line-height: 1.1;
+  }
+
+  #modalRoot > .modal.shot-entry-viewport .shot-close {
+    min-width: 48px;
+    min-height: 48px;
+    padding: 6px;
+    flex: 0 0 auto;
+  }
+
+  #modalRoot > .modal.shot-entry-viewport .shot-panel {
+    margin-top: 8px;
+    padding: 10px;
+    border-radius: 12px;
+  }
+
+  #modalRoot > .modal.shot-entry-viewport .shot-summary {
+    gap: 2px;
+    margin-bottom: 7px;
+    font-size: 14px;
+    line-height: 1.25;
+  }
+
+  #modalRoot > .modal.shot-entry-viewport .shot-type-grid,
+  #modalRoot > .modal.shot-entry-viewport .shot-result-grid {
+    gap: 8px;
+    margin-top: 7px;
+  }
+
+  #modalRoot > .modal.shot-entry-viewport .shot-type {
+    min-height: 44px;
+    padding: 7px 5px;
+    font-size: 13px;
+  }
+
+  #modalRoot > .modal.shot-entry-viewport .shot-foul-check {
+    min-height: 44px;
+    margin-top: 8px;
+    padding: 7px 10px;
+    font-size: 13px;
+  }
+
+  #modalRoot > .modal.shot-entry-viewport .shot-result {
+    min-height: 44px;
+  }
+
+  #modalRoot > .modal.shot-entry-viewport .shot-list {
+    margin-top: 10px;
+  }
+}
