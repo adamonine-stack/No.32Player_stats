@@ -10,7 +10,6 @@
       min-width: 0;
     }
 
-    /* 既存の数値入力欄・標準スピナー・独自▲▼ボタンを完全に隠す */
     .stat-counter-enhanced input[type="number"],
     .stat-counter-enhanced button:not(.stat-counter-button),
     .stat-counter-enhanced .number-stepper,
@@ -23,13 +22,13 @@
 
     .stat-counter-control {
       display: grid !important;
-      grid-template-columns: 48px minmax(48px, 1fr) 48px;
+      grid-template-columns: 44px minmax(40px, 1fr) 44px;
       align-items: center;
       width: 100%;
-      min-height: 48px;
-      margin-top: 4px;
+      min-height: 42px;
+      margin-top: 2px;
       border: 1px solid rgba(255,255,255,.22);
-      border-radius: 13px;
+      border-radius: 11px;
       background: rgba(0,0,0,.34);
       overflow: hidden;
       box-sizing: border-box;
@@ -44,34 +43,22 @@
       background: rgba(255,255,255,.06);
       color: #fff;
       font: inherit;
-      font-size: 26px;
+      font-size: 24px;
       font-weight: 600;
       line-height: 1;
       width: 100%;
       min-width: 44px;
-      min-height: 48px;
+      min-height: 42px;
       padding: 0;
       cursor: pointer;
       touch-action: manipulation;
       -webkit-tap-highlight-color: transparent;
     }
 
-    .stat-counter-button:first-child {
-      border-right: 1px solid rgba(255,255,255,.15);
-    }
-
-    .stat-counter-button:last-child {
-      border-left: 1px solid rgba(255,255,255,.15);
-    }
-
-    .stat-counter-button:active {
-      background: rgba(124,58,237,.38);
-    }
-
-    .stat-counter-button:disabled {
-      opacity: .28;
-      cursor: default;
-    }
+    .stat-counter-button:first-child { border-right: 1px solid rgba(255,255,255,.15); }
+    .stat-counter-button:last-child { border-left: 1px solid rgba(255,255,255,.15); }
+    .stat-counter-button:active { background: rgba(124,58,237,.38); }
+    .stat-counter-button:disabled { opacity: .28; cursor: default; }
 
     .stat-counter-value {
       display: flex;
@@ -79,9 +66,9 @@
       justify-content: center;
       min-width: 0;
       height: 100%;
-      padding: 0 6px;
+      padding: 0 4px;
       color: #fff;
-      font-size: 24px;
+      font-size: 21px;
       font-weight: 600;
       font-variant-numeric: tabular-nums;
       line-height: 1;
@@ -94,21 +81,125 @@
     .stat-counter-value.is-decreased { color: ${PURPLE}; }
     .stat-counter-value.is-unchanged { color: #fff; }
 
+    /* スタッツ入力画面専用の縦方向圧縮 */
+    .stats-form-compact {
+      padding: 10px 12px 12px !important;
+    }
+
+    .stats-form-compact h2,
+    .stats-form-compact h3 {
+      margin-top: 0 !important;
+      margin-bottom: 6px !important;
+      line-height: 1.2 !important;
+    }
+
+    .stats-form-compact .grid {
+      gap: 4px 10px !important;
+    }
+
+    .stats-form-compact label {
+      margin: 0 !important;
+      line-height: 1.05 !important;
+      font-size: 12px !important;
+    }
+
+    .stats-form-compact select,
+    .stats-form-compact input:not([type="number"]) {
+      min-height: 38px !important;
+      height: 38px !important;
+      padding-top: 5px !important;
+      padding-bottom: 5px !important;
+    }
+
+    .stats-form-compact .seg,
+    .stats-form-compact [class*="segment"] {
+      margin-top: 3px !important;
+      margin-bottom: 4px !important;
+    }
+
+    .stats-form-compact .seg button,
+    .stats-form-compact [class*="segment"] button {
+      min-height: 38px !important;
+      padding-top: 5px !important;
+      padding-bottom: 5px !important;
+    }
+
+    .stats-form-compact .shot-registration-button,
+    .stats-form-compact button[data-open-shot-registration],
+    .stats-form-compact button[id*="shot" i]:not(.stat-counter-button),
+    .stats-form-compact button[class*="shot" i]:not(.stat-counter-button) {
+      min-height: 46px !important;
+      margin-top: 5px !important;
+      margin-bottom: 6px !important;
+      padding-top: 7px !important;
+      padding-bottom: 7px !important;
+    }
+
+    .stats-form-compact .stats-form-actions {
+      margin-top: 7px !important;
+      padding-top: 0 !important;
+      gap: 7px !important;
+    }
+
+    .stats-form-compact .stats-form-actions .btn,
+    .stats-form-compact .stats-form-actions button {
+      min-height: 44px !important;
+      padding-top: 7px !important;
+      padding-bottom: 7px !important;
+    }
+
+    .stats-form-compact .stat-counter-enhanced {
+      padding: 0 !important;
+    }
+
     @media (max-width: 600px) {
-      .stat-counter-control {
-        grid-template-columns: 46px minmax(42px, 1fr) 46px;
-        min-height: 46px;
-        margin-top: 3px;
-        border-radius: 12px;
+      .stats-form-compact {
+        padding: 7px 9px 9px !important;
       }
+
+      .stats-form-compact .grid {
+        gap: 2px 8px !important;
+      }
+
+      .stats-form-compact label {
+        font-size: 11.5px !important;
+      }
+
+      .stat-counter-control {
+        grid-template-columns: 44px minmax(34px, 1fr) 44px;
+        min-height: 39px;
+        margin-top: 1px;
+        border-radius: 10px;
+      }
+
       .stat-counter-button {
         min-width: 44px;
-        min-height: 46px;
-        font-size: 25px;
+        min-height: 39px;
+        font-size: 23px;
       }
+
       .stat-counter-value {
-        font-size: 22px;
-        padding-inline: 3px;
+        font-size: 20px;
+        padding-inline: 2px;
+      }
+
+      .stats-form-compact select,
+      .stats-form-compact input:not([type="number"]) {
+        min-height: 36px !important;
+        height: 36px !important;
+      }
+
+      .stats-form-compact .shot-registration-button,
+      .stats-form-compact button[data-open-shot-registration],
+      .stats-form-compact button[id*="shot" i]:not(.stat-counter-button),
+      .stats-form-compact button[class*="shot" i]:not(.stat-counter-button) {
+        min-height: 42px !important;
+        margin-top: 3px !important;
+        margin-bottom: 4px !important;
+      }
+
+      .stats-form-compact .stats-form-actions {
+        margin-top: 5px !important;
       }
     }
   `;
@@ -120,8 +211,37 @@
     return clone.textContent.replace(/\s+/g, ' ').trim().toUpperCase();
   }
 
+  function statsActions() {
+    return document.querySelector('.stats-form-actions');
+  }
+
   function isStatsForm() {
-    return Boolean(document.querySelector('.stats-form-actions'));
+    return Boolean(statsActions());
+  }
+
+  function statsCard() {
+    return statsActions()?.closest('.card') || statsActions()?.parentElement || null;
+  }
+
+  function removeShotMethodExplanation(card) {
+    if (!card) return;
+    const phrases = [
+      '方式を切り替えて保存すると',
+      'その方式の非FTシュートデータを使用します',
+      'シュート登録方式の説明'
+    ];
+
+    [...card.querySelectorAll('p, small, .help, .hint, .muted, .note')].forEach(element => {
+      const text = element.textContent.replace(/\s+/g, ' ').trim();
+      if (phrases.some(phrase => text.includes(phrase))) element.remove();
+    });
+  }
+
+  function prepareCompactStatsForm() {
+    const card = statsCard();
+    if (!card) return;
+    card.classList.add('stats-form-compact');
+    removeShotMethodExplanation(card);
   }
 
   function shouldEnhance(input) {
@@ -213,6 +333,7 @@
 
   function enhanceAll(root = document) {
     if (!isStatsForm()) return;
+    prepareCompactStatsForm();
     root.querySelectorAll?.('input[type="number"]').forEach(enhanceInput);
   }
 
