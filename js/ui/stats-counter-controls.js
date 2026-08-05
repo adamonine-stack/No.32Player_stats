@@ -6,65 +6,79 @@
   style.textContent = `
     .stat-counter-enhanced {
       position: relative;
+      display: block !important;
+      min-width: 0;
     }
-    .stat-counter-enhanced > input[type="number"] {
-      position: absolute !important;
-      width: 1px !important;
-      height: 1px !important;
-      padding: 0 !important;
-      margin: 0 !important;
-      opacity: 0 !important;
-      pointer-events: none !important;
-      overflow: hidden !important;
+
+    /* 既存の数値入力欄・標準スピナー・独自▲▼ボタンを完全に隠す */
+    .stat-counter-enhanced input[type="number"],
+    .stat-counter-enhanced button:not(.stat-counter-button),
+    .stat-counter-enhanced .number-stepper,
+    .stat-counter-enhanced .input-stepper,
+    .stat-counter-enhanced .stepper-buttons,
+    .stat-counter-enhanced .number-controls,
+    .stat-counter-enhanced .spin-buttons {
+      display: none !important;
     }
+
     .stat-counter-control {
-      display: grid;
-      grid-template-columns: 46px minmax(42px, 1fr) 46px;
-      align-items: stretch;
-      min-height: 46px;
+      display: grid !important;
+      grid-template-columns: 48px minmax(48px, 1fr) 48px;
+      align-items: center;
       width: 100%;
+      min-height: 48px;
+      margin-top: 4px;
       border: 1px solid rgba(255,255,255,.22);
-      border-radius: 14px;
-      background: rgba(0,0,0,.28);
+      border-radius: 13px;
+      background: rgba(0,0,0,.34);
       overflow: hidden;
       box-sizing: border-box;
     }
+
     .stat-counter-button {
+      display: flex !important;
+      align-items: center;
+      justify-content: center;
       appearance: none;
       border: 0;
-      background: rgba(255,255,255,.055);
+      background: rgba(255,255,255,.06);
       color: #fff;
       font: inherit;
-      font-size: 28px;
+      font-size: 26px;
       font-weight: 600;
       line-height: 1;
+      width: 100%;
       min-width: 44px;
-      min-height: 44px;
+      min-height: 48px;
       padding: 0;
       cursor: pointer;
       touch-action: manipulation;
       -webkit-tap-highlight-color: transparent;
     }
+
     .stat-counter-button:first-child {
       border-right: 1px solid rgba(255,255,255,.15);
     }
+
     .stat-counter-button:last-child {
       border-left: 1px solid rgba(255,255,255,.15);
     }
+
     .stat-counter-button:active {
-      background: rgba(124,58,237,.34);
-      transform: scale(.96);
+      background: rgba(124,58,237,.38);
     }
+
     .stat-counter-button:disabled {
-      opacity: .3;
+      opacity: .28;
       cursor: default;
-      transform: none;
     }
+
     .stat-counter-value {
       display: flex;
       align-items: center;
       justify-content: center;
       min-width: 0;
+      height: 100%;
       padding: 0 6px;
       color: #fff;
       font-size: 24px;
@@ -75,20 +89,22 @@
       user-select: none;
       -webkit-user-select: none;
     }
+
     .stat-counter-value.is-increased { color: var(--accent, #ff8a00); }
     .stat-counter-value.is-decreased { color: ${PURPLE}; }
     .stat-counter-value.is-unchanged { color: #fff; }
 
     @media (max-width: 600px) {
       .stat-counter-control {
-        grid-template-columns: 44px minmax(36px, 1fr) 44px;
-        min-height: 44px;
+        grid-template-columns: 46px minmax(42px, 1fr) 46px;
+        min-height: 46px;
+        margin-top: 3px;
         border-radius: 12px;
       }
       .stat-counter-button {
         min-width: 44px;
-        min-height: 44px;
-        font-size: 26px;
+        min-height: 46px;
+        font-size: 25px;
       }
       .stat-counter-value {
         font-size: 22px;
@@ -138,8 +154,9 @@
   }
 
   function changeValue(input, delta) {
-    const next = Math.max(0, numericValue(input) + delta);
-    if (next === numericValue(input)) return;
+    const current = numericValue(input);
+    const next = Math.max(0, current + delta);
+    if (next === current) return;
     input.value = String(next);
     input.dispatchEvent(new Event('input', { bubbles: true }));
     input.dispatchEvent(new Event('change', { bubbles: true }));
@@ -172,11 +189,11 @@
     const plus = document.createElement('button');
     plus.type = 'button';
     plus.className = 'stat-counter-button stat-counter-plus';
-    plus.textContent = '+';
+    plus.textContent = '＋';
     plus.setAttribute('aria-label', '1増やす');
 
     control.append(minus, value, plus);
-    input.insertAdjacentElement('afterend', control);
+    label.appendChild(control);
     input._statCounterControl = { root: control, minus, plus, value };
 
     minus.addEventListener('click', event => {
