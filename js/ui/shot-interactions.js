@@ -1,8 +1,8 @@
 (() => {
   const CONFIG = Object.freeze({
-    longPressMs: 260,
-    moveCancelPx: 9,
-    markerHitRadiusSvg: 7,
+    longPressMs: 240,
+    moveStartPx: 10,
+    markerHitRadiusSvg: 8,
     magnifierSizePx: 144,
     magnifierViewWidth: 27,
     magnifierViewHeight: 27,
@@ -173,6 +173,7 @@
 
   function activateDrag() {
     if (!drag || drag.active) return;
+    window.clearTimeout(drag.holdTimer);
     drag.active = true;
     drag.svg.classList.remove('shot-point-ready');
     drag.svg.classList.add('shot-point-dragging');
@@ -271,16 +272,18 @@
 
   document.addEventListener('pointermove', event => {
     if (!drag || drag.pointerId !== event.pointerId) return;
-    const distance = Math.hypot(event.clientX - drag.startClientX, event.clientY - drag.startClientY);
     event.preventDefault();
     event.stopPropagation();
+
+    drag.lastClientX = event.clientX;
+    drag.lastClientY = event.clientY;
+
     if (!drag.active) {
-      if (distance > CONFIG.moveCancelPx) {
-        clearDragVisual(drag);
-        drag = null;
-      }
-      return;
+      const distance = Math.hypot(event.clientX - drag.startClientX, event.clientY - drag.startClientY);
+      if (distance < CONFIG.moveStartPx) return;
+      activateDrag();
     }
+
     updatePreview(event.clientX, event.clientY);
   }, { capture: true, passive: false });
 
