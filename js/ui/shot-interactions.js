@@ -1,13 +1,27 @@
 (() => {
   const LONG_PRESS_MS = 300;
   const MOVE_CANCEL_PX = 8;
-  const MARKER_HIT_RADIUS_SVG = 5;
+  const MARKER_HIT_RADIUS_SVG = 6;
   let drag = null;
   let suppressNativeClick = false;
   let allowSyntheticClick = false;
 
   const style = document.createElement('style');
   style.textContent = `
+    #shotCourtRoot,
+    #shotCourtRoot .shot-court,
+    #shotCourtRoot .shot-court * {
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-touch-callout: none;
+    }
+    #shotCourtRoot .shot-court {
+      touch-action: manipulation;
+    }
+    #shotCourtRoot .shot-court.shot-point-ready,
+    #shotCourtRoot .shot-court.shot-point-dragging {
+      touch-action: none;
+    }
     #shotCourtRoot .shot-court.shot-point-ready .shot-marker.selected,
     #shotCourtRoot .shot-court.shot-point-dragging .shot-marker.selected {
       transform-box: fill-box;
@@ -77,10 +91,8 @@
   function activateDrag() {
     if (!drag || drag.active) return;
     drag.active = true;
-    drag.svg.style.touchAction = 'none';
     drag.svg.classList.remove('shot-point-ready');
     drag.svg.classList.add('shot-point-dragging');
-    drag.svg.setPointerCapture?.(drag.pointerId);
     navigator.vibrate?.(12);
   }
 
@@ -102,15 +114,38 @@
   function clearDragVisual(current) {
     window.clearTimeout(current.holdTimer);
     current.svg.releasePointerCapture?.(current.pointerId);
-    current.svg.style.touchAction = current.previousTouchAction;
     current.svg.classList.remove('shot-point-ready', 'shot-point-dragging');
   }
+
+  document.addEventListener('contextmenu', event => {
+    const svg = event.target.closest?.('#shotCourtRoot .shot-court');
+    if (!svg) return;
+    const marker = selectedMarker(svg);
+    if (!marker || !isNearMarker(svg, marker, event.clientX, event.clientY)) return;
+    event.preventDefault();
+    event.stopPropagation();
+  }, true);
+
+  document.addEventListener('selectstart', event => {
+    if (!event.target.closest?.('#shotCourtRoot')) return;
+    event.preventDefault();
+  }, true);
+
+  document.addEventListener('dragstart', event => {
+    if (!event.target.closest?.('#shotCourtRoot')) return;
+    event.preventDefault();
+  }, true);
 
   document.addEventListener('pointerdown', event => {
     const svg = event.target.closest?.('.shot-court');
     if (!svg || !svg.closest('#shotCourtRoot')) return;
     const marker = selectedMarker(svg);
     if (!marker || !isNearMarker(svg, marker, event.clientX, event.clientY)) return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    svg.classList.add('shot-point-ready');
+    svg.setPointerCapture?.(event.pointerId);
 
     drag = {
       svg,
@@ -121,7 +156,6 @@
       lastClientX: event.clientX,
       lastClientY: event.clientY,
       active: false,
-      previousTouchAction: svg.style.touchAction,
       elements: markerElementsAt(svg, marker),
       holdTimer: null
     };
@@ -129,15 +163,16 @@
     if (event.pointerType === 'mouse') {
       activateDrag();
     } else {
-      svg.classList.add('shot-point-ready');
       drag.holdTimer = window.setTimeout(activateDrag, LONG_PRESS_MS);
     }
-  }, true);
+  }, { capture: true, passive: false });
 
   document.addEventListener('pointermove', event => {
     if (!drag || drag.pointerId !== event.pointerId) return;
     const distance = Math.hypot(event.clientX - drag.startClientX, event.clientY - drag.startClientY);
     if (!drag.active) {
+      event.preventDefault();
+      event.stopPropagation();
       if (distance > MOVE_CANCEL_PX) {
         clearDragVisual(drag);
         drag = null;
