@@ -2,7 +2,6 @@
   const CONFIG = Object.freeze({
     longPressMs: 240,
     moveStartPx: 10,
-    markerHitRadiusSvg: 8,
     magnifierSizePx: 144,
     magnifierViewWidth: 27,
     magnifierViewHeight: 27,
@@ -24,9 +23,10 @@
       -webkit-touch-callout: none !important;
       -webkit-tap-highlight-color: transparent;
     }
-    #shotCourtRoot .shot-court { touch-action: manipulation; }
-    #shotCourtRoot .shot-court.shot-point-ready,
-    #shotCourtRoot .shot-court.shot-point-dragging { touch-action: none; }
+    #shotCourtRoot .shot-court {
+      touch-action: none !important;
+      overscroll-behavior: contain;
+    }
     #shotCourtRoot .shot-court .shot-marker.selected { cursor: grab; }
     #shotCourtRoot .shot-court.shot-point-dragging { cursor: grabbing; }
     .shot-position-magnifier {
@@ -49,9 +49,6 @@
     .shot-position-magnifier.visible { opacity: 1; transform: scale(1); }
     .shot-position-magnifier svg { width: 100%; height: 100%; display: block; }
     .shot-position-magnifier .court-tap-surface { display: none; }
-    .shot-position-magnifier .shot-markers .shot-marker.selected {
-      filter: drop-shadow(0 0 2px rgba(255,255,255,.95));
-    }
     .shot-position-magnifier-crosshair::before,
     .shot-position-magnifier-crosshair::after {
       content: '';
@@ -101,9 +98,9 @@
         if (node.matches('.shot-undo')) {
           node.remove();
           showSavedToast();
-          continue;
+        } else {
+          replaceUndoWithSavedMessage(node);
         }
-        replaceUndoWithSavedMessage(node);
       }
     }
   });
@@ -116,21 +113,11 @@
     return matrix ? point.matrixTransform(matrix.inverse()) : null;
   }
 
-  function selectedMarker(svg) {
-    return svg.querySelector('.shot-marker.selected');
-  }
-
   function markerElementsAt(svg, marker) {
     const x = marker.getAttribute('cx');
     const y = marker.getAttribute('cy');
     return [...svg.querySelectorAll('.shot-selection-ring, .shot-foul-ring, .shot-marker')]
       .filter(element => element.getAttribute('cx') === x && element.getAttribute('cy') === y);
-  }
-
-  function isNearMarker(svg, marker, clientX, clientY) {
-    const point = clientToSvg(svg, clientX, clientY);
-    if (!point) return false;
-    return Math.hypot(point.x - Number(marker.getAttribute('cx')), point.y - Number(marker.getAttribute('cy'))) <= CONFIG.markerHitRadiusSvg;
   }
 
   function createMagnifier(svg) {
@@ -171,21 +158,68 @@
     positionMagnifier(drag.magnifier, clientX, clientY);
   }
 
-  function activateDrag() {
+  function dispatchCourtClick(svg, clientX, clientY) {
+    allowSyntheticClick = true;
+    svg.dispatchEvent(new MouseEvent('click', {
+      bubbles: true,
+      cancelable: true,
+      clientX,
+      clientY
+    }));
+    allowSyntheticClick = false;
+  }
+
+  function bindCurrentMarker() {
+    if (!drag) return false;
+    const svg = document.querySelector('#shotCourtRoot .shot-court');
+    const marker = svg?.querySelector('.shot-marker.selected');
+    if (!svg || !marker) return false;
+    drag.svg = svg;
+    drag.elements = markerElementsAt(svg, marker);
+    return drag.elements.length > 0;
+  }
+
+  function finishActivation() {
     if (!drag || drag.active) return;
-    window.clearTimeout(drag.holdTimer);
+    if (!bindCurrentMarker()) {
+      requestAnimationFrame(() => {
+        if (!drag || drag.active || !bindCurrentMarker()) return;
+        finishActivation();
+      });
+      return;
+    }
     drag.active = true;
-    drag.svg.classList.remove('shot-point-ready');
     drag.svg.classList.add('shot-point-dragging');
     drag.magnifier = createMagnifier(drag.svg);
-    const point = clientToSvg(drag.svg, drag.lastClientX, drag.lastClientY);
-    updateMagnifier(point, drag.lastClientX, drag.lastClientY);
+    updatePreview(drag.lastClientX, drag.lastClientY);
     requestAnimationFrame(() => drag?.magnifier?.root.classList.add('visible'));
     navigator.vibrate?.(12);
   }
 
+  function activateDrag() {
+    if (!drag || drag.active || drag.activating) return;
+    window.clearTimeout(drag.holdTimer);
+    drag.activating = true;
+
+    const selectedMarker = drag.svg.querySelector('.shot-marker.selected');
+    if (!selectedMarker) {
+      dispatchCourtClick(drag.svg, drag.lastClientX, drag.lastClientY);
+      requestAnimationFrame(() => {
+        if (!drag) return;
+        drag.activating = false;
+        finishActivation();
+      });
+      return;
+    }
+
+    drag.activating = false;
+    finishActivation();
+  }
+
   function updatePreview(clientX, clientY) {
-    if (!drag?.active) return;
+    if (!drag?.active || !drag.svg?.isConnected) {
+      if (!bindCurrentMarker() || !drag?.active) return;
+    }
     const point = clientToSvg(drag.svg, clientX, clientY);
     if (!point) return;
     const viewBox = drag.svg.viewBox.baseVal;
@@ -194,17 +228,6 @@
     for (const element of drag.elements) {
       element.setAttribute('cx', x.toFixed(3));
       element.setAttribute('cy', y.toFixed(3));
-    }
-    const magnifierMarker = drag.magnifier?.svg.querySelector('.shot-marker.selected');
-    if (magnifierMarker) {
-      const mx = magnifierMarker.getAttribute('cx');
-      const my = magnifierMarker.getAttribute('cy');
-      drag.magnifier.svg.querySelectorAll('.shot-selection-ring, .shot-foul-ring, .shot-marker').forEach(element => {
-        if (element.getAttribute('cx') === mx && element.getAttribute('cy') === my) {
-          element.setAttribute('cx', x.toFixed(3));
-          element.setAttribute('cy', y.toFixed(3));
-        }
-      });
     }
     drag.lastClientX = clientX;
     drag.lastClientY = clientY;
@@ -221,9 +244,9 @@
 
   function clearDragVisual(current) {
     window.clearTimeout(current.holdTimer);
-    current.svg.releasePointerCapture?.(current.pointerId);
-    current.svg.classList.remove('shot-point-ready', 'shot-point-dragging');
+    current.svg?.classList.remove('shot-point-dragging');
     removeMagnifier(current);
+    try { document.body.releasePointerCapture?.(current.pointerId); } catch (_) {}
   }
 
   document.addEventListener('contextmenu', event => {
@@ -243,15 +266,12 @@
   }, true);
 
   document.addEventListener('pointerdown', event => {
-    const svg = event.target.closest?.('.shot-court');
-    if (!svg || !svg.closest('#shotCourtRoot')) return;
-    const marker = selectedMarker(svg);
-    if (!marker || !isNearMarker(svg, marker, event.clientX, event.clientY)) return;
+    const svg = event.target.closest?.('#shotCourtRoot .shot-court');
+    if (!svg) return;
 
     event.preventDefault();
     event.stopPropagation();
-    svg.classList.add('shot-point-ready');
-    svg.setPointerCapture?.(event.pointerId);
+    try { document.body.setPointerCapture?.(event.pointerId); } catch (_) {}
 
     drag = {
       svg,
@@ -261,7 +281,8 @@
       lastClientX: event.clientX,
       lastClientY: event.clientY,
       active: false,
-      elements: markerElementsAt(svg, marker),
+      activating: false,
+      elements: [],
       holdTimer: null,
       magnifier: null
     };
@@ -278,47 +299,41 @@
     drag.lastClientX = event.clientX;
     drag.lastClientY = event.clientY;
 
-    if (!drag.active) {
+    if (!drag.active && !drag.activating) {
       const distance = Math.hypot(event.clientX - drag.startClientX, event.clientY - drag.startClientY);
-      if (distance < CONFIG.moveStartPx) return;
-      activateDrag();
+      if (distance >= CONFIG.moveStartPx) activateDrag();
     }
-
-    updatePreview(event.clientX, event.clientY);
+    if (drag.active) updatePreview(event.clientX, event.clientY);
   }, { capture: true, passive: false });
 
-  function finishDrag(event) {
+  function finishDrag(event, cancelled = false) {
     if (!drag || drag.pointerId !== event.pointerId) return;
     const current = drag;
     drag = null;
     clearDragVisual(current);
-    if (!current.active) return;
 
     event.preventDefault();
     event.stopPropagation();
     suppressNativeClick = true;
-    allowSyntheticClick = true;
-    current.svg.dispatchEvent(new MouseEvent('click', {
-      bubbles: true,
-      cancelable: true,
-      clientX: current.lastClientX,
-      clientY: current.lastClientY
-    }));
-    allowSyntheticClick = false;
-    navigator.vibrate?.(18);
+
+    if (current.active || current.activating) {
+      const svg = document.querySelector('#shotCourtRoot .shot-court') || current.svg;
+      if (svg) dispatchCourtClick(svg, current.lastClientX, current.lastClientY);
+      navigator.vibrate?.(18);
+    } else if (!cancelled) {
+      dispatchCourtClick(current.svg, event.clientX, event.clientY);
+    }
+
     window.setTimeout(() => { suppressNativeClick = false; }, 0);
   }
 
-  document.addEventListener('pointerup', finishDrag, { capture: true, passive: false });
-  document.addEventListener('pointercancel', event => {
-    if (!drag || drag.pointerId !== event.pointerId) return;
-    clearDragVisual(drag);
-    drag = null;
-  }, true);
+  document.addEventListener('pointerup', event => finishDrag(event, false), { capture: true, passive: false });
+  document.addEventListener('pointercancel', event => finishDrag(event, true), { capture: true, passive: false });
 
   document.addEventListener('click', event => {
-    if (!suppressNativeClick || allowSyntheticClick) return;
-    if (!event.target.closest?.('.shot-court')) return;
+    if (allowSyntheticClick) return;
+    if (!event.target.closest?.('#shotCourtRoot .shot-court')) return;
+    if (!suppressNativeClick) return;
     event.preventDefault();
     event.stopImmediatePropagation();
   }, true);
