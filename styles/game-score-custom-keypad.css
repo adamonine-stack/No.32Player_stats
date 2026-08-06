@@ -1,0 +1,77 @@
+@media (max-width: 800px) {
+  #gOwn[data-custom-score-keypad="true"],
+  #gOppScore[data-custom-score-keypad="true"],
+  input[id^="qTeam"][data-custom-score-keypad="true"],
+  input[id^="qOpp"][data-custom-score-keypad="true"] {
+    cursor: pointer;
+    caret-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
+    font-size: 18px !important;
+  }
+
+  .score-keypad {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding: 12px max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
+    background: rgba(0, 0, 0, .42);
+  }
+
+  .score-keypad__panel {
+    width: min(100%, 420px);
+    padding: 14px;
+    border: 1px solid rgba(255, 255, 255, .18);
+    border-radius: 18px;
+    background: #111;
+    box-shadow: 0 18px 50px rgba(0, 0, 0, .55);
+  }
+
+  .score-keypad__display {
+    min-height: 54px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 8px 14px;
+    border: 1px solid #444;
+    border-radius: 12px;
+    background: #050505;
+    color: #fff;
+    font-size: 30px;
+    font-weight: 800;
+  }
+
+  .score-keypad__grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .score-keypad button {
+    min-height: 54px;
+    border: 1px solid #444;
+    border-radius: 12px;
+    background: #202020;
+    color: #fff;
+    font-size: 23px;
+    font-weight: 800;
+    touch-action: manipulation;
+  }
+
+  .score-keypad__clear,
+  .score-keypad__back {
+    font-size: 15px !important;
+  }
+
+  .score-keypad__done {
+    width: 100%;
+    margin-top: 10px;
+    background: linear-gradient(135deg, #8a2be2, #6514cb) !important;
+    border-color: transparent !important;
+    font-size: 17px !important;
+  }
+}
