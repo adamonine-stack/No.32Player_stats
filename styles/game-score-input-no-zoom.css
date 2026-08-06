@@ -1,13 +1,21 @@
 /* Prevent iOS Safari from auto-zooming game score inputs on focus. */
 @media (max-width: 800px) {
+  html,
+  body,
+  #modalRoot,
+  #modalRoot input {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
   #gOwn,
   #gOppScore,
   input[id^="qTeam"],
   input[id^="qOpp"] {
-    font-size: 16px !important;
-    line-height: 1.25;
-    -webkit-text-size-adjust: 100%;
-    text-size-adjust: 100%;
+    font-size: 18px !important;
+    line-height: 1.25 !important;
     touch-action: manipulation;
+    -webkit-appearance: none;
+    appearance: none;
   }
 }
