@@ -5,5 +5,9 @@
   input[id^="qTeam"],
   input[id^="qOpp"] {
     font-size: 16px !important;
+    line-height: 1.25;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    touch-action: manipulation;
   }
 }
