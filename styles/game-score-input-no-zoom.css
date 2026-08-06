@@ -1,11 +1,19 @@
-/* iOS Safariの入力フォーカス時自動拡大を防止する。 */
+/* iOS Safari／ホーム画面Webアプリの入力フォーカス時拡大を防止する。 */
 @media (max-width: 800px) {
   html,
   body,
   #modalRoot,
-  #modalRoot input {
+  #modalRoot input,
+  #modalRoot select,
+  #modalRoot textarea {
     -webkit-text-size-adjust: 100%;
     text-size-adjust: 100%;
+  }
+
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
   }
 
   #gOwn,
