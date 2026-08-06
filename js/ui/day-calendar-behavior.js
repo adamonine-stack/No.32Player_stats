@@ -18,7 +18,10 @@
       calendar.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
     }
     const input = document.getElementById(inputIdForScope(scope));
-    if (input) input.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+    if (input) {
+      input.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+      input.blur();
+    }
   }
 
   function prepareDateTarget(scope) {
@@ -26,11 +29,17 @@
     const calendar = calendarForScope(scope);
     if (!input || !calendar) return;
 
-    // ブラウザ標準の日付ピッカーを表示させず、R32独自カレンダーだけを使用する。
+    // ブラウザ標準の日付ピッカーとスマートフォンの入力フォーカス拡大を使用せず、
+    // R32独自カレンダーを開くボタンとして扱う。
     if (input.type === 'date') input.type = 'text';
     input.readOnly = true;
     input.inputMode = 'none';
     input.autocomplete = 'off';
+    input.tabIndex = 0;
+    input.style.fontSize = '16px';
+    input.style.touchAction = 'manipulation';
+    input.style.webkitUserSelect = 'none';
+    input.style.userSelect = 'none';
     input.setAttribute('role', 'button');
     input.setAttribute('aria-haspopup', 'dialog');
     input.setAttribute('aria-controls', `${scope}-day-calendar`);
@@ -50,6 +59,21 @@
   const observer = new MutationObserver(prepareAll);
   observer.observe(document.documentElement, { childList: true, subtree: true });
 
+  // タップ開始時点で入力欄へのフォーカスを止め、iOS等の自動ズームを防止する。
+  document.addEventListener('pointerdown', event => {
+    const input = event.target.closest?.('#statTarget, #teamTarget');
+    if (!input) return;
+    event.preventDefault();
+    input.blur();
+  }, true);
+
+  document.addEventListener('touchstart', event => {
+    const input = event.target.closest?.('#statTarget, #teamTarget');
+    if (!input) return;
+    event.preventDefault();
+    input.blur();
+  }, { capture: true, passive: false });
+
   document.addEventListener('click', event => {
     const modeButton = event.target.closest('.stat-mode-btn, .team-mode-btn');
     if (modeButton) {
@@ -65,6 +89,7 @@
     if (input) {
       const scope = input.id === 'teamTarget' ? 'team' : 'analysis';
       event.preventDefault();
+      input.blur();
       setCalendarOpen(scope, true);
       return;
     }
@@ -81,6 +106,13 @@
       }
     }
   }, true);
+
+  document.addEventListener('focusin', event => {
+    const input = event.target.closest?.('#statTarget, #teamTarget');
+    if (!input) return;
+    // タップ由来のフォーカスは直ちに外す。キーボード操作はkeydownで維持する。
+    if (event.sourceCapabilities?.firesTouchEvents) input.blur();
+  });
 
   document.addEventListener('keydown', event => {
     const input = event.target.closest?.('#statTarget, #teamTarget');
