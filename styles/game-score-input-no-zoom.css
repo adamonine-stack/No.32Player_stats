@@ -1,4 +1,4 @@
-/* Prevent iOS Safari from auto-zooming game score inputs on focus. */
+/* iOS Safariの入力フォーカス時自動拡大を防止する。 */
 @media (max-width: 800px) {
   html,
   body,
@@ -17,5 +17,7 @@
     touch-action: manipulation;
     -webkit-appearance: none;
     appearance: none;
+    transform: none !important;
+    zoom: 1 !important;
   }
 }
