@@ -1,51 +1,8 @@
-import { detectShotArea, FIBA_COURT } from '../calculations/shot-calculations.js?v=20260807-analysis-tags-v2';
+import { SHOT_ANALYSIS_DISTANCE_OPTIONS, SHOT_ANALYSIS_SIDE_OPTIONS, aggregateShotAnalysis } from '../calculations/shot-analysis-calculations.js?v=20260807-analysis-core-v2';
 
 (() => {
-  const DISTANCE_OPTIONS = [
-    ['all', '全て'],
-    ['paint', 'ゴール下＋インサイド'],
-    ['mid', 'ミドル'],
-    ['three', '3P'],
-    ['mid_three', 'ミドル＋3P']
-  ];
-  const SIDE_OPTIONS = [
-    ['all', '全て'],
-    ['left', '左'],
-    ['center', '正面'],
-    ['right', '右']
-  ];
-
-  const DISTANCE_LABELS = Object.fromEntries(DISTANCE_OPTIONS);
-  const SIDE_LABELS = Object.fromEntries(SIDE_OPTIONS);
-
-  const SIDE_BY_AREA = Object.freeze({
-    left_zero_mid: 'left',
-    left_mid: 'left',
-    center_mid: 'center',
-    right_mid: 'right',
-    right_zero_mid: 'right',
-    left_corner_3p: 'left',
-    left_45_3p: 'left',
-    center_3p: 'center',
-    right_45_3p: 'right',
-    right_corner_3p: 'right'
-  });
-
-  const DISTANCE_BY_AREA = Object.freeze({
-    under_basket: 'under',
-    inside: 'inside',
-    left_zero_mid: 'mid',
-    left_mid: 'mid',
-    center_mid: 'mid',
-    right_mid: 'mid',
-    right_zero_mid: 'mid',
-    left_corner_3p: 'three',
-    left_45_3p: 'three',
-    center_3p: 'three',
-    right_45_3p: 'three',
-    right_corner_3p: 'three',
-    backcourt_3p: 'three'
-  });
+  const DISTANCE_LABELS = Object.fromEntries(SHOT_ANALYSIS_DISTANCE_OPTIONS);
+  const SIDE_LABELS = Object.fromEntries(SHOT_ANALYSIS_SIDE_OPTIONS);
 
   const style = document.createElement('style');
   style.textContent = `
@@ -89,51 +46,26 @@ import { detectShotArea, FIBA_COURT } from '../calculations/shot-calculations.js
 
   const key = (x, y) => `${Number(x).toFixed(3)}:${Number(y).toFixed(3)}`;
 
-  function insideSide(x) {
-    const width = FIBA_COURT.paintRight - FIBA_COURT.paintLeft;
-    const leftBoundary = FIBA_COURT.paintLeft + width / 3;
-    const rightBoundary = FIBA_COURT.paintLeft + width * 2 / 3;
-    if (x < leftBoundary) return 'left';
-    if (x > rightBoundary) return 'right';
-    return 'center';
-  }
-
-  function tagsForPoint(x, y) {
-    const area = detectShotArea(x, y);
-    const distance = DISTANCE_BY_AREA[area] || 'other';
-    let side = SIDE_BY_AREA[area] || null;
-    if (area === 'inside') side = insideSide(Number(x));
-    return { area, distance, side };
-  }
-
-  function matchesDistance(distance) {
-    if (distanceFilter === 'all') return true;
-    if (distanceFilter === 'paint') return distance === 'under' || distance === 'inside';
-    if (distanceFilter === 'mid') return distance === 'mid';
-    if (distanceFilter === 'three') return distance === 'three';
-    if (distanceFilter === 'mid_three') return distance === 'mid' || distance === 'three';
-    return true;
-  }
-
-  function matchesShot(shot) {
-    return matchesDistance(shot.distance) && (sideFilter === 'all' || shot.side === sideFilter);
-  }
-
   function capture(modal) {
     const court = modal.querySelector('#analysisShotCourt .shot-court');
     if (!court) return [];
     const foulKeys = new Set([...court.querySelectorAll('.shot-foul-ring')].map(circle => key(circle.getAttribute('cx'), circle.getAttribute('cy'))));
-    return [...court.querySelectorAll('.shot-marker')].map(circle => {
-      const x = Number(circle.getAttribute('cx'));
-      const y = Number(circle.getAttribute('cy'));
+    return [...court.querySelectorAll('.shot-marker')].map((circle, index) => {
+      const shotX = Number(circle.getAttribute('cx'));
+      const shotY = Number(circle.getAttribute('cy'));
       const result = circle.classList.contains('made') ? 'made' : 'missed';
-      const wasFouled = foulKeys.has(key(x, y));
-      return { x, y, result, wasFouled, ...tagsForPoint(x, y) };
+      return {
+        id: `analysis_marker_${index}`,
+        shotX,
+        shotY,
+        result,
+        wasFouled: foulKeys.has(key(shotX, shotY))
+      };
     });
   }
 
   function signatureFor(shots) {
-    return shots.map(shot => `${key(shot.x, shot.y)}:${shot.result}:${shot.wasFouled ? 1 : 0}`).join('|');
+    return shots.map(shot => `${key(shot.shotX, shot.shotY)}:${shot.result}:${shot.wasFouled ? 1 : 0}`).join('|');
   }
 
   function buttonHtml(options, current, field) {
@@ -167,10 +99,10 @@ import { detectShotArea, FIBA_COURT } from '../calculations/shot-calculations.js
     });
   }
 
-  function applyMarkerEmphasis(modal) {
+  function applyMarkerEmphasis(modal, selectedShots) {
     const court = modal.querySelector('#analysisShotCourt .shot-court');
     if (!court) return;
-    const selectedKeys = new Set(snapshot.filter(matchesShot).map(shot => key(shot.x, shot.y)));
+    const selectedKeys = new Set(selectedShots.map(shot => key(shot.shotX, shot.shotY)));
     court.querySelectorAll('.shot-marker,.shot-foul-ring,.shot-selection-ring').forEach(circle => {
       const muted = !selectedKeys.has(key(circle.getAttribute('cx'), circle.getAttribute('cy')));
       circle.classList.toggle('analysis-tag-muted', muted);
@@ -181,19 +113,15 @@ import { detectShotArea, FIBA_COURT } from '../calculations/shot-calculations.js
     ensurePanel(modal);
     const panel = modal.querySelector('.shot-analysis-tag-panel');
     if (!panel) return;
-    panel.querySelector('[data-tag-distance]').innerHTML = buttonHtml(DISTANCE_OPTIONS, distanceFilter, 'distance');
-    panel.querySelector('[data-tag-side]').innerHTML = buttonHtml(SIDE_OPTIONS, sideFilter, 'side');
+    panel.querySelector('[data-tag-distance]').innerHTML = buttonHtml(SHOT_ANALYSIS_DISTANCE_OPTIONS, distanceFilter, 'distance');
+    panel.querySelector('[data-tag-side]').innerHTML = buttonHtml(SHOT_ANALYSIS_SIDE_OPTIONS, sideFilter, 'side');
     panel.querySelector('[data-tag-current]').textContent = `${DISTANCE_LABELS[distanceFilter]} × ${SIDE_LABELS[sideFilter]}`;
-    const selected = snapshot.filter(matchesShot);
-    const registered = selected.length;
-    const attempts = selected.filter(shot => shot.result === 'made' || (shot.result === 'missed' && !shot.wasFouled)).length;
-    const made = selected.filter(shot => shot.result === 'made').length;
-    const rate = attempts ? `${(made / attempts * 100).toFixed(1)}%` : '-';
-    panel.querySelector('[data-tag-registered]').textContent = String(registered);
-    panel.querySelector('[data-tag-attempts]').textContent = String(attempts);
-    panel.querySelector('[data-tag-made]').textContent = String(made);
-    panel.querySelector('[data-tag-rate]').textContent = rate;
-    applyMarkerEmphasis(modal);
+    const aggregate = aggregateShotAnalysis(snapshot, { distance: distanceFilter, side: sideFilter });
+    panel.querySelector('[data-tag-registered]').textContent = String(aggregate.registered);
+    panel.querySelector('[data-tag-attempts]').textContent = String(aggregate.attempts);
+    panel.querySelector('[data-tag-made]').textContent = String(aggregate.made);
+    panel.querySelector('[data-tag-rate]').textContent = aggregate.rate;
+    applyMarkerEmphasis(modal, aggregate.shots);
   }
 
   function initialize(modal) {
@@ -205,7 +133,6 @@ import { detectShotArea, FIBA_COURT } from '../calculations/shot-calculations.js
       snapshot = [];
       snapshotSignature = '';
     }
-
     ensurePanel(modal);
     const nextSnapshot = capture(modal);
     const nextSignature = signatureFor(nextSnapshot);
@@ -217,7 +144,7 @@ import { detectShotArea, FIBA_COURT } from '../calculations/shot-calculations.js
   }
 
   function scan() {
-    const modal = document.querySelector('#modalRoot .shot-analysis-modal');
+    const modal = document.querySelector('#modalRoot .shot-analysis-modal:not(.team-shot-analysis-modal)');
     if (!modal) {
       activeModal = null;
       snapshot = [];
