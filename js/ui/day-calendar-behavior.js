@@ -10,6 +10,14 @@
     return document.querySelector(`[data-calendar-scope="${scope}"]`);
   }
 
+  function dayTargetFromEvent(event) {
+    const input = event.target.closest?.('input#statTarget, input#teamTarget');
+    if (!input) return null;
+    const scope = input.id === 'teamTarget' ? 'team' : 'analysis';
+    if (!calendarForScope(scope)) return null;
+    return { input, scope };
+  }
+
   function setCalendarOpen(scope, isOpen) {
     openState[scope] = isOpen;
     const calendar = calendarForScope(scope);
@@ -18,7 +26,7 @@
       calendar.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
     }
     const input = document.getElementById(inputIdForScope(scope));
-    if (input) {
+    if (input instanceof HTMLInputElement) {
       input.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
       input.blur();
     }
@@ -27,10 +35,10 @@
   function prepareDateTarget(scope) {
     const input = document.getElementById(inputIdForScope(scope));
     const calendar = calendarForScope(scope);
-    if (!input || !calendar) return;
+    if (!(input instanceof HTMLInputElement) || !calendar) return;
 
-    // ブラウザ標準の日付ピッカーとスマートフォンの入力フォーカス拡大を使用せず、
-    // R32独自カレンダーを開くボタンとして扱う。
+    // 日別集計の入力欄だけをR32独自カレンダーの起動ボタンとして扱う。
+    // 試合・大会集計では同じIDを持つselectが使われるため、selectには一切干渉しない。
     if (input.type === 'date') input.type = 'text';
     input.readOnly = true;
     input.inputMode = 'none';
@@ -59,19 +67,19 @@
   const observer = new MutationObserver(prepareAll);
   observer.observe(document.documentElement, { childList: true, subtree: true });
 
-  // タップ開始時点で入力欄へのフォーカスを止め、iOS等の自動ズームを防止する。
+  // 日別集計の入力欄だけ、タップ開始時点でフォーカスを止めてiOS等の自動ズームを防止する。
   document.addEventListener('pointerdown', event => {
-    const input = event.target.closest?.('#statTarget, #teamTarget');
-    if (!input) return;
+    const target = dayTargetFromEvent(event);
+    if (!target) return;
     event.preventDefault();
-    input.blur();
+    target.input.blur();
   }, true);
 
   document.addEventListener('touchstart', event => {
-    const input = event.target.closest?.('#statTarget, #teamTarget');
-    if (!input) return;
+    const target = dayTargetFromEvent(event);
+    if (!target) return;
     event.preventDefault();
-    input.blur();
+    target.input.blur();
   }, { capture: true, passive: false });
 
   document.addEventListener('click', event => {
@@ -85,12 +93,11 @@
       return;
     }
 
-    const input = event.target.closest('#statTarget, #teamTarget');
-    if (input) {
-      const scope = input.id === 'teamTarget' ? 'team' : 'analysis';
+    const target = dayTargetFromEvent(event);
+    if (target) {
       event.preventDefault();
-      input.blur();
-      setCalendarOpen(scope, true);
+      target.input.blur();
+      setCalendarOpen(target.scope, true);
       return;
     }
 
@@ -108,18 +115,17 @@
   }, true);
 
   document.addEventListener('focusin', event => {
-    const input = event.target.closest?.('#statTarget, #teamTarget');
-    if (!input) return;
+    const target = dayTargetFromEvent(event);
+    if (!target) return;
     // タップ由来のフォーカスは直ちに外す。キーボード操作はkeydownで維持する。
-    if (event.sourceCapabilities?.firesTouchEvents) input.blur();
+    if (event.sourceCapabilities?.firesTouchEvents) target.input.blur();
   });
 
   document.addEventListener('keydown', event => {
-    const input = event.target.closest?.('#statTarget, #teamTarget');
-    if (!input || !['Enter', ' '].includes(event.key)) return;
+    const target = dayTargetFromEvent(event);
+    if (!target || !['Enter', ' '].includes(event.key)) return;
     event.preventDefault();
-    const scope = input.id === 'teamTarget' ? 'team' : 'analysis';
-    setCalendarOpen(scope, true);
+    setCalendarOpen(target.scope, true);
   });
 
   if (document.readyState === 'loading') {
