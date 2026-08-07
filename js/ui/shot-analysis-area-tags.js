@@ -43,6 +43,7 @@ import { SHOT_ANALYSIS_DISTANCE_OPTIONS, SHOT_ANALYSIS_SIDE_OPTIONS, aggregateSh
   let distanceFilter = 'all';
   let sideFilter = 'all';
   let renderTimer = 0;
+  let suppressClickUntil = 0;
 
   const key = (x, y) => `${Number(x).toFixed(3)}:${Number(y).toFixed(3)}`;
 
@@ -54,13 +55,7 @@ import { SHOT_ANALYSIS_DISTANCE_OPTIONS, SHOT_ANALYSIS_SIDE_OPTIONS, aggregateSh
       const shotX = Number(circle.getAttribute('cx'));
       const shotY = Number(circle.getAttribute('cy'));
       const result = circle.classList.contains('made') ? 'made' : 'missed';
-      return {
-        id: `analysis_marker_${index}`,
-        shotX,
-        shotY,
-        result,
-        wasFouled: foulKeys.has(key(shotX, shotY))
-      };
+      return { id:`analysis_marker_${index}`, shotX, shotY, result, wasFouled:foulKeys.has(key(shotX,shotY)) };
     });
   }
 
@@ -78,17 +73,7 @@ import { SHOT_ANALYSIS_DISTANCE_OPTIONS, SHOT_ANALYSIS_SIDE_OPTIONS, aggregateSh
     if (!quick) return;
     const panel = document.createElement('div');
     panel.className = 'shot-analysis-tag-panel';
-    panel.innerHTML = `
-      <div class="shot-analysis-tag-head"><div class="shot-analysis-tag-title">複合エリア分析</div><div class="shot-analysis-tag-current" data-tag-current></div></div>
-      <div class="shot-analysis-tag-group"><div class="shot-analysis-tag-label">距離</div><div class="shot-analysis-tag-buttons" data-tag-distance></div></div>
-      <div class="shot-analysis-tag-group"><div class="shot-analysis-tag-label">方向</div><div class="shot-analysis-tag-buttons side" data-tag-side></div></div>
-      <div class="shot-analysis-tag-result">
-        <div><span>登録</span><b data-tag-registered>0</b></div>
-        <div><span>FG試投</span><b data-tag-attempts>0</b></div>
-        <div><span>成功</span><b data-tag-made>0</b></div>
-        <div class="rate"><span>成功率</span><b data-tag-rate>-</b></div>
-      </div>
-      <div class="shot-analysis-tag-note">方向指定時、ゴール下は集計対象外です。インサイドの左・正面・右は登録座標をペイント幅で3分割して内部判定します。コート図面・登録エリアには変更ありません。</div>`;
+    panel.innerHTML = `<div class="shot-analysis-tag-head"><div class="shot-analysis-tag-title">複合エリア分析</div><div class="shot-analysis-tag-current" data-tag-current></div></div><div class="shot-analysis-tag-group"><div class="shot-analysis-tag-label">距離</div><div class="shot-analysis-tag-buttons" data-tag-distance></div></div><div class="shot-analysis-tag-group"><div class="shot-analysis-tag-label">方向</div><div class="shot-analysis-tag-buttons side" data-tag-side></div></div><div class="shot-analysis-tag-result"><div><span>登録</span><b data-tag-registered>0</b></div><div><span>FG試投</span><b data-tag-attempts>0</b></div><div><span>成功</span><b data-tag-made>0</b></div><div class="rate"><span>成功率</span><b data-tag-rate>-</b></div></div><div class="shot-analysis-tag-note">方向指定時、ゴール下は集計対象外です。インサイドの左・正面・右は登録座標をペイント幅で3分割して内部判定します。コート図面・登録エリアには変更ありません。</div>`;
     quick.parentElement?.insertBefore(panel, quick);
   }
 
@@ -96,22 +81,26 @@ import { SHOT_ANALYSIS_DISTANCE_OPTIONS, SHOT_ANALYSIS_SIDE_OPTIONS, aggregateSh
     const court = modal.querySelector('#analysisShotCourt .shot-court');
     if (!court) return;
     const selectedKeys = new Set(selectedShots.map(shot => key(shot.shotX, shot.shotY)));
-    court.querySelectorAll('.shot-marker,.shot-foul-ring,.shot-selection-ring').forEach(circle => {
-      const muted = !selectedKeys.has(key(circle.getAttribute('cx'), circle.getAttribute('cy')));
-      circle.classList.toggle('analysis-tag-muted', muted);
-    });
+    court.querySelectorAll('.shot-marker,.shot-foul-ring,.shot-selection-ring').forEach(circle => circle.classList.toggle('analysis-tag-muted', !selectedKeys.has(key(circle.getAttribute('cx'), circle.getAttribute('cy')))));
+  }
+
+  function activateTagButton(button) {
+    const modal = button?.closest?.('#modalRoot .shot-analysis-modal:not(.team-shot-analysis-modal)');
+    if (!modal) return;
+    const field = button.dataset.analysisTagFilter;
+    const value = button.dataset.value;
+    if (field === 'distance') distanceFilter = value;
+    if (field === 'side') sideFilter = value;
+    renderPanel(modal);
   }
 
   function bindTagButtons(modal) {
     modal.querySelectorAll('[data-analysis-tag-filter]').forEach(button => {
       button.onclick = event => {
+        if (performance.now() < suppressClickUntil) return;
         event.preventDefault();
         event.stopPropagation();
-        const field = button.dataset.analysisTagFilter;
-        const value = button.dataset.value;
-        if (field === 'distance') distanceFilter = value;
-        if (field === 'side') sideFilter = value;
-        renderPanel(modal);
+        activateTagButton(button);
       };
     });
   }
@@ -135,33 +124,31 @@ import { SHOT_ANALYSIS_DISTANCE_OPTIONS, SHOT_ANALYSIS_SIDE_OPTIONS, aggregateSh
   function initialize(modal) {
     const fresh = activeModal !== modal;
     activeModal = modal;
-    if (fresh) {
-      distanceFilter = 'all';
-      sideFilter = 'all';
-      snapshot = [];
-      snapshotSignature = '';
-    }
+    if (fresh) { distanceFilter='all'; sideFilter='all'; snapshot=[]; snapshotSignature=''; }
     ensurePanel(modal);
     const nextSnapshot = capture(modal);
     const nextSignature = signatureFor(nextSnapshot);
-    if (nextSignature !== snapshotSignature) {
-      snapshot = nextSnapshot;
-      snapshotSignature = nextSignature;
-    }
+    if (nextSignature !== snapshotSignature) { snapshot = nextSnapshot; snapshotSignature = nextSignature; }
     renderPanel(modal);
   }
 
   function scan() {
     const modal = document.querySelector('#modalRoot .shot-analysis-modal:not(.team-shot-analysis-modal)');
-    if (!modal) {
-      activeModal = null;
-      snapshot = [];
-      snapshotSignature = '';
-      return;
-    }
+    if (!modal) { activeModal=null; snapshot=[]; snapshotSignature=''; return; }
     clearTimeout(renderTimer);
     renderTimer = window.setTimeout(() => initialize(modal), 20);
   }
+
+  document.addEventListener('pointerup', event => {
+    if (event.pointerType === 'mouse') return;
+    const button = event.target.closest?.('#modalRoot .shot-analysis-modal:not(.team-shot-analysis-modal) [data-analysis-tag-filter]');
+    if (!button) return;
+    event.preventDefault();
+    event.stopPropagation();
+    event.stopImmediatePropagation?.();
+    suppressClickUntil = performance.now() + 500;
+    activateTagButton(button);
+  }, { capture:true, passive:false });
 
   const observer = new MutationObserver(records => {
     const meaningful = records.some(record => {
@@ -172,8 +159,8 @@ import { SHOT_ANALYSIS_DISTANCE_OPTIONS, SHOT_ANALYSIS_SIDE_OPTIONS, aggregateSh
     });
     if (meaningful) scan();
   });
-  observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+  observer.observe(document.documentElement, { childList:true, subtree:true, attributes:true, attributeFilter:['class'] });
 
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', scan, { once: true });
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', scan, { once:true });
   else scan();
 })();
