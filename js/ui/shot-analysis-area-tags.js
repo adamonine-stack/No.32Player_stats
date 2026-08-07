@@ -6,16 +6,16 @@ import { SHOT_ANALYSIS_DISTANCE_OPTIONS, SHOT_ANALYSIS_SIDE_OPTIONS, aggregateSh
 
   const style = document.createElement('style');
   style.textContent = `
-    .shot-analysis-tag-panel{margin:10px 0 12px;padding:12px;border:1px solid rgba(255,255,255,.16);border-radius:12px;background:rgba(2,6,23,.38)}
+    .shot-analysis-tag-panel{position:relative;z-index:15;margin:10px 0 12px;padding:12px;border:1px solid rgba(255,255,255,.16);border-radius:12px;background:rgba(2,6,23,.38);pointer-events:auto!important}
     .shot-analysis-tag-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
     .shot-analysis-tag-title{font-size:14px;font-weight:900;color:#fff}
     .shot-analysis-tag-current{font-size:10px;font-weight:800;color:var(--orange,#f97316);text-align:right}
     .shot-analysis-tag-group{margin-top:8px}
     .shot-analysis-tag-label{font-size:11px;font-weight:800;color:var(--muted,#9ca3af);margin-bottom:5px}
-    .shot-analysis-tag-buttons{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}
+    .shot-analysis-tag-buttons{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px;position:relative;z-index:16;pointer-events:auto!important}
     .shot-analysis-tag-buttons.side{grid-template-columns:repeat(4,minmax(0,1fr))}
-    .shot-analysis-tag-btn{min-width:0;border:1px solid rgba(255,255,255,.18);border-radius:9px;background:rgba(255,255,255,.05);color:#fff;padding:8px 4px;font-size:11px;font-weight:800;line-height:1.15;touch-action:manipulation}
-    .shot-analysis-tag-btn.active{background:linear-gradient(135deg,#8a2be2,#6514cb);border-color:transparent}
+    .shot-analysis-tag-btn{position:relative;z-index:17;min-width:0;border:1px solid rgba(255,255,255,.18);border-radius:9px;background:rgba(255,255,255,.05);color:#fff;padding:8px 4px;font-size:11px;font-weight:800;line-height:1.15;touch-action:manipulation!important;pointer-events:auto!important;-webkit-tap-highlight-color:transparent}
+    .shot-analysis-tag-btn.active{background:linear-gradient(135deg,#8a2be2,#6514cb)!important;border-color:transparent!important;color:#fff!important}
     .shot-analysis-tag-result{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:10px;border:1px solid rgba(255,255,255,.14);border-radius:10px;overflow:hidden}
     .shot-analysis-tag-result>div{text-align:center;padding:9px 5px;border-right:1px solid rgba(255,255,255,.12)}
     .shot-analysis-tag-result>div:last-child{border-right:0}
@@ -90,13 +90,6 @@ import { SHOT_ANALYSIS_DISTANCE_OPTIONS, SHOT_ANALYSIS_SIDE_OPTIONS, aggregateSh
       </div>
       <div class="shot-analysis-tag-note">方向指定時、ゴール下は集計対象外です。インサイドの左・正面・右は登録座標をペイント幅で3分割して内部判定します。コート図面・登録エリアには変更ありません。</div>`;
     quick.parentElement?.insertBefore(panel, quick);
-    panel.addEventListener('click', event => {
-      const button = event.target.closest('[data-analysis-tag-filter]');
-      if (!button) return;
-      if (button.dataset.analysisTagFilter === 'distance') distanceFilter = button.dataset.value;
-      if (button.dataset.analysisTagFilter === 'side') sideFilter = button.dataset.value;
-      renderPanel(modal);
-    });
   }
 
   function applyMarkerEmphasis(modal, selectedShots) {
@@ -106,6 +99,20 @@ import { SHOT_ANALYSIS_DISTANCE_OPTIONS, SHOT_ANALYSIS_SIDE_OPTIONS, aggregateSh
     court.querySelectorAll('.shot-marker,.shot-foul-ring,.shot-selection-ring').forEach(circle => {
       const muted = !selectedKeys.has(key(circle.getAttribute('cx'), circle.getAttribute('cy')));
       circle.classList.toggle('analysis-tag-muted', muted);
+    });
+  }
+
+  function bindTagButtons(modal) {
+    modal.querySelectorAll('[data-analysis-tag-filter]').forEach(button => {
+      button.onclick = event => {
+        event.preventDefault();
+        event.stopPropagation();
+        const field = button.dataset.analysisTagFilter;
+        const value = button.dataset.value;
+        if (field === 'distance') distanceFilter = value;
+        if (field === 'side') sideFilter = value;
+        renderPanel(modal);
+      };
     });
   }
 
@@ -122,6 +129,7 @@ import { SHOT_ANALYSIS_DISTANCE_OPTIONS, SHOT_ANALYSIS_SIDE_OPTIONS, aggregateSh
     panel.querySelector('[data-tag-made]').textContent = String(aggregate.made);
     panel.querySelector('[data-tag-rate]').textContent = aggregate.rate;
     applyMarkerEmphasis(modal, aggregate.shots);
+    bindTagButtons(modal);
   }
 
   function initialize(modal) {
