@@ -1,4 +1,4 @@
-import { detectShotArea, FIBA_COURT } from '../calculations/shot-calculations.js?v=20260807-analysis-tags-v1';
+import { detectShotArea, FIBA_COURT } from '../calculations/shot-calculations.js?v=20260807-analysis-tags-v2';
 
 (() => {
   const DISTANCE_OPTIONS = [
@@ -14,6 +14,9 @@ import { detectShotArea, FIBA_COURT } from '../calculations/shot-calculations.js
     ['center', '正面'],
     ['right', '右']
   ];
+
+  const DISTANCE_LABELS = Object.fromEntries(DISTANCE_OPTIONS);
+  const SIDE_LABELS = Object.fromEntries(SIDE_OPTIONS);
 
   const SIDE_BY_AREA = Object.freeze({
     left_zero_mid: 'left',
@@ -47,14 +50,16 @@ import { detectShotArea, FIBA_COURT } from '../calculations/shot-calculations.js
   const style = document.createElement('style');
   style.textContent = `
     .shot-analysis-tag-panel{margin:10px 0 12px;padding:12px;border:1px solid rgba(255,255,255,.16);border-radius:12px;background:rgba(2,6,23,.38)}
-    .shot-analysis-tag-title{font-size:14px;font-weight:900;margin-bottom:8px;color:#fff}
+    .shot-analysis-tag-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+    .shot-analysis-tag-title{font-size:14px;font-weight:900;color:#fff}
+    .shot-analysis-tag-current{font-size:10px;font-weight:800;color:var(--orange,#f97316);text-align:right}
     .shot-analysis-tag-group{margin-top:8px}
     .shot-analysis-tag-label{font-size:11px;font-weight:800;color:var(--muted,#9ca3af);margin-bottom:5px}
     .shot-analysis-tag-buttons{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:5px}
     .shot-analysis-tag-buttons.side{grid-template-columns:repeat(4,minmax(0,1fr))}
-    .shot-analysis-tag-btn{min-width:0;border:1px solid rgba(255,255,255,.18);border-radius:9px;background:rgba(255,255,255,.05);color:#fff;padding:8px 4px;font-size:11px;font-weight:800;line-height:1.15}
+    .shot-analysis-tag-btn{min-width:0;border:1px solid rgba(255,255,255,.18);border-radius:9px;background:rgba(255,255,255,.05);color:#fff;padding:8px 4px;font-size:11px;font-weight:800;line-height:1.15;touch-action:manipulation}
     .shot-analysis-tag-btn.active{background:linear-gradient(135deg,#8a2be2,#6514cb);border-color:transparent}
-    .shot-analysis-tag-result{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin-top:10px;border:1px solid rgba(255,255,255,.14);border-radius:10px;overflow:hidden}
+    .shot-analysis-tag-result{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin-top:10px;border:1px solid rgba(255,255,255,.14);border-radius:10px;overflow:hidden}
     .shot-analysis-tag-result>div{text-align:center;padding:9px 5px;border-right:1px solid rgba(255,255,255,.12)}
     .shot-analysis-tag-result>div:last-child{border-right:0}
     .shot-analysis-tag-result span{display:block;color:var(--muted,#9ca3af);font-size:10px;font-weight:800}
@@ -65,16 +70,19 @@ import { detectShotArea, FIBA_COURT } from '../calculations/shot-calculations.js
     .shot-foul-ring.analysis-tag-muted,.shot-selection-ring.analysis-tag-muted{opacity:.12!important}
     @media(max-width:600px){
       .shot-analysis-tag-panel{padding:9px;margin:8px 0 10px}
+      .shot-analysis-tag-head{align-items:flex-start}
       .shot-analysis-tag-buttons{grid-template-columns:repeat(3,minmax(0,1fr))}
       .shot-analysis-tag-buttons.side{grid-template-columns:repeat(4,minmax(0,1fr))}
       .shot-analysis-tag-btn{padding:7px 2px;font-size:10px}
-      .shot-analysis-tag-result b{font-size:18px}
+      .shot-analysis-tag-result b{font-size:17px}
+      .shot-analysis-tag-result span{font-size:9px}
     }
   `;
   document.head.appendChild(style);
 
   let activeModal = null;
   let snapshot = [];
+  let snapshotSignature = '';
   let distanceFilter = 'all';
   let sideFilter = 'all';
   let renderTimer = 0;
@@ -95,7 +103,6 @@ import { detectShotArea, FIBA_COURT } from '../calculations/shot-calculations.js
     const distance = DISTANCE_BY_AREA[area] || 'other';
     let side = SIDE_BY_AREA[area] || null;
     if (area === 'inside') side = insideSide(Number(x));
-    // ゴール下・バックコート・その他は左右方向を付与しない。
     return { area, distance, side };
   }
 
@@ -125,8 +132,12 @@ import { detectShotArea, FIBA_COURT } from '../calculations/shot-calculations.js
     });
   }
 
+  function signatureFor(shots) {
+    return shots.map(shot => `${key(shot.x, shot.y)}:${shot.result}:${shot.wasFouled ? 1 : 0}`).join('|');
+  }
+
   function buttonHtml(options, current, field) {
-    return options.map(([value, label]) => `<button type="button" class="shot-analysis-tag-btn ${current === value ? 'active' : ''}" data-analysis-tag-filter="${field}" data-value="${value}">${label}</button>`).join('');
+    return options.map(([value, label]) => `<button type="button" class="shot-analysis-tag-btn ${current === value ? 'active' : ''}" data-analysis-tag-filter="${field}" data-value="${value}" aria-pressed="${current === value}">${label}</button>`).join('');
   }
 
   function ensurePanel(modal) {
@@ -136,10 +147,11 @@ import { detectShotArea, FIBA_COURT } from '../calculations/shot-calculations.js
     const panel = document.createElement('div');
     panel.className = 'shot-analysis-tag-panel';
     panel.innerHTML = `
-      <div class="shot-analysis-tag-title">複合エリア分析</div>
+      <div class="shot-analysis-tag-head"><div class="shot-analysis-tag-title">複合エリア分析</div><div class="shot-analysis-tag-current" data-tag-current></div></div>
       <div class="shot-analysis-tag-group"><div class="shot-analysis-tag-label">距離</div><div class="shot-analysis-tag-buttons" data-tag-distance></div></div>
       <div class="shot-analysis-tag-group"><div class="shot-analysis-tag-label">方向</div><div class="shot-analysis-tag-buttons side" data-tag-side></div></div>
       <div class="shot-analysis-tag-result">
+        <div><span>登録</span><b data-tag-registered>0</b></div>
         <div><span>FG試投</span><b data-tag-attempts>0</b></div>
         <div><span>成功</span><b data-tag-made>0</b></div>
         <div class="rate"><span>成功率</span><b data-tag-rate>-</b></div>
@@ -171,10 +183,13 @@ import { detectShotArea, FIBA_COURT } from '../calculations/shot-calculations.js
     if (!panel) return;
     panel.querySelector('[data-tag-distance]').innerHTML = buttonHtml(DISTANCE_OPTIONS, distanceFilter, 'distance');
     panel.querySelector('[data-tag-side]').innerHTML = buttonHtml(SIDE_OPTIONS, sideFilter, 'side');
+    panel.querySelector('[data-tag-current]').textContent = `${DISTANCE_LABELS[distanceFilter]} × ${SIDE_LABELS[sideFilter]}`;
     const selected = snapshot.filter(matchesShot);
+    const registered = selected.length;
     const attempts = selected.filter(shot => shot.result === 'made' || (shot.result === 'missed' && !shot.wasFouled)).length;
     const made = selected.filter(shot => shot.result === 'made').length;
     const rate = attempts ? `${(made / attempts * 100).toFixed(1)}%` : '-';
+    panel.querySelector('[data-tag-registered]').textContent = String(registered);
     panel.querySelector('[data-tag-attempts]').textContent = String(attempts);
     panel.querySelector('[data-tag-made]').textContent = String(made);
     panel.querySelector('[data-tag-rate]').textContent = rate;
@@ -187,10 +202,18 @@ import { detectShotArea, FIBA_COURT } from '../calculations/shot-calculations.js
     if (fresh) {
       distanceFilter = 'all';
       sideFilter = 'all';
-      snapshot = capture(modal);
+      snapshot = [];
+      snapshotSignature = '';
     }
+
     ensurePanel(modal);
-    if (snapshot.length) renderPanel(modal);
+    const nextSnapshot = capture(modal);
+    const nextSignature = signatureFor(nextSnapshot);
+    if (nextSignature !== snapshotSignature) {
+      snapshot = nextSnapshot;
+      snapshotSignature = nextSignature;
+    }
+    renderPanel(modal);
   }
 
   function scan() {
@@ -198,14 +221,24 @@ import { detectShotArea, FIBA_COURT } from '../calculations/shot-calculations.js
     if (!modal) {
       activeModal = null;
       snapshot = [];
+      snapshotSignature = '';
       return;
     }
     clearTimeout(renderTimer);
-    renderTimer = window.setTimeout(() => initialize(modal), 0);
+    renderTimer = window.setTimeout(() => initialize(modal), 20);
   }
 
-  const observer = new MutationObserver(scan);
-  observer.observe(document.documentElement, { childList: true, subtree: true });
+  const observer = new MutationObserver(records => {
+    const meaningful = records.some(record => {
+      const target = record.target instanceof Element ? record.target : record.target.parentElement;
+      if (!target) return false;
+      if (target.closest('.shot-analysis-tag-panel')) return false;
+      return target.closest('#analysisShotCourt, #analysisQuickFilters, #analysisAreaRows, #analysisShotTypeDetail, #modalRoot') !== null;
+    });
+    if (meaningful) scan();
+  });
+  observer.observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['class'] });
+
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', scan, { once: true });
   else scan();
 })();
