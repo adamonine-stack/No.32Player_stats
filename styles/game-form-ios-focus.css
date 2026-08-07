@@ -1,0 +1,31 @@
+/* iOS Safari game registration/edit form focus behavior
+   Keep every editable control at 16px or larger so Safari does not auto-zoom on focus.
+   Do not restrict viewport scaling or pinch zoom. */
+@media (max-width: 800px) {
+  #modalRoot .game-form-grid input,
+  #modalRoot .game-form-grid select,
+  #modalRoot .game-form-grid textarea,
+  #modalRoot #quarterScoreFields input,
+  #modalRoot #quarterScoreFields select,
+  #modalRoot #quarterScoreFields textarea {
+    font-size: 16px !important;
+    line-height: 1.25;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  /* Override the older 12px date-field rule in app.css. */
+  #modalRoot .game-form-grid label:first-child input {
+    font-size: 16px !important;
+  }
+
+  /* Preserve normal touch gestures; never lock pinch zoom. */
+  #modalRoot .game-form-grid input,
+  #modalRoot .game-form-grid select,
+  #modalRoot .game-form-grid textarea,
+  #modalRoot #quarterScoreFields input,
+  #modalRoot #quarterScoreFields select,
+  #modalRoot #quarterScoreFields textarea {
+    touch-action: manipulation;
+  }
+}
