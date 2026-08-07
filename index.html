@@ -21,6 +21,17 @@
 <link rel="stylesheet" href="styles/shot-registration.css?v=20260804-modal-scroll-lock-v20">
 <link rel="stylesheet" href="styles/mobile-modal-viewport-fit.css?v=20260806-mobile-modal-fit-v1">
 <link rel="stylesheet" href="styles/game-form-ios-focus.css?v=20260807-game-form-ios-focus-v1">
+<style>
+.shot-type[data-shot-type="running_shot"],
+.shot-type[data-legacy-type="running_shot"] { font-size:0; }
+.shot-type[data-shot-type="running_shot"]::before,
+.shot-type[data-legacy-type="running_shot"]::before {
+  content:"ランニング/\Aステップイン";
+  white-space:pre-line;
+  font-size:14px;
+  line-height:1.15;
+}
+</style>
 </head>
 <body class="app-bg">
 <div class="app">
