@@ -23,32 +23,39 @@ import { detectShotArea, SHOT_COURT_SIZE, SHOT_AREAS } from '../calculations/sho
   const areaLabel = id => SHOT_AREAS?.[id]?.label || SHOT_AREAS?.[id]?.name || id;
   const pointKey = (x,y) => `${Number(x).toFixed(3)}:${Number(y).toFixed(3)}`;
 
+  function buildPlayerOptions(){
+    return state.players.map(p => `<option value="${esc(p.id)}" ${p.id===state.lastPlayerId?'selected':''}>${esc(playerLabel(p))}</option>`).join('');
+  }
+
   function ensurePlayerSwitcher(modal) {
     if (!modal) return;
     let wrap = modal.querySelector('.analysis-player-switcher');
     if (!wrap) {
       wrap = document.createElement('div');
       wrap.className = 'analysis-player-switcher';
-      const anchor = modal.querySelector('.shot-analysis-head') || modal.firstElementChild;
+      wrap.innerHTML = `<label for="analysisPlayerSelect">選手変更</label><select id="analysisPlayerSelect" aria-label="分析対象選手を変更">${buildPlayerOptions()}</select>`;
+      const anchor = modal.querySelector('.shot-modal-head') || modal.querySelector('.shot-analysis-head') || modal.firstElementChild;
       if (anchor?.parentElement) anchor.insertAdjacentElement('afterend', wrap); else modal.prepend(wrap);
+      const select = wrap.querySelector('select');
+      select.onchange = () => {
+        const nextId = select.value;
+        if (!nextId || nextId === state.lastPlayerId) return;
+        selectedAreas.clear();
+        state.lastPlayerId = nextId;
+        setLastPlayerId(nextId);
+        document.dispatchEvent(new CustomEvent('analysis-player-change-requested',{detail:{playerId:nextId}}));
+        const close = modal.querySelector('.shot-close,[data-shot-analysis-close]');
+        close?.click();
+        setTimeout(() => {
+          const trigger = document.querySelector('[data-open-shot-analysis],#openShotAnalysis');
+          if (trigger) trigger.click();
+          else window.openShotAnalysis?.();
+        }, 60);
+      };
+    } else {
+      const select = wrap.querySelector('select');
+      if (select && select.value !== state.lastPlayerId) select.value = state.lastPlayerId || '';
     }
-    wrap.innerHTML = `<label for="analysisPlayerSelect">選手変更</label><select id="analysisPlayerSelect" aria-label="分析対象選手を変更">${state.players.map(p => `<option value="${esc(p.id)}" ${p.id===state.lastPlayerId?'selected':''}>${esc(playerLabel(p))}</option>`).join('')}</select>`;
-    const select = wrap.querySelector('select');
-    select.onchange = () => {
-      const nextId = select.value;
-      if (!nextId || nextId === state.lastPlayerId) return;
-      selectedAreas.clear();
-      state.lastPlayerId = nextId;
-      setLastPlayerId(nextId);
-      document.dispatchEvent(new CustomEvent('analysis-player-change-requested',{detail:{playerId:nextId}}));
-      const close = modal.querySelector('[data-shot-analysis-close]');
-      close?.click();
-      setTimeout(() => {
-        const trigger = document.querySelector('[data-open-shot-analysis],#openShotAnalysis');
-        if (trigger) trigger.click();
-        else window.openShotAnalysis?.();
-      }, 60);
-    };
   }
 
   function ensureStatus(modal) {
@@ -128,10 +135,17 @@ import { detectShotArea, SHOT_COURT_SIZE, SHOT_AREAS } from '../calculations/sho
     if (event.detail!==0) selectFromCourt(event);
   }, true);
 
+  let scheduled = false;
   const observer = new MutationObserver(() => {
-    const modal = document.querySelector(MODAL_SELECTOR);
-    if (!modal) return;
-    ensurePlayerSwitcher(modal); ensureStatus(modal); syncAreaRows(modal); syncMarkers(modal);
+    if (scheduled) return;
+    scheduled = true;
+    requestAnimationFrame(() => {
+      scheduled = false;
+      const modal = document.querySelector(MODAL_SELECTOR);
+      if (!modal) return;
+      if (!modal.querySelector('.analysis-player-switcher')) ensurePlayerSwitcher(modal);
+      if (!modal.querySelector('.analysis-area-selection-status')) ensureStatus(modal);
+    });
   });
   observer.observe(document.getElementById('modalRoot')||document.body,{childList:true,subtree:true});
 
