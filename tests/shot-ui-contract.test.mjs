@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 
 const app = readFileSync(new URL("../js/app.js", import.meta.url), "utf8");
+const index = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 const calculations = readFileSync(new URL("../js/calculations/shot-calculations.js", import.meta.url), "utf8");
 const css = readFileSync(new URL("../styles/shot-registration.css", import.meta.url), "utf8");
 const detailCss = readFileSync(new URL("../styles/detail-stats-actions.css", import.meta.url), "utf8");
@@ -62,6 +63,9 @@ assert.match(css, /\.shot-selection-ring/);
 assert.doesNotMatch(css, /shot-selection-pulse/);
 assert.doesNotMatch(css, /running_shot[\s\S]{0,160}::before/);
 assert.doesNotMatch(css, /running_shot[\s\S]{0,160}font-size\s*:\s*0/);
+assert.doesNotMatch(index, /running_shot[\s\S]{0,200}::before/);
+assert.doesNotMatch(index, /running_shot[\s\S]{0,200}font-size\s*:\s*0/);
+assert.match(index, /js\/app\.js\?v=20260810-running-step-in-label-v34/);
 assert.match(css, /\.analysis-shot-heading/);
 assert.match(css, /\.shot-analysis-quick-filters/);
 assert.match(css, /\.shot-analysis-filter-row/);
