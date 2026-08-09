@@ -7,6 +7,11 @@ const css = readFileSync(new URL("../styles/shot-registration.css", import.meta.
 const detailCss = readFileSync(new URL("../styles/detail-stats-actions.css", import.meta.url), "utf8");
 
 assert.match(app, /selectedShotId=normalizedEditing\?\.id\|\|''/);
+assert.match(app, /function shotTypeButtonLabel\(id\)\{return id==='running_shot'\?'ランニング\/<br>ステップイン':escapeHtml\(SHOT_TYPES\[id\]\|\|''\)\}/);
+assert.match(app, /data-shot-type="\$\{id\}">\$\{shotTypeButtonLabel\(id\)\}<\/button>/);
+assert.match(app, /data-legacy-type="\$\{id\}">\$\{shotTypeButtonLabel\(id\)\}<\/button>/);
+assert.match(app, /typeFilters=SHOT_TYPE_ORDER\.map\(id=>\['type',id,shotTypeButtonLabel\(id\)\]\)/);
+assert.match(app, /data-analysis-shot-type="\$\{id\}"><span>\$\{shotTypeButtonLabel\(id\)\}<\/span>/);
 assert.match(app, /function lockModalBackground\(\)/);
 assert.match(app, /document\.body\.style\.top=`-\$\{modalBackgroundScrollY\}px`/);
 assert.match(app, /function unlockModalBackground\(\)/);
@@ -55,6 +60,8 @@ assert.match(css, /\.modal \.card \{ overscroll-behavior:contain; -webkit-overfl
 assert.match(css, /\.shot-foul-ring/);
 assert.match(css, /\.shot-selection-ring/);
 assert.doesNotMatch(css, /shot-selection-pulse/);
+assert.doesNotMatch(css, /running_shot[\s\S]{0,160}::before/);
+assert.doesNotMatch(css, /running_shot[\s\S]{0,160}font-size\s*:\s*0/);
 assert.match(css, /\.analysis-shot-heading/);
 assert.match(css, /\.shot-analysis-quick-filters/);
 assert.match(css, /\.shot-analysis-filter-row/);
