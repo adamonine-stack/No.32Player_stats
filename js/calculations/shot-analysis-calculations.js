@@ -1,4 +1,4 @@
-import { FIBA_COURT, detectShotArea, countsAsFieldGoalAttempt, normalizeShot } from './shot-calculations.js?v=20260807-analysis-core-v1';
+import { FIBA_COURT, detectShotArea, countsAsFieldGoalAttempt, normalizeShot } from './shot-calculations.js?v=20260810-under-basket-v20';
 
 export const SHOT_ANALYSIS_DISTANCE_OPTIONS = Object.freeze([
   ['all', '全て'],

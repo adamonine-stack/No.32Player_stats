@@ -29,8 +29,8 @@ export const SHOT_TYPE_ORDER = Object.freeze(Object.keys(SHOT_TYPES));
 export const HALF_COURT_HEIGHT = 93.333;
 export const SHOT_COURT_SIZE = Object.freeze({ width: 100, height: 108 });
 export const FIBA_COURT = Object.freeze({ basketX: 50, basketY: 10.5, paintLeft: 33.667, paintRight: 66.333, freeThrowY: 38.667, threeRadius: 45, cornerLeft: 6, cornerRight: 94, cornerJoinY: 19.934, noChargeRadius: 8.667 });
-export const UNDER_BASKET_ZONE = Object.freeze({ centerX: 50, centerY: 10.5, radiusX: 14, radiusY: 14 });
-export const SHOT_AREA_MODEL_VERSION = "fiba-2024-r32-v2-backcourt";
+export const UNDER_BASKET_ZONE = Object.freeze({ centerX: 50, centerY: 10.5, radiusX: FIBA_COURT.noChargeRadius, radiusY: FIBA_COURT.noChargeRadius });
+export const SHOT_AREA_MODEL_VERSION = "fiba-2024-r32-v3-inner-no-charge";
 
 export function detectShotArea(xValue, yValue) {
   const x = Number(xValue), y = Number(yValue);
@@ -49,7 +49,7 @@ export function detectShotArea(xValue, yValue) {
   }
   const under = UNDER_BASKET_ZONE, normalizedX = (x - under.centerX) / under.radiusX;
   const underCurveY = under.centerY + under.radiusY * Math.sqrt(Math.max(0, 1 - normalizedX ** 2));
-  if (Math.abs(normalizedX) <= 1 && y <= underCurveY) return "under_basket";
+  if (Math.abs(normalizedX) <= 1.000001 && y <= underCurveY + 0.000001) return "under_basket";
   if (x >= paintLeft && x <= paintRight && y <= freeThrowY) return "inside";
   if (y <= 24) return x < paintLeft ? "left_zero_mid" : x > paintRight ? "right_zero_mid" : "inside";
   if (x < paintLeft) return "left_mid";
