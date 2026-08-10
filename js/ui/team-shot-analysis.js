@@ -2,8 +2,8 @@ import { state } from '../core/state.js';
 import { statHasRegisteredData, getGameStatsRegistrationType, quarterKey } from '../calculations/stats-calculations.js';
 import { OPPONENT_RANKS } from '../calculations/opponent-team-calculations.js';
 import { filterByOpponentFilterRange, filterByRegisteredGameCategory, filterByAggregationCondition } from '../calculations/game-filter-calculations.js';
-import { SHOT_AREAS, SHOT_AREA_ORDER, SHOT_TYPES, SHOT_TYPE_ORDER, SHOT_COURT_SIZE, aggregateShots, collectShots, countsAsFieldGoalAttempt, detectShotArea, filterShots, normalizedShotType, normalizeShot, shotAreaForRecord } from '../calculations/shot-calculations.js?v=20260810-team-shot-analysis-v2';
-import { SHOT_ANALYSIS_DISTANCE_OPTIONS, SHOT_ANALYSIS_SIDE_OPTIONS, aggregateShotAnalysis } from '../calculations/shot-analysis-calculations.js?v=20260807-analysis-core-v1';
+import { SHOT_AREAS, SHOT_AREA_ORDER, SHOT_TYPES, SHOT_TYPE_ORDER, SHOT_COURT_SIZE, aggregateShots, collectShots, countsAsFieldGoalAttempt, detectShotArea, filterShots, normalizedShotType, normalizeShot, shotAreaForRecord } from '../calculations/shot-calculations.js?v=20260810-under-basket-v20';
+import { SHOT_ANALYSIS_DISTANCE_OPTIONS, SHOT_ANALYSIS_SIDE_OPTIONS, aggregateShotAnalysis } from '../calculations/shot-analysis-calculations.js?v=20260810-under-basket-v3';
 
 (() => {
   const style = document.createElement('style');
@@ -133,7 +133,7 @@ import { SHOT_ANALYSIS_DISTANCE_OPTIONS, SHOT_ANALYSIS_SIDE_OPTIONS, aggregateSh
     return `<svg class="shot-court" viewBox="0 0 100 108" role="img" aria-label="バックコート3P領域付きFIBA規格シュート位置分析コート">
 <rect width="100" height="108" class="court-bg"/>
 <g class="court-zones"><path d="M6 0V19.934A45 45 0 0 0 94 19.934V0"/><rect x="33.667" y="0" width="32.666" height="38.667"/><path d="M38 38.667A12 12 0 0 0 62 38.667" stroke-dasharray="2 2"/><path d="M41.333 10.5A8.667 8.667 0 0 0 58.667 10.5M41.333 10.5V8M58.667 10.5V8"/></g>
-<g class="court-zone-guides"><path d="M0 24H33.667M66.333 24H100M33.667 38.667V93.333M66.333 38.667V93.333"/><path d="M36 10.5A14 14 0 0 0 64 10.5"/></g>
+<g class="court-zone-guides"><path d="M0 24H33.667M66.333 24H100M33.667 38.667V93.333M66.333 38.667V93.333"/></g>
 <g class="court-lines"><rect x=".4" y=".4" width="99.2" height="107.2"/><path d="M44 8V4.5H56V8M42.5 7H57.5M50 8v2.5"/><circle cx="50" cy="10.5" r="1.2"/><path d="M38 93.333A12 12 0 0 1 62 93.333M50 90V93.333"/><path d="M.4 93.333H99.6"/></g>
 <g class="shot-area-label"><text x="9" y="11">左コーナー3P</text><text x="91" y="11">右コーナー3P</text><text x="17" y="55">左45°3P</text><text x="83" y="55">右45°3P</text><text x="50" y="76">正面3P</text><text x="23" y="15">左0°ミドル</text><text x="77" y="15">右0°ミドル</text><text x="23" y="36">左ミドル</text><text x="77" y="36">右ミドル</text><text x="50" y="47">正面ミドル</text><text x="50" y="30">インサイド</text><text x="50" y="17">ゴール下</text><text x="50" y="102">バックコート3P</text></g>
 ${areaOverlaySvg(selectedAreas)}<g class="shot-markers">${markers.map(point => `${point.wasFouled ? `<circle class="shot-foul-ring" cx="${point.x.toFixed(3)}" cy="${point.y.toFixed(3)}" r="2.25"/>` : ''}<circle class="shot-marker ${point.result}" cx="${point.x.toFixed(3)}" cy="${point.y.toFixed(3)}" r="1.5"/>`).join('')}</g>
