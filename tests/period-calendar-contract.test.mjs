@@ -1,0 +1,13 @@
+import assert from "node:assert/strict";
+import fs from "node:fs";
+const app=fs.readFileSync(new URL("../js/app.js",import.meta.url),"utf8");
+const html=fs.readFileSync(new URL("../index.html",import.meta.url),"utf8");
+assert.ok(app.includes('data-period-picker="start"'));
+assert.ok(app.includes('data-period-picker="end"'));
+assert.ok(app.includes('data-calendar-field="${field}"'));
+assert.ok(app.includes("getDatesWithRegisteredGames(opponentFilteredGames(scope),month)"));
+assert.ok(app.includes("state[field==='start'?'periodStart':'periodEnd']=value"));
+assert.ok(app.includes("state[field==='start'?'teamPeriodStart':'teamPeriodEnd']=value"));
+assert.ok(html.includes("period-calendar.css?v=20260811-v1"));
+assert.ok(html.includes("app.js?v=20260811-period-calendar-v2"));
+console.log("period marked calendar contract passed");
