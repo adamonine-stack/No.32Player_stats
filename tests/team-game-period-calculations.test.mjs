@@ -6,6 +6,7 @@ const periods=teamGamePeriods(game,"quarter","q2",[1,2,4]);
 assert.deepEqual(periods.map(({label,team,opponent})=>[label,team,opponent]),[["1Q",12,16],["2Q",18,14],["3Q",15,10],["4Q",20,18],["FINAL",65,58]]);
 assert.equal(periods[1].selected,true);assert.equal(periods[4].selected,false);assert.equal(periods[2].registered,false);
 assert.equal(teamGamePeriods({...game,quarters:2},"quarter","game",[]).map(x=>x.label).join("/"),"1Q/2Q/FINAL");
+assert.equal(teamGamePeriods({...game,quarters:5,quarterScores:{...game.quarterScores,q5:{team:70,opponent:63}}},"quarter","game",[]).map(x=>x.label).join("/"),"1Q/2Q/3Q/4Q/5Q/FINAL");
 assert.ok(teamGamePeriods(game,"game","game",[]).slice(0,-1).every(x=>x.disabled));
 assert.equal(selectedTeamQuarterStatus("quarter","q2",[2]),"registered");
 assert.equal(selectedTeamQuarterStatus("quarter","q3",[2]),"unregistered");
@@ -19,6 +20,8 @@ const stats=[
 assert.deepEqual(teamRegisteredQuarterNumbers(stats),[1,2]);
 const q2=sumStats(teamStatsForView(quarterGame,stats,"q2"),[quarterGame]),q2d=derived(q2);
 assert.deepEqual({twoPa:q2.twoPa,twoPm:q2.twoPm,threePa:q2.threePa,threePm:q2.threePm,fta:q2.fta,ftm:q2.ftm,ast:q2.ast,blk:q2.blk,stl:q2d.stl,reb:q2d.reb,to:q2d.to,pts:q2d.pts},{twoPa:8,twoPm:5,threePa:3,threePm:1,fta:2,ftm:2,ast:4,blk:1,stl:3,reb:4,to:2,pts:15});
+const playerQ2=sumStats(teamStatsForView(quarterGame,[stats[0]],"q2"),[quarterGame]),playerQ2d=derived(playerQ2);
+assert.deepEqual({pts:playerQ2d.pts,ast:playerQ2.ast,stl:playerQ2d.stl,reb:playerQ2d.reb,to:playerQ2d.to},{pts:5,ast:1,stl:2,reb:3,to:1});
 assert.equal(teamStatsForView(quarterGame,stats,"q3").length,0);
 assert.equal(teamStatsForView({...quarterGame,statsRegistrationType:"game"},stats,"q2"),stats);
 console.log("team game periods: ok");
