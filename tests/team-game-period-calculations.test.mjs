@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { selectedTeamQuarterStatus, teamGamePeriods, teamRegisteredQuarterNumbers, teamStatsForView } from "../js/calculations/team-game-period-calculations.js";
+import { selectedTeamQuarterStatus, teamGamePeriods, teamRegisteredQuarterNumbers, teamStatsForView, hasTeamDetailRegistration } from "../js/calculations/team-game-period-calculations.js";
 import { derived, sumStats } from "../js/calculations/stats-calculations.js";
 const game={quarters:4,ownScore:65,oppScore:58,quarterScores:{q1:{team:12,opponent:16},q2:{team:30,opponent:30},q3:{team:45,opponent:40},q4:{team:65,opponent:58}}};
 const periods=teamGamePeriods(game,"quarter","q2",[1,2,4]);
@@ -24,4 +24,6 @@ const playerQ2=sumStats(teamStatsForView(quarterGame,[stats[0]],"q2"),[quarterGa
 assert.deepEqual({pts:playerQ2d.pts,ast:playerQ2.ast,stl:playerQ2d.stl,reb:playerQ2d.reb,to:playerQ2d.to},{pts:5,ast:1,stl:2,reb:3,to:1});
 assert.equal(teamStatsForView(quarterGame,stats,"q3").length,0);
 assert.equal(teamStatsForView({...quarterGame,statsRegistrationType:"game"},stats,"q2"),stats);
+assert.equal(hasTeamDetailRegistration([]),false,"対象試合・Qに登録がない選手は一覧対象外");
+assert.equal(hasTeamDetailRegistration([{playerId:"p1",ast:0}]),true,"登録済み選手は選択スタッツが0でも一覧対象");
 console.log("team game periods: ok");

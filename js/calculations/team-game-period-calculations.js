@@ -14,6 +14,10 @@ export function teamStatsForView(game = {}, stats = [], selectedView = "game") {
     .map(stat => ({ ...stat, quarters: { [key]: stat.quarters[key] } }));
 }
 
+export function hasTeamDetailRegistration(stats = []) {
+  return stats.length > 0;
+}
+
 export function teamGamePeriods(game = {}, registrationType = "game", selectedView = "game", registeredQuarters = []) {
   const registered = new Set(registeredQuarters.map(Number));
   const quarterMode = registrationType === "quarter";
