@@ -98,3 +98,27 @@ export function quarterScoreRows(game = {}) {
   }
   return rows;
 }
+
+export function hasQuarterScoreData(game = {}) {
+  return Object.values(game.quarterScores || {}).some(score => score &&
+    (score.team !== undefined || score.opponent !== undefined ||
+     score.myScore !== undefined || score.opponentScore !== undefined));
+}
+
+export function hasShotPointData(game = {}, stats = []) {
+  const populated = value => Array.isArray(value)
+    ? value.length > 0
+    : Boolean(value && typeof value === "object" && Object.keys(value).length);
+  if (populated(game.shotPoints)) return true;
+  return stats.some(stat => {
+    if (game.id && stat.gameId !== game.id) return false;
+    if (populated(stat.shots) || populated(stat.shotPoints)) return true;
+    return Object.values(stat.quarters || {}).some(quarter =>
+      populated(quarter?.shots) || populated(quarter?.shotPoints));
+  });
+}
+
+export function registrationChoiceVisibility(game = {}, stats = []) {
+  if (!game.id || game.registrationDefaultsVersion >= 2) return { score: false, shot: false };
+  return { score: !hasQuarterScoreData(game), shot: !hasShotPointData(game, stats) };
+}

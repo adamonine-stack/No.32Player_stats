@@ -2,7 +2,7 @@ import { auth, db, signInWithEmailAndPassword, signOut, onAuthStateChanged, coll
 import { state } from "./core/state.js";
 import { setGameSortDirection, setLastPlayerId } from "./core/storage.js";
 import { num, pct, one, sumStats as sumStatsBase, derived, STAT_KEYS, getGameStatsRegistrationType, quarterKey, registeredQuarterNumbers, statHasRegisteredData } from "./calculations/stats-calculations.js";
-import { resultMark, resultText, resultWord, resultClass, gameRecord, dateRange, finalScoreFromQuarterScores, quarterScoreKey } from "./calculations/game-calculations.js";
+import { resultMark, resultText, resultWord, resultClass, gameRecord, dateRange, finalScoreFromQuarterScores, quarterScoreKey, hasQuarterScoreData, hasShotPointData, registrationChoiceVisibility } from "./calculations/game-calculations.js";
 import { selectedTeamQuarterStatus, teamGamePeriods, teamRegisteredQuarterNumbers, teamStatsForView } from "./calculations/team-game-period-calculations.js";
 import { filterGamesByDate, filterGamesByMonth } from "./calculations/analysis-calculations.js";
 import { OPPONENT_RANKS, calculateOpponentTeamRank, placementLabelToRank, sortPlayerNumbers } from "./calculations/opponent-team-calculations.js";
@@ -431,12 +431,20 @@ function updateGameOpponentInfo(team,g={},legacy=''){
 
 function gameForm(g={}){
   if(!requireLogin())return;
-  const currentType=g.id?getGameStatsRegistrationType(g):'quarter';
+  const currentType=!g.id||hasQuarterScoreData(g)?'quarter':getGameStatsRegistrationType(g);
+  const registrationChoices=registrationChoiceVisibility(g,state.stats);
   const selectedTeam=state.opponentTeams.find(team=>team.id===g.opponentTeamId),legacy=!selectedTeam&&(g.opponentTeamName||g.opponent||'');
   const opponentOptions=`<option value="">対戦チームを選択</option>${legacy?`<option value="legacy" selected>${escapeHtml(legacy)}（既存データ）</option>`:''}${sortOpponentTeamsForSelect(state.opponentTeams).map(team=>`<option value="${team.id}" ${team.id===selectedTeam?.id?'selected':''}>${escapeHtml(team.teamName)}</option>`).join('')}`;
   const initialRankVisible=opponentRankVisible(selectedTeam,g.category);
   modal(`<h2>${g.id?'試合修正':'試合登録'}</h2><div class="form-grid game-form-grid"><label>年月日<input type="date" id="gDate" value="${g.date||''}"></label><label>Q数${numInput('gQ',g.quarters||4)}</label><label>カテゴリー<input id="gCategory" list="categoryList" value="${g.category||''}"><datalist id="categoryList"><option value="U15"><option value="U14"><option value="U13"><option value="中学"><option value="高校"><option value="練習"></datalist></label><label>大会名<input id="gTour" value="${g.tournament||''}"></label><label>対戦相手<select id="gOpponentTeam">${opponentOptions}</select></label><div class="opponent-game-info">対戦チーム：<b id="gOpponentName">${escapeHtml(selectedTeam?.teamName||legacy||'-')}</b><br>都道府県：<b id="gOpponentPrefecture">${selectedTeam?.prefecture||g.opponentPrefecture||'-'}</b><br><span id="gOpponentRankRow" class="${initialRankVisible?'':'hidden'}">チームランク：<b id="gOpponentRank">${initialRankVisible?selectedTeam.calculatedRank:''}</b></span></div><label>自チーム得点${numInput('gOwn',g.ownScore||0)}</label><label>相手得点${numInput('gOppScore',g.oppScore||0)}</label></div><div class="card"><div class="section-title">Q別スコア（累積）</div><div id="quarterScoreFields">${gameQuarterScoreFields(g)}</div></div><div class="row game-form-actions"><button class="btn" id="saveGame">保存</button><button class="btn ghost" id="closeModal">閉じる</button>${g.id?'<button class="btn danger delete-right" id="deleteGameFromEdit">削除</button>':''}</div>`);
   let selectedType=currentType;
+  if(registrationChoices.score){
+    const scoreModeCard=document.createElement('div');
+    scoreModeCard.className='card score-registration-mode-card';
+    scoreModeCard.innerHTML=`<div class="section-title">スコア登録方式</div><div class="seg stats-type-seg"><button type="button" class="stats-type-btn ${selectedType==='game'?'active':''}" data-stats-type="game">最終スコア登録</button><button type="button" class="stats-type-btn ${selectedType==='quarter'?'active':''}" data-stats-type="quarter">Q毎スコア登録</button></div>`;
+    $('#quarterScoreFields').closest('.card').before(scoreModeCard);
+    scoreModeCard.querySelectorAll('[data-stats-type]').forEach(button=>button.onclick=()=>{selectedType=button.dataset.statsType;scoreModeCard.querySelectorAll('[data-stats-type]').forEach(item=>item.classList.toggle('active',item===button))});
+  }
   const refreshQuarterScores=()=>{$('#quarterScoreFields').innerHTML=gameQuarterScoreFields(g);bindNumberSteppers();document.querySelectorAll('#quarterScoreFields input').forEach(i=>i.oninput=syncFinalScoreInputsFromQuarters)};
   bindNumberSteppers();
   const qInput=$('#gQ');if(qInput)qInput.oninput=refreshQuarterScores;
@@ -448,9 +456,10 @@ function gameForm(g={}){
     const id=g.id||uid(),oldDate=g.date||'',newDate=$('#gDate').value,shouldPromote=!g.id||normalizeGameDate(oldDate)!==normalizeGameDate(newDate);
     const qCount=Math.max(1,num($('#gQ').value));
     const scoreData=collectQuarterScores(qCount);if(!scoreData)return;
+    if(registrationChoices.score&&selectedType==='quarter'&&!scoreData.quarterScores){toast('Q毎スコアを1つ以上入力してください');return}
     const finalScore=scoreData.finalScore||{team:num($('#gOwn').value),opponent:num($('#gOppScore').value)};
     const team=state.opponentTeams.find(item=>item.id===$('#gOpponentTeam').value),usingLegacy=$('#gOpponentTeam').value==='legacy';if(!team&&!usingLegacy){toast('対戦チームを選択してください');return}const opponentName=team?.teamName||legacy;
-    const gameCategory=$('#gCategory').value,data={date:newDate,quarters:qCount,quarterCount:qCount,statsRegistrationType:selectedType,...(!g.id?{shotRegistrationMode:'detail'}:{}),category:gameCategory,tournament:$('#gTour').value,opponent:opponentName,opponentTeamId:team?.id||g.opponentTeamId||null,opponentTeamName:opponentName,opponentPrefecture:team?.prefecture||g.opponentPrefecture||null,opponentRankAtGame:team?.calculatedRank||null,ownScore:finalScore.team,oppScore:finalScore.opponent,finalScore:{team:finalScore.team,opponent:finalScore.opponent},sameDateOrder:shouldPromote?0:sameDateOrderValue(g),updatedAt:serverTimestamp()};
+    const gameCategory=$('#gCategory').value,data={date:newDate,quarters:qCount,quarterCount:qCount,statsRegistrationType:selectedType,...(!g.id?{shotRegistrationMode:'detail',registrationDefaultsVersion:2}:{}),category:gameCategory,tournament:$('#gTour').value,opponent:opponentName,opponentTeamId:team?.id||g.opponentTeamId||null,opponentTeamName:opponentName,opponentPrefecture:team?.prefecture||g.opponentPrefecture||null,opponentRankAtGame:team?.calculatedRank||null,ownScore:finalScore.team,oppScore:finalScore.opponent,finalScore:{team:finalScore.team,opponent:finalScore.opponent},sameDateOrder:shouldPromote?0:sameDateOrderValue(g),updatedAt:serverTimestamp()};
     if(scoreData.quarterScores)data.quarterScores=scoreData.quarterScores;
     if(!g.id)data.createdAt=serverTimestamp();
     await setDoc(doc(db,'games',id),data,{merge:true});
@@ -510,6 +519,7 @@ function statsForm(gameId,forcedQuarter=null){
   const g=state.games.find(x=>x.id===gameId);
   const shotKeys=['twoPa','twoPm','threePa','threePm'],otherKeys=STAT_KEYS.filter(key=>!shotKeys.includes(key)),mode=getGameStatsRegistrationType(g);
   const existingForGame=state.stats.filter(x=>x.gameId===gameId);
+  const allowShotModeChoice=Boolean(g?.id&&num(g.registrationDefaultsVersion)<2&&!hasShotPointData(g,state.stats));
   let defaultPid=state.lastPlayerId||'';
   if(defaultPid&&!state.players.some(p=>p.id===defaultPid))defaultPid='';
   if(!defaultPid&&existingForGame[0])defaultPid=existingForGame[0].playerId;
@@ -524,6 +534,7 @@ function statsForm(gameId,forcedQuarter=null){
   modal(`<h2>${targetLabel}</h2><p class="sub">${g?`vs ${g.opponent||''}｜${g.date||''}｜${g.tournament||''}`:''}</p><p class="sub stats-target-note">対象：${mode==='quarter'?`${selectedQuarter}Q`:'試合'}</p><label>選手<select id="sfPlayer">${state.players.map(p=>`<option value="${p.id}" ${p.id===defaultPid?'selected':''}>No.${p.number||''} ${p.name||''}</option>`).join('')}</select></label><div id="sfBody"></div><div class="row game-form-actions stats-form-actions"><button class="btn" id="saveStats">保存</button><button class="btn ghost" id="closeModal">閉じる</button>${mode==='quarter'?'<button type="button" class="btn danger delete-right hidden" id="deleteQuarterStats">このQを削除</button>':''}</div>`);
   let selectedShootingMode='';
   const defaultShootingMode=()=>{
+    if(hasShotPointData(g,state.stats))return 'detailed';
     if(g?.shotRegistrationMode==='detail')return 'detailed';
     const gameStats=state.stats.filter(item=>item.gameId===gameId);
     return gameStats.some(item=>item.shotInputMode==='detailed'||item.shotTrackingMode==='detailed'||Object.values(item.quarters||{}).some(q=>q?.shotInputMode==='detailed'||q?.shotTrackingMode==='detailed'))?'detailed':'legacy';
@@ -533,7 +544,9 @@ function statsForm(gameId,forcedQuarter=null){
     if(!preserveMode)selectedShootingMode=source.shotInputMode||(source.shotTrackingMode==='detailed'?'detailed':defaultShootingMode());
     const activeKeys=selectedShootingMode==='legacy'?STAT_KEYS:otherKeys;activeKeys.forEach(k=>base[k]=num(source[k]));
     const registered=registeredQuarterNumbers(s);
-    $('#sfBody').innerHTML=(selectedShootingMode==='detailed'?shotManagementHtml(source,mode==='quarter'):shootingInputGrid(source))+inputGrid(source);
+    const modeControl=allowShotModeChoice?`<div class="card shooting-mode-card"><div class="section-title">シュート登録方式</div><div class="seg shooting-mode-seg"><button type="button" class="shooting-mode-btn ${selectedShootingMode==='legacy'?'active':''}" data-shooting-mode="legacy">従来の数値入力</button><button type="button" class="shooting-mode-btn ${selectedShootingMode==='detailed'?'active':''}" data-shooting-mode="detailed">シュートポイント登録</button></div><p class="sub">シュートポイントを1件以上保存すると、以後は新方式に固定されます。</p></div>`:'';
+    $('#sfBody').innerHTML=modeControl+(selectedShootingMode==='detailed'?shotManagementHtml(source,mode==='quarter'):shootingInputGrid(source))+inputGrid(source);
+    document.querySelectorAll('[data-shooting-mode]').forEach(button=>button.onclick=()=>{selectedShootingMode=button.dataset.shootingMode;renderInputs(true)});
     if(selectedShootingMode==='detailed')bindShotManagement(gameId,$('#sfPlayer').value,mode==='quarter'?q:null,source);
     bindNumberSteppers();setupStatsDirty(base);
     const del=$('#deleteQuarterStats');
@@ -545,7 +558,7 @@ function statsForm(gameId,forcedQuarter=null){
   };
   const load=()=>{const pid=$('#sfPlayer').value;state.lastPlayerId=pid;setLastPlayerId(pid);renderInputs()};
   $('#sfPlayer').onchange=load;load();
-  $('#saveStats').onclick=async()=>{const pid=$('#sfPlayer').value,id=`${gameId}_${pid}`,stat=statForPlayer(),source=mode==='quarter'?(stat.quarters?.[quarterKey(selectedQuarter)]||{}):stat;const data={gameId,playerId:pid,updatedAt:serverTimestamp()},activeKeys=selectedShootingMode==='legacy'?STAT_KEYS:otherKeys,replacementTotals=selectedShootingMode==='detailed'?shotTotals(source.shots||[]):null;if(mode==='quarter'){const q=selectedQuarter,qData={registered:true,quarter:q,shotInputMode:selectedShootingMode,shotTrackingMode:selectedShootingMode,...(replacementTotals||{})};activeKeys.forEach(k=>qData[k]=num($('#'+k).value));data.quarters={[quarterKey(q)]:qData}}else{data.quarters=g?.quarters||4;data.shotInputMode=selectedShootingMode;data.shotTrackingMode=selectedShootingMode;if(replacementTotals)Object.assign(data,replacementTotals);activeKeys.forEach(k=>data[k]=num($('#'+k).value))}await saveStatsAndReturnToTop({save:()=>setDoc(doc(db,'stats',id),data,{merge:true}),onSuccess:()=>{if(mode==='quarter')setDetailStatsView(gameId,`q${selectedQuarter}`);state.lastPlayerId=pid;setLastPlayerId(pid);closeModal();render();toast('保存しました')},onFailure:error=>{console.error(error);toast('保存に失敗しました')},schedule:callback=>requestAnimationFrame(callback),scroll:options=>window.scrollTo(options)})};
+  $('#saveStats').onclick=async()=>{const pid=$('#sfPlayer').value,id=`${gameId}_${pid}`,stat=statForPlayer(),source=mode==='quarter'?(stat.quarters?.[quarterKey(selectedQuarter)]||{}):stat;const data={gameId,playerId:pid,updatedAt:serverTimestamp()},activeKeys=selectedShootingMode==='legacy'?STAT_KEYS:otherKeys,hasDetailedShots=Array.isArray(source.shots)&&source.shots.length>0,replacementTotals=selectedShootingMode==='detailed'&&(!allowShotModeChoice||hasDetailedShots)?shotTotals(source.shots||[]):null;if(mode==='quarter'){const q=selectedQuarter,qData={registered:true,quarter:q,shotInputMode:selectedShootingMode,shotTrackingMode:selectedShootingMode,...(replacementTotals||{})};activeKeys.forEach(k=>qData[k]=num($('#'+k).value));data.quarters={[quarterKey(q)]:qData}}else{data.quarters=g?.quarters||4;data.shotInputMode=selectedShootingMode;data.shotTrackingMode=selectedShootingMode;if(replacementTotals)Object.assign(data,replacementTotals);activeKeys.forEach(k=>data[k]=num($('#'+k).value))}await saveStatsAndReturnToTop({save:()=>setDoc(doc(db,'stats',id),data,{merge:true}),onSuccess:()=>{if(mode==='quarter')setDetailStatsView(gameId,`q${selectedQuarter}`);state.lastPlayerId=pid;setLastPlayerId(pid);closeModal();render();toast('保存しました')},onFailure:error=>{console.error(error);toast('保存に失敗しました')},schedule:callback=>requestAnimationFrame(callback),scroll:options=>window.scrollTo(options)})};
   $('#closeModal').onclick=closeModal;
 }
 async function import2026ShigaMen(){

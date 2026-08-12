@@ -69,7 +69,7 @@ assert.doesNotMatch(css, /running_shot[\s\S]{0,160}::before/);
 assert.doesNotMatch(css, /running_shot[\s\S]{0,160}font-size\s*:\s*0/);
 assert.doesNotMatch(index, /running_shot[\s\S]{0,200}::before/);
 assert.doesNotMatch(index, /running_shot[\s\S]{0,200}font-size\s*:\s*0/);
-assert.match(index, /js\/app\.js\?v=20260811-team-zero-hotfix-v4/);
+assert.match(index, /js\/app\.js\?v=20260812-registration-migration-ui-v1/);
 assert.doesNotMatch(index, /shot-analysis-area-tags\.js/);
 assert.doesNotMatch(index, /analysis-shot-area-player-controls\.js/);
 assert.doesNotMatch(index, /shot-analysis-legacy-filter-fix\.js/);
