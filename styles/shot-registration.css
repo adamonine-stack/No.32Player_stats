@@ -76,7 +76,10 @@ body.modal-open { position:fixed; left:0; right:0; width:100%; }
 .shooting-mode-card { margin:14px 0; }
 .shooting-mode-seg { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
 .shooting-mode-btn { min-height:48px; }
-.shot-total-status input[readonly] { opacity:1; color:#fff; background:#111b36; cursor:default; }
+.shot-total-item { min-width:0; color:var(--muted); font-size:12px; font-weight:900; }
+.shot-total-item span { display:block; }
+.shot-total-item output { display:flex; align-items:center; width:100%; min-height:42px; margin-top:2px; padding:10px 12px; border:1px solid var(--line); border-radius:14px; background:#111b36; color:#fff; font-size:16px; font-weight:700; line-height:1; pointer-events:none; user-select:none; -webkit-user-select:none; }
+@media(max-width:600px){.stats-form-compact .shot-total-item{font-size:10.5px;line-height:1}.stats-form-compact .shot-total-item output{min-height:34px;height:34px;margin-top:1px;padding:4px 7px;border-radius:10px;font-size:17px}}
 .legacy-shot-notice { border:1px solid #7c3aed; border-radius:12px; padding:14px; margin:12px 0; background:#15112b; }
 .legacy-shot-sheet { overflow:auto; max-height:60dvh; margin:14px 0; border:1px solid #33436a; border-radius:10px; }
 .legacy-shot-sheet table { width:100%; border-collapse:collapse; min-width:620px; }
