@@ -9,10 +9,14 @@ const statsForm=app.slice(app.indexOf("function statsForm"),app.indexOf("async f
 const analysisList=app.slice(app.indexOf("function analysisGameTable"),app.indexOf("function homeStatsModeControl"));
 const teamList=app.slice(app.indexOf("function teamGameList"),app.indexOf("function teamStatsForGames"));
 
-assert.ok(gameForm.includes("const currentType=g.id?getGameStatsRegistrationType(g):'quarter'"));
+assert.ok(gameForm.includes("hasQuarterScoreData(g)?'quarter':getGameStatsRegistrationType(g)"));
 assert.ok(gameForm.includes("shotRegistrationMode:'detail'"));
-assert.ok(!gameForm.includes("data-stats-type"));
-assert.ok(!statsForm.includes("data-shooting-mode"));
+assert.ok(gameForm.includes("registrationChoiceVisibility(g,state.stats)"));
+assert.ok(gameForm.includes("data-stats-type"));
+assert.ok(statsForm.includes("allowShotModeChoice"));
+assert.ok(statsForm.includes("data-shooting-mode"));
+assert.ok(gameForm.includes("Q毎スコアを1つ以上入力してください"));
+assert.ok(statsForm.includes("!allowShotModeChoice||hasDetailedShots"));
 assert.ok(!analysisList.includes("g.tournament||'大会未登録'"));
 assert.ok(!teamList.includes("g.tournament||'大会未登録'"));
 assert.match(css,/@media\(max-width:800px\)[\s\S]*grid-template-columns:minmax\(0,1fr\) minmax\(0,1fr\)/);
