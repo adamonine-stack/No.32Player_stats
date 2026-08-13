@@ -101,8 +101,7 @@ export function quarterScoreRows(game = {}) {
 
 export function hasQuarterScoreData(game = {}) {
   return Object.values(game.quarterScores || {}).some(score => score &&
-    (score.team !== undefined || score.opponent !== undefined ||
-     score.myScore !== undefined || score.opponentScore !== undefined));
+    typeof score === "object" && Object.values(score).some(value => value !== undefined && value !== null && value !== ""));
 }
 
 export function hasShotPointData(game = {}, stats = []) {
