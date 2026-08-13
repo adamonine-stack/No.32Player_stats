@@ -19,6 +19,8 @@ const detailedStats = [{
 assert.equal(hasQuarterScoreData(legacy), false);
 assert.equal(hasQuarterScoreData(quarterMigrated), true);
 assert.equal(hasQuarterScoreData({ quarterScores: { q1: { myScore: 0 } } }), true);
+assert.equal(hasQuarterScoreData({ quarterScores: { q1: { home: 17, away: 12 } } }), true);
+assert.equal(hasQuarterScoreData({ quarterScores: { q1: { team: "", opponent: "" } } }), false);
 assert.equal(hasShotPointData(legacy, []), false);
 assert.equal(hasShotPointData(legacy, detailedStats), true);
 assert.deepEqual(registrationChoiceVisibility({}, []), { score: false, shot: false });
