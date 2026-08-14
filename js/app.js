@@ -320,8 +320,8 @@ function sortPoint(e){const t=e.touches?.[0]||e.changedTouches?.[0]||e;return{cl
 function bindSortHandle(handle,item,itemSelector,saveOrder,canMove){
   handle.addEventListener('contextmenu',e=>{e.preventDefault();e.stopPropagation()});
   handle.addEventListener('click',e=>{e.preventDefault();e.stopPropagation()});
-  handle.addEventListener('pointerdown',e=>scheduleHandleSort(handle,item,itemSelector,saveOrder,e,canMove),{passive:false});
-  handle.addEventListener('touchstart',e=>scheduleHandleSort(handle,item,itemSelector,saveOrder,e,canMove),{passive:false});
+  const startEvent=('PointerEvent' in window)?'pointerdown':'touchstart';
+  handle.addEventListener(startEvent,e=>scheduleHandleSort(handle,item,itemSelector,saveOrder,e,canMove),{passive:false});
   handle.addEventListener('dragstart',e=>{e.preventDefault();e.stopPropagation()});
 }
 function scheduleHandleSort(handle,item,itemSelector,saveOrder,e,canMove){
@@ -336,9 +336,11 @@ function scheduleHandleSort(handle,item,itemSelector,saveOrder,e,canMove){
 function startHandleSort(handle,item,itemSelector,saveOrder,e,canMove){
   e.preventDefault();e.stopPropagation();if(activeSort)return;
   activeSort={item,itemSelector,saveOrder};item.classList.add('dragging');
-  const move=ev=>{if(!activeSort)return;ev.preventDefault();const p=sortPoint(ev);const target=[...document.querySelectorAll(itemSelector)].find(el=>{const r=el.getBoundingClientRect();return p.clientY>=r.top&&p.clientY<=r.bottom});if(!target||target===item||(canMove&&!canMove(item,target)))return;const rect=target.getBoundingClientRect();const after=(p.clientY-rect.top)>rect.height/2;target.parentNode.insertBefore(item,after?target.nextSibling:target)};
-  const end=ev=>{if(ev){ev.preventDefault();ev.stopPropagation()}document.removeEventListener('pointermove',move);document.removeEventListener('pointerup',end);document.removeEventListener('touchmove',move);document.removeEventListener('touchend',end);document.removeEventListener('touchcancel',end);item.classList.remove('dragging');const done=activeSort;activeSort=null;done.saveOrder()};
-  document.addEventListener('pointermove',move,{passive:false});document.addEventListener('pointerup',end,{passive:false});document.addEventListener('touchmove',move,{passive:false});document.addEventListener('touchend',end,{passive:false});document.addEventListener('touchcancel',end,{passive:false});
+  const touchInput=e.type.startsWith('touch');
+  const moveEvent=touchInput?'touchmove':'pointermove',endEvent=touchInput?'touchend':'pointerup';
+  const move=ev=>{if(!activeSort)return;ev.preventDefault();const p=sortPoint(ev);const targets=[...document.querySelectorAll(itemSelector)].filter(el=>el!==item&&(!canMove||canMove(item,el)));if(!targets.length)return;const before=targets.find(el=>{const r=el.getBoundingClientRect();return p.clientY<r.top+r.height/2});const parent=item.parentNode;if(before){parent.insertBefore(item,before)}else{const last=targets[targets.length-1];parent.insertBefore(item,last.nextSibling)}};
+  const end=ev=>{if(ev){ev.preventDefault();ev.stopPropagation()}document.removeEventListener(moveEvent,move);document.removeEventListener(endEvent,end);if(touchInput)document.removeEventListener('touchcancel',end);item.classList.remove('dragging');const done=activeSort;activeSort=null;done.saveOrder()};
+  document.addEventListener(moveEvent,move,{passive:false});document.addEventListener(endEvent,end,{passive:false});if(touchInput)document.addEventListener('touchcancel',end,{passive:false});
 }
 function bindPlayerSorting(){
   if(!state.user) return;
