@@ -5,7 +5,7 @@ const app = fs.readFileSync(new URL('../js/app.js', import.meta.url), 'utf8');
 const gameForm = app.slice(app.indexOf('function gameForm'), app.indexOf('function shotSourceFor'));
 
 assert.ok(gameForm.includes('const quarterScoresRegistered=hasQuarterScoreData(g)'));
-assert.ok(gameForm.includes("const totalScoreFields=g.id&&!quarterScoresRegistered?`<label>自チーム得点"));
+assert.ok(gameForm.includes("const totalScoreFields=registrationChoices.score&&!quarterScoresRegistered?`<label>自チーム得点"));
 assert.ok(gameForm.includes('if(registrationChoices.score&&!quarterScoresRegistered)'));
 assert.ok(gameForm.includes('${totalScoreFields}</div><div class="card"><div class="section-title">Q別スコア（累積）'));
 assert.ok(gameForm.includes("$('#gOwn')?.value??g.ownScore"));
