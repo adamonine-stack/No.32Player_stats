@@ -23,4 +23,8 @@ assert.match(css,/@media\(max-width:800px\)[\s\S]*grid-template-columns:minmax\(
 assert.match(css,/input\[type="date"\][\s\S]*max-width:100%/);
 assert.match(css,/@media\(max-width:340px\)[\s\S]*grid-template-columns:minmax\(0,1fr\)/);
 assert.ok(html.includes("registration-standardization.css?v=20260811-v2"));
+assert.ok(app.includes('data-day-picker="${scope}"'),"day selection uses a tappable calendar control");
+assert.ok(app.includes("state[calendarStateKey(scope)]=calendarMonthFor(selected);render()"),"day picker reopens on the selected month");
+assert.ok(app.includes("date===selected?'selected':''"),"calendar marks the selected day");
+
 console.log("registration standardization contract tests passed");
