@@ -585,7 +585,7 @@ async function import2026ShigaMen(){
 async function import2026KyotoMen(){
   if(!requireLogin()||!confirm('京都府U15クラブバスケットボール選手権大会の男子16チーム・大会実績・15試合を登録しますか？'))return;
   const tournament=TOURNAMENT_2026_KYOTO_U15_MEN,existingByName=new Map(),teamByName=new Map();
-  for(const team of state.opponentTeams){const key=normalizeImportedTeamName(team.normalizedTeamName||team.teamName),items=existingByName.get(key)||[];items.push(team);existingByName.set(key,items)}
+  for(const team of state.opponentTeams){const key=normalizeImportedTeamName(team.teamName||team.normalizedTeamName),items=existingByName.get(key)||[];items.push(team);existingByName.set(key,items)}
   const reviews=[];
   for(const imported of TEAMS_2026_KYOTO_U15_MEN){const candidates=(existingByName.get(imported.normalizedTeamName)||[]).filter(team=>team.prefecture===tournament.prefecture),different=candidates.filter(team=>String(team.teamName||'').trim()!==imported.teamName);if(candidates.length>1||different.length)reviews.push({imported,candidates})}
   if(reviews.length){modal(`<h2>表記揺れ候補の確認が必要です</h2><p>自動登録は行っていません。対戦チームマスタで同一チームか確認し、表記を整理してから再実行してください。</p><p>${reviews.map(item=>`${escapeHtml(item.imported.teamName)} ↔ ${item.candidates.map(team=>escapeHtml(team.teamName||'(名称なし)')).join(' / ')}`).join('<br>')}</p><button class="btn" id="closeModal">閉じる</button>`);$('#closeModal').onclick=closeModal;return}
