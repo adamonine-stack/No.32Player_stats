@@ -1,0 +1,20 @@
+import assert from 'node:assert/strict';
+import { calculateOpponentTeamRank } from '../js/calculations/opponent-team-calculations.js';
+import { TOURNAMENT_2026_KYOTO_U15_MEN, TEAMS_2026_KYOTO_U15_MEN, MATCHES_2026_KYOTO_U15_MEN } from '../js/data/2026-kyoto-u15-men.js';
+
+assert.equal(TOURNAMENT_2026_KYOTO_U15_MEN.prefecture,'京都府');
+assert.equal(TOURNAMENT_2026_KYOTO_U15_MEN.category,'U15');
+assert.equal(TOURNAMENT_2026_KYOTO_U15_MEN.gender,'男子');
+assert.equal(TOURNAMENT_2026_KYOTO_U15_MEN.participantCount,16);
+assert.equal(TEAMS_2026_KYOTO_U15_MEN.length,16);
+assert.equal(new Set(TEAMS_2026_KYOTO_U15_MEN.map(team=>team.normalizedTeamName)).size,16);
+assert.equal(MATCHES_2026_KYOTO_U15_MEN.length,15);
+assert.deepEqual(Object.fromEntries(['S','A+','A','B+','B','C','D'].map(rank=>[rank,TEAMS_2026_KYOTO_U15_MEN.filter(team=>team.rank===rank).length])),{S:1,'A+':1,A:2,'B+':4,B:0,C:0,D:8});
+for(const team of TEAMS_2026_KYOTO_U15_MEN)assert.equal(calculateOpponentTeamRank([{placementRank:team.rank}]).rank,team.rank,team.teamName);
+assert.equal(calculateOpponentTeamRank([{placementRank:'A'},{placementRank:'B+'}]).rank,'A');
+assert.equal(calculateOpponentTeamRank([{placementRank:'B'},{placementRank:'A'}]).rank,'A');
+assert.ok(MATCHES_2026_KYOTO_U15_MEN.every(game=>TEAMS_2026_KYOTO_U15_MEN.some(team=>team.teamName===game.winner)&&TEAMS_2026_KYOTO_U15_MEN.some(team=>team.teamName===game.loser)));
+const old={tournamentId:'older-event',year:2025,placementRank:'A'},kyoto={tournamentId:TOURNAMENT_2026_KYOTO_U15_MEN.id,year:2026,placementRank:'B+'},first=[old,kyoto],second=first.map(item=>item.tournamentId===kyoto.tournamentId?{...item,...kyoto}:item);
+assert.equal(second.length,2);
+assert.equal(calculateOpponentTeamRank(second).rank,'A');
+console.log('2026 Kyoto U15 men import data: ok');
