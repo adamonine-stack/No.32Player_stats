@@ -20,5 +20,6 @@ assert.equal(second.length,2);
 assert.equal(calculateOpponentTeamRank(second).rank,'A');
 const app=fs.readFileSync(new URL('../js/app.js',import.meta.url),'utf8');
 assert.ok(app.includes(".find(team=>team.prefecture===tournament.prefecture)"),'same-name teams in other prefectures stay separate');
+assert.ok(app.includes("normalizeImportedTeamName(team.teamName||team.normalizedTeamName)"),'current display name wins over stale normalized name after a confirmed rename');
 assert.ok(app.includes("item.tournamentId===tournament.id||item.tournamentName===tournament.name"),'manual same-event placement is reused on reimport');
 console.log('2026 Kyoto U15 men import data: ok');
