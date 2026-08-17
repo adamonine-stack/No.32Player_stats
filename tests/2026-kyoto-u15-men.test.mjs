@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { calculateOpponentTeamRank } from '../js/calculations/opponent-team-calculations.js';
 import { TOURNAMENT_2026_KYOTO_U15_MEN, TEAMS_2026_KYOTO_U15_MEN, MATCHES_2026_KYOTO_U15_MEN } from '../js/data/2026-kyoto-u15-men.js';
+import fs from 'node:fs';
 
 assert.equal(TOURNAMENT_2026_KYOTO_U15_MEN.prefecture,'京都府');
 assert.equal(TOURNAMENT_2026_KYOTO_U15_MEN.category,'U15');
@@ -17,4 +18,7 @@ assert.ok(MATCHES_2026_KYOTO_U15_MEN.every(game=>TEAMS_2026_KYOTO_U15_MEN.some(t
 const old={tournamentId:'older-event',year:2025,placementRank:'A'},kyoto={tournamentId:TOURNAMENT_2026_KYOTO_U15_MEN.id,year:2026,placementRank:'B+'},first=[old,kyoto],second=first.map(item=>item.tournamentId===kyoto.tournamentId?{...item,...kyoto}:item);
 assert.equal(second.length,2);
 assert.equal(calculateOpponentTeamRank(second).rank,'A');
+const app=fs.readFileSync(new URL('../js/app.js',import.meta.url),'utf8');
+assert.ok(app.includes(".find(team=>team.prefecture===tournament.prefecture)"),'same-name teams in other prefectures stay separate');
+assert.ok(app.includes("item.tournamentId===tournament.id||item.tournamentName===tournament.name"),'manual same-event placement is reused on reimport');
 console.log('2026 Kyoto U15 men import data: ok');
