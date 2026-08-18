@@ -8,5 +8,7 @@ assert.match(app, /!game\.opponentTeamId/);
 assert.match(app, /tournamentPlacements/);
 assert.match(app, /onclick="openGameDetail/);
 assert.match(app, /event\.stopPropagation\(\);editOpponentTeam/);
+assert.match(app, /escapeHtml\(scoreLine\(game\)\).*escapeHtml\(resultWord\(game\)\)/);
+assert.doesNotMatch(app, /escapeHtml\(resultText\(game\)\)/);
 assert.match(css, /opponent-game-record/);
 console.log('opponent team detail contract: ok');
