@@ -53,48 +53,14 @@
     flex: 0 0 auto;
   }
 
-  #modalRoot > .modal.shot-entry-viewport #shotCourtRoot {
-    display: flex;
-    justify-content: center;
-  }
-
-  #modalRoot > .modal.shot-entry-viewport .shot-court {
-    width: auto;
-    max-width: 100%;
-    height: min(39dvh, 360px);
-    margin: 2px auto 6px;
-  }
-
   #modalRoot > .modal.shot-entry-viewport .shot-panel {
     margin-top: 0;
-    padding: 8px;
+    padding: 6px 8px 8px;
     border-radius: 10px;
   }
 
   #modalRoot > .modal.shot-entry-viewport .shot-summary {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 4px;
-    margin-bottom: 5px;
-    font-size: 10px;
-    line-height: 1.2;
-  }
-
-  #modalRoot > .modal.shot-entry-viewport .shot-summary span {
-    min-width: 0;
-    padding: 4px;
-    border: 1px solid #33436a;
-    border-radius: 6px;
-    text-align: center;
-  }
-
-  #modalRoot > .modal.shot-entry-viewport .shot-summary b {
-    display: block;
-    margin-top: 2px;
-    overflow: hidden;
-    color: #fff;
-    font-size: 11px;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    display: none;
   }
 
   #modalRoot > .modal.shot-entry-viewport .shot-type-grid,
