@@ -42,51 +42,94 @@
 
   #modalRoot > .modal.shot-entry-viewport .shot-modal-head h2 {
     margin: 0;
-    font-size: clamp(24px, 7vw, 32px);
-    line-height: 1.1;
+    font-size: 18px;
+    line-height: 1.25;
   }
 
   #modalRoot > .modal.shot-entry-viewport .shot-close {
-    min-width: 48px;
-    min-height: 48px;
-    padding: 6px;
+    min-width: 40px;
+    min-height: 40px;
+    padding: 4px;
     flex: 0 0 auto;
   }
 
+  #modalRoot > .modal.shot-entry-viewport #shotCourtRoot {
+    display: flex;
+    justify-content: center;
+  }
+
+  #modalRoot > .modal.shot-entry-viewport .shot-court {
+    width: auto;
+    max-width: 100%;
+    height: min(39dvh, 360px);
+    margin: 2px auto 6px;
+  }
+
   #modalRoot > .modal.shot-entry-viewport .shot-panel {
-    margin-top: 8px;
-    padding: 10px;
-    border-radius: 12px;
+    margin-top: 0;
+    padding: 8px;
+    border-radius: 10px;
   }
 
   #modalRoot > .modal.shot-entry-viewport .shot-summary {
-    gap: 2px;
-    margin-bottom: 7px;
-    font-size: 14px;
-    line-height: 1.25;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 4px;
+    margin-bottom: 5px;
+    font-size: 10px;
+    line-height: 1.2;
+  }
+
+  #modalRoot > .modal.shot-entry-viewport .shot-summary span {
+    min-width: 0;
+    padding: 4px;
+    border: 1px solid #33436a;
+    border-radius: 6px;
+    text-align: center;
+  }
+
+  #modalRoot > .modal.shot-entry-viewport .shot-summary b {
+    display: block;
+    margin-top: 2px;
+    overflow: hidden;
+    color: #fff;
+    font-size: 11px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   #modalRoot > .modal.shot-entry-viewport .shot-type-grid,
   #modalRoot > .modal.shot-entry-viewport .shot-result-grid {
-    gap: 8px;
-    margin-top: 7px;
+    gap: 5px;
+    margin-top: 5px;
+  }
+
+  #modalRoot > .modal.shot-entry-viewport .shot-type-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   #modalRoot > .modal.shot-entry-viewport .shot-type {
-    min-height: 44px;
-    padding: 7px 5px;
-    font-size: 13px;
+    min-height: 34px;
+    padding: 4px 3px;
+    font-size: 11px;
+    line-height: 1.15;
   }
 
   #modalRoot > .modal.shot-entry-viewport .shot-foul-check {
-    min-height: 44px;
-    margin-top: 8px;
-    padding: 7px 10px;
-    font-size: 13px;
+    min-height: 34px;
+    margin-top: 5px;
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+
+  #modalRoot > .modal.shot-entry-viewport .shot-foul-check input {
+    width: 20px;
+    height: 20px;
   }
 
   #modalRoot > .modal.shot-entry-viewport .shot-result {
-    min-height: 44px;
+    min-height: 42px;
+    padding: 6px 10px;
+    font-size: 15px;
   }
 
   #modalRoot > .modal.shot-entry-viewport .shot-list {
