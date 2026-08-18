@@ -55,7 +55,7 @@ assert.equal(backcourtMade.points, 3);
 assert.equal(backcourtMade.shotArea, "backcourt_3p");
 assert.deepEqual(shotTotals([backcourtMade]), { twoPa: 0, twoPm: 0, threePa: 1, threePm: 1 });
 assert.deepEqual(allowedShotTypes("right_corner_3p"), ["jump_shot", "running_shot"]);
-assert.deepEqual(allowedShotTypes("backcourt_3p"), ["jump_shot"]);
+assert.deepEqual(allowedShotTypes("backcourt_3p"), ["jump_shot", "buzzer_beater"]);
 assert.deepEqual(allowedShotTypes("center_mid"), ["jump_shot", "running_shot", "floater"]);
 assert.deepEqual(allowedShotTypes("inside"), ["jump_shot", "running_shot", "layup", "floater", "tap"]);
 assert.deepEqual(allowedShotTypes("under_basket"), ["jump_shot", "running_shot", "layup", "floater", "tap"]);

@@ -8,6 +8,7 @@ export const state = {
   gameSortDirection: getGameSortDirection(),
   stats: [],
   opponentTeams: [],
+  selectedOpponentTeamId: "",
   analysisCalendarMonth: "",
   teamCalendarMonth: "",
   lastPlayerId: getLastPlayerId(),

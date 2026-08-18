@@ -21,7 +21,8 @@ export const SHOT_TYPES = Object.freeze({
   running_shot: "ランニングシュート",
   layup: "レイアップ",
   floater: "フローター",
-  tap: "タップ"
+  tap: "タップ",
+  buzzer_beater: "ブザービーター"
 });
 
 export const SHOT_AREA_ORDER = Object.freeze(Object.keys(SHOT_AREAS).filter(id => id !== "long_range_3p"));
@@ -90,7 +91,7 @@ export function shotValueForArea(areaId) {
 
 export function allowedShotTypes(areaId) {
   const group = SHOT_AREAS[areaId]?.group;
-  if (areaId === "backcourt_3p") return ["jump_shot"];
+  if (areaId === "backcourt_3p") return ["jump_shot", "buzzer_beater"];
   if (group === "three") return ["jump_shot", "running_shot"];
   if (group === "mid") return ["jump_shot", "running_shot", "floater"];
   if (group === "inside" || group === "under") return ["jump_shot", "running_shot", "layup", "floater", "tap"];

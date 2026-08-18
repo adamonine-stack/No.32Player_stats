@@ -1,0 +1,12 @@
+import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
+const app = await readFile(new URL('../js/app.js', import.meta.url), 'utf8');
+const css = await readFile(new URL('../styles/opponent-teams.css', import.meta.url), 'utf8');
+assert.match(app, /opponentTeamDetailView/);
+assert.match(app, /game\.opponentTeamId===team\.id/);
+assert.match(app, /!game\.opponentTeamId/);
+assert.match(app, /tournamentPlacements/);
+assert.match(app, /onclick="openGameDetail/);
+assert.match(app, /event\.stopPropagation\(\);editOpponentTeam/);
+assert.match(css, /opponent-game-record/);
+console.log('opponent team detail contract: ok');

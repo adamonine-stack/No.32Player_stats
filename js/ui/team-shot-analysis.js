@@ -148,6 +148,7 @@ ${areaOverlaySvg(selectedAreas)}<g class="shot-markers">${markers.map(point => `
     let distance = 'all';
     let side = 'all';
     let selectedType = '';
+    let excludeBuzzerBeaters = false;
     let filters = { value: '', result: '', type: '', foul: '' };
 
     scrollY = window.scrollY || 0;
@@ -164,7 +165,7 @@ ${areaOverlaySvg(selectedAreas)}<g class="shot-markers">${markers.map(point => `
         <div class="tag-head"><div class="tag-title">複合エリア分析</div><div class="tag-current" data-team-tag-current></div></div>
         <div class="tag-label">距離</div><div class="tag-buttons" data-team-distance></div>
         <div class="tag-label">方向</div><div class="tag-buttons side" data-team-side></div>
-        <div class="team-shot-analysis-result"><div><span>登録</span><b data-team-registered>0</b></div><div><span>FG試投</span><b data-team-attempts>0</b></div><div><span>成功</span><b data-team-made>0</b></div><div class="rate"><span>成功率</span><b data-team-rate>-</b></div></div>
+        <label class="buzzer-exclusion-toggle"><input type="checkbox" data-team-exclude-buzzer> 3P集計からブザービーターを除外</label><div class="team-shot-analysis-result"><div><span>登録</span><b data-team-registered>0</b></div><div><span>FG試投</span><b data-team-attempts>0</b></div><div><span>成功</span><b data-team-made>0</b></div><div class="rate"><span>成功率</span><b data-team-rate>-</b></div></div>
       </div>
       <div class="team-shot-analysis-filter-row" data-team-primary-filters></div>
       <div class="team-shot-analysis-filter-row" data-team-type-filters></div>
@@ -224,15 +225,19 @@ ${areaOverlaySvg(selectedAreas)}<g class="shot-markers">${markers.map(point => `
     const buttonSet = (options, current, field) => options.map(([value, label]) => `<button type="button" class="tag-button ${current === value ? 'active' : ''}" data-team-tag-field="${field}" data-value="${value}">${label}</button>`).join('');
 
     const render = () => {
-      const base = filteredBase();
+      const rawBase = filteredBase();
+      const base = excludeBuzzerBeaters ? rawBase.filter(shot => normalizedShotType(shot) !== 'buzzer_beater') : rawBase;
       const modeShots = areaFiltered(base);
       const displayShots = selectedType ? modeShots.filter(shot => normalizedShotType(shot) === selectedType) : modeShots;
       const visibleAreas = selectedAreas.size ? [...selectedAreas] : [];
-      const aggregate = aggregateShotAnalysis(base, { distance, side });
+      const aggregate = aggregateShotAnalysis(rawBase, { distance, side, excludeBuzzerBeaters });
       root.querySelector('[data-team-distance]').innerHTML = buttonSet(SHOT_ANALYSIS_DISTANCE_OPTIONS, distance, 'distance');
       root.querySelector('[data-team-side]').innerHTML = buttonSet(SHOT_ANALYSIS_SIDE_OPTIONS, side, 'side');
       const distanceLabel = SHOT_ANALYSIS_DISTANCE_OPTIONS.find(([id]) => id === distance)?.[1] || distance;
       const sideLabel = SHOT_ANALYSIS_SIDE_OPTIONS.find(([id]) => id === side)?.[1] || side;
+      const exclusionToggle = root.querySelector('[data-team-exclude-buzzer]');
+      exclusionToggle.checked = excludeBuzzerBeaters;
+      exclusionToggle.onchange = event => { excludeBuzzerBeaters = event.target.checked; render(); };
       root.querySelector('[data-team-tag-current]').textContent = `${distanceLabel} × ${sideLabel}`;
       root.querySelector('[data-team-registered]').textContent = aggregate.registered;
       root.querySelector('[data-team-attempts]').textContent = aggregate.attempts;

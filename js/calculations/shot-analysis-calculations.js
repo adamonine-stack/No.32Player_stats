@@ -78,7 +78,7 @@ export function matchesShotAnalysisTags(shot = {}, { distance = 'all', side = 'a
 }
 
 export function filterShotsByAnalysisTags(shots = [], filters = {}) {
-  return shots.map(normalizeShot).filter(shot => matchesShotAnalysisTags(shot, filters));
+  return shots.map(normalizeShot).filter(shot => matchesShotAnalysisTags(shot, filters) && !(filters.excludeBuzzerBeaters && shot.shotType === 'buzzer_beater'));
 }
 
 export function aggregateShotAnalysis(shots = [], filters = {}) {
