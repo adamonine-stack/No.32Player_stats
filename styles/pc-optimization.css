@@ -1,0 +1,193 @@
+/* Desktop layout follows the compact mobile workflows while using horizontal space. */
+@media (min-width: 801px) {
+  .app {
+    max-width: 1600px;
+    width: min(100% - 40px, 1600px);
+    padding: 20px 0 48px;
+  }
+
+  .layout {
+    grid-template-columns: 248px minmax(0, 1fr);
+    gap: 24px;
+  }
+
+  .content,
+  #view,
+  .analysis-screen,
+  .team-screen,
+  .opponent-team-detail {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .analysis-screen > .card,
+  .home-pc > .card,
+  .team-screen > .card,
+  .opponent-team-detail > .card {
+    margin-bottom: 16px;
+  }
+
+  .analysis-filter.upper-filter-layout {
+    grid-template-columns: minmax(180px, .8fr) minmax(180px, .8fr) minmax(220px, 1fr);
+    align-items: end;
+    column-gap: 16px;
+  }
+
+  .analysis-filter.upper-filter-layout > .wide {
+    grid-column: 1 / -1;
+  }
+
+  .analysis-filter-card .analysis-target-row {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(220px, 1fr));
+    max-width: 720px;
+  }
+
+  .analysis-summary-info .analysis-info-top {
+    grid-template-columns: minmax(0, 1fr) minmax(240px, auto) !important;
+  }
+
+  .analysis-shot-card,
+  .analysis-break-card {
+    padding: 18px 20px;
+  }
+
+  .analysis-game-list.compact {
+    max-height: 340px;
+  }
+
+  .analysis-game-item {
+    grid-template-columns: minmax(220px, .9fr) minmax(0, 1.7fr);
+    padding: 12px 16px;
+  }
+
+  .team-stat-detail {
+    max-width: 1180px;
+    margin-inline: auto;
+  }
+
+  .team-detail-row {
+    font-size: 14px;
+  }
+
+  .team-detail-row > div {
+    padding: 11px 10px;
+  }
+
+  .team-detail-table.value .team-detail-row {
+    grid-template-columns: 56px minmax(240px, 1fr) 110px 120px !important;
+  }
+
+  .team-detail-table.shot .team-detail-row {
+    grid-template-columns: 56px minmax(240px, 1fr) 100px repeat(3, 110px) !important;
+  }
+
+  .opponent-team-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .opponent-team-card {
+    height: 100%;
+    padding: 16px 18px;
+  }
+
+  .opponent-detail-summary {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .opponent-record-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .opponent-game-record {
+    grid-template-columns: 110px minmax(240px, 1fr) 150px 130px;
+    padding: 12px 16px;
+  }
+
+  .modal {
+    padding: 24px;
+  }
+
+  .modal .card:has(#saveGame) {
+    max-width: 1040px;
+    max-height: calc(100dvh - 48px);
+    padding: 18px 20px;
+  }
+
+  .modal .card:has(#saveGame) .game-form-grid {
+    grid-template-columns: minmax(170px, 1.05fr) minmax(100px, .55fr) minmax(150px, .8fr) minmax(220px, 1.35fr);
+    gap: 10px 12px;
+  }
+
+  .modal .card:has(#saveGame) .opponent-game-info {
+    align-self: end;
+    min-height: 44px;
+  }
+
+  .modal .card:has(#saveGame) > .card {
+    margin: 12px 0;
+    padding: 12px 14px;
+    box-shadow: none;
+  }
+
+  .modal .card:has(.stats-form-grid) {
+    max-width: 1160px !important;
+    max-height: calc(100dvh - 48px) !important;
+    padding: 14px 18px !important;
+  }
+
+  .modal .card:has(.stats-form-grid) #sfPlayer {
+    max-width: 420px;
+  }
+
+  .modal .card:has(.stats-form-grid) .stats-form-grid {
+    grid-template-columns: repeat(7, minmax(92px, 1fr));
+    gap: 8px !important;
+  }
+
+  .modal .card:has(.stats-form-grid) .shooting-number-grid,
+  .modal .card:has(.stats-form-grid) .shot-total-status {
+    grid-template-columns: repeat(4, minmax(110px, 1fr));
+    max-width: 650px;
+  }
+
+  .modal .card:has(.stats-form-grid) .stats-form-grid label {
+    min-width: 0;
+    font-size: 12px !important;
+  }
+
+  .modal .card:has(.stats-form-grid) .stats-form-actions {
+    position: sticky;
+    bottom: -14px;
+    z-index: 2;
+    margin: 10px -18px -14px !important;
+    padding: 10px 18px 14px;
+    border-top: 1px solid var(--line);
+    background: rgba(10, 10, 10, .96);
+  }
+
+  .modal .card:has(.stats-form-grid) .stats-form-actions .btn {
+    min-width: 112px;
+  }
+}
+
+@media (min-width: 801px) and (max-width: 1100px) {
+  .app {
+    width: calc(100% - 28px);
+  }
+
+  .layout {
+    grid-template-columns: 220px minmax(0, 1fr);
+    gap: 16px;
+  }
+
+  .modal .card:has(.stats-form-grid) .stats-form-grid {
+    grid-template-columns: repeat(4, minmax(92px, 1fr));
+  }
+
+  .opponent-team-list,
+  .opponent-record-list {
+    grid-template-columns: 1fr;
+  }
+}
