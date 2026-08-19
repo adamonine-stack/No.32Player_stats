@@ -2,7 +2,7 @@ import { normalizeImportedTeamName } from './2026-hyogo-u15-men.js';
 export const normalizeCbgTeamIdentity=name=>String(name||'').normalize('NFKC').toLocaleLowerCase('ja').replace(/\s+/g,'');
 
 export const TOURNAMENT_2025_CBG_HYOGO_MEN={id:'2025-26-cbg-hyogo-men',competitionId:'2025-26-cbg-hyogo-men',year:2025,season:'2025-26',name:'2025年度 第14回 CBG 兵庫県予選大会 男子',shortName:'2025年度 第14回 CBG兵庫県予選大会',competitionName:'2025年度 第14回 CBG兵庫県予選大会',competitionType:'兵庫県大会',prefecture:'兵庫県',category:'U15男子',gender:'男子',participantCount:39,generationType:'previous',sourceType:'official_tournament_bracket',resultConfirmed:true,resultStatus:'completed'};
-export const CBG_CANONICAL_NAMES=new Map([['All Blacks A','All blacks'],['BRAVEBIRDS','BRAVE BIRDS'],['BRAVEBIRDS u14','BRAVE BIRDS u14'],['BAYCROWN JUNIOR','BAY CROWN JUNIOR'],['EPIC BASKETBALL CLUB U15','EPIC BASKETBALL CLUB'],['team DENY','team DENY'],['TEDDY BASKETBALL CLUB','UNICORN BASKETBALL CLUB(旧TEDDY)']]);
+export const CBG_CANONICAL_NAMES=new Map([['All Blacks A','All blacks'],['BRAVEBIRDS','BRAVE BIRDS'],['BRAVEBIRDS u14','BRAVE BIRDS u14'],['BAYCROWN JUNIOR','BAY CROWN JUNIOR'],['DIVE','DIVE basketball academy'],['EPIC BASKETBALL CLUB U15','EPIC BASKETBALL CLUB'],['SAKURA PRESS 男子','SAKURA PRESS'],['team DENY','team DENY'],['TEDDY BASKETBALL CLUB','UNICORN BASKETBALL CLUB(旧TEDDY)'],['Wild Wolves U-15','Wild Wolves']]);
 const RESULT={champion:['優勝','S',5],runner_up:['準優勝','A+',4],best4:['ベスト4','A',3],best8:['ベスト8','B+',2],best16:['ベスト16','B',1],best32:['ベスト32','C',1],first_round:['初戦敗退','D',0],withdrawn:['棄権','D',0]};
 const rows=[
  ['ゴッドドア','champion'],['KARTER','runner_up'],['HDC Academy Cranes','best4'],['G.Dark Horse','best4'],
