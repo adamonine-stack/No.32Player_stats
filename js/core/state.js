@@ -1,10 +1,17 @@
-import { getGameSortDirection, getLastPlayerId } from "./storage.js";
+import { getGameSortDirection, getLastPlayerId, getSelectedSeasonId } from "./storage.js";
+import { DEFAULT_SEASON_ID, DEFAULT_SEASONS } from "../calculations/season-calculations.js";
 
 export const state = {
   user: null,
   tab: "home",
   players: [],
+  allPlayers: [],
+  playerSeasons: [],
   games: [],
+  allGames: [],
+  seasons: DEFAULT_SEASONS,
+  activeSeasonId: DEFAULT_SEASON_ID,
+  selectedSeasonId: getSelectedSeasonId() || DEFAULT_SEASON_ID,
   gameSortDirection: getGameSortDirection(),
   stats: [],
   opponentTeams: [],
