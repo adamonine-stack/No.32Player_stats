@@ -1,0 +1,105 @@
+/* Match Players / Games list headers to the mobile Analysis title treatment. */
+@media (max-width: 800px) {
+  /* Remove the large enclosing card only for the two list screens so the
+     title becomes a standalone page header like Analysis. */
+  body.bg-list #view > .card:has(#addPlayerMobile),
+  body.bg-list #view > .card:has(#toggleGameSort) {
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    padding: 0 8px 96px !important;
+    margin: 0 !important;
+  }
+
+  body.bg-list #view > .card:has(#addPlayerMobile) > .list-header,
+  body.bg-list #view > .card:has(#toggleGameSort) > .list-header {
+    min-height: 52px;
+    margin: 0 0 10px !important;
+    padding: 0 172px 0 0;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: flex-start !important;
+  }
+
+  body.bg-list #view > .card:has(#addPlayerMobile) > .list-header h2,
+  body.bg-list #view > .card:has(#toggleGameSort) > .list-header h2 {
+    margin: 0 !important;
+    color: #fff !important;
+    font-size: 24px !important;
+    line-height: 1.05 !important;
+    font-weight: 800 !important;
+    letter-spacing: 0 !important;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+  }
+
+  body.bg-list #view > .card:has(#addPlayerMobile) > .list-header h2::before,
+  body.bg-list #view > .card:has(#toggleGameSort) > .list-header h2::before {
+    font-family: "Material Symbols Outlined";
+    font-size: 31px;
+    line-height: 1;
+    font-weight: 400;
+    color: #8a2be2;
+    margin-right: 9px;
+    -webkit-font-feature-settings: "liga";
+    font-feature-settings: "liga";
+  }
+
+  body.bg-list #view > .card:has(#addPlayerMobile) > .list-header h2::before {
+    content: "person";
+  }
+
+  body.bg-list #view > .card:has(#toggleGameSort) > .list-header h2::before {
+    content: "edit_note";
+  }
+
+  body.bg-list #view > .card:has(#addPlayerMobile) > .list-header h2::after,
+  body.bg-list #view > .card:has(#toggleGameSort) > .list-header h2::after {
+    color: #d4d4d4;
+    font-size: 12px;
+    line-height: 1;
+    font-weight: 500;
+    margin-left: 10px;
+    align-self: flex-end;
+    padding-bottom: 3px;
+  }
+
+  body.bg-list #view > .card:has(#addPlayerMobile) > .list-header h2::after {
+    content: "PLAYERS";
+  }
+
+  body.bg-list #view > .card:has(#toggleGameSort) > .list-header h2::after {
+    content: "GAMES";
+  }
+
+  /* Align the season selector with the standalone title row exactly as on Analysis. */
+  body.bg-list #view:has(#addPlayerMobile) > .season-switcher,
+  body.bg-list #view:has(#toggleGameSort) > .season-switcher {
+    top: calc(var(--r32-mobile-safe-top) + 6px) !important;
+    right: 8px !important;
+  }
+
+  body.bg-list #view:has(#addPlayerMobile) > .season-switcher select,
+  body.bg-list #view:has(#toggleGameSort) > .season-switcher select {
+    min-height: 44px;
+    border-radius: 9px;
+    font-weight: 800;
+  }
+
+  /* Keep the registration action directly below the unified title. */
+  body.bg-list #view > .card:has(#addPlayerMobile) > .mobile-list-action,
+  body.bg-list #view > .card:has(#toggleGameSort) > .mobile-list-action {
+    margin-top: 0 !important;
+    margin-bottom: 14px !important;
+  }
+
+  /* Preserve the existing individual list-card design. */
+  body.bg-list #view > .card:has(#addPlayerMobile) > .list-item,
+  body.bg-list #view > .card:has(#toggleGameSort) > .list-item {
+    margin-left: 0 !important;
+    margin-right: 0 !important;
+  }
+}
