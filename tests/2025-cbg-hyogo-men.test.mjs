@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import { TOURNAMENT_2025_CBG_HYOGO_MEN as tournament,TEAMS_2025_CBG_HYOGO_MEN as teams,MATCHES_2025_CBG_HYOGO_MEN as matches,CBG_CANONICAL_NAMES,normalizeCbgTeamIdentity } from '../js/data/2025-cbg-hyogo-men.js';
+assert.equal(tournament.season,'2025-26');assert.equal(tournament.generationType,'previous');assert.equal(teams.length,39);
+const rank=name=>teams.find(team=>team.teamName===name)?.rank;
+assert.equal(rank('ゴッドドア'),'S');assert.equal(rank('KARTER'),'A+');assert.equal(rank('HDC Academy Cranes'),'A');assert.equal(rank('G.Dark Horse'),'A');assert.equal(rank('EPIC BASKETBALL CLUB U15'),'B+');assert.equal(rank('TEDDY BASKETBALL CLUB'),'B+');assert.equal(rank('センターサークル'),'B+');assert.equal(rank('ARMS'),'B+');assert.equal(rank('BRUINS ashiya'),'B');
+assert.notEqual(teams.find(team=>team.teamName==='ゴッドドア').clubId,undefined);assert.equal(teams.find(team=>team.teamName==='U14 ゴッドドア').ageGroup,'U14');assert.equal(teams.find(team=>team.teamName==='BRAVEBIRDS u14').ageGroup,'U14');
+assert.equal(CBG_CANONICAL_NAMES.get('All Blacks A'),'All blacks');assert.equal(CBG_CANONICAL_NAMES.has('All Blacks B'),false);assert.equal(CBG_CANONICAL_NAMES.has('Kobe Center Circle'),false);
+assert.equal(normalizeCbgTeamIdentity('Kobe Center Circle'),normalizeCbgTeamIdentity('kobecentercircle'));assert.notEqual(normalizeCbgTeamIdentity('BRAVEBIRDS'),normalizeCbgTeamIdentity('BRAVEBIRDS u14'));
+const withdrawal=matches.find(item=>item.winByWithdrawal);assert.equal(withdrawal.withdrawnTeam,'U15稗田ウィングス');assert.equal(withdrawal.teamAScore,null);assert.ok(matches.length>=30);
+assert.ok(teams.every(team=>team.season==='2025-26'&&team.generationType==='previous'));
+console.log('2025 CBG Hyogo men: ok');
