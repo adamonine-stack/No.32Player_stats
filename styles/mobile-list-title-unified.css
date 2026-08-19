@@ -16,6 +16,7 @@
   body.bg-list #view > .card:has(#addPlayerMobile) > .list-header,
   body.bg-list #view > .card:has(#toggleGameSort) > .list-header {
     min-height: 52px;
+    height: 52px;
     margin: 0 0 10px !important;
     padding: 0 172px 0 0;
     display: flex !important;
@@ -101,5 +102,81 @@
   body.bg-list #view > .card:has(#toggleGameSort) > .list-item {
     margin-left: 0 !important;
     margin-right: 0 !important;
+  }
+
+  /* Analysis / Team / Opponent Team use the same 52px title row and
+     the same Material Symbols as the bottom navigation. */
+  #view > .analysis-screen > .analysis-title {
+    min-height: 52px !important;
+    height: 52px !important;
+    margin: 0 0 10px !important;
+    padding: 0 132px 0 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    overflow: visible !important;
+  }
+
+  #view > .analysis-screen > .analysis-title h2 {
+    margin: 0 !important;
+    color: #fff !important;
+    font-size: 24px !important;
+    line-height: 1.05 !important;
+    font-weight: 800 !important;
+    letter-spacing: 0 !important;
+    display: flex !important;
+    align-items: center !important;
+    white-space: nowrap !important;
+  }
+
+  #view > .analysis-screen > .analysis-title h2::before {
+    content: "bar_chart" !important;
+    display: inline-block !important;
+    width: auto !important;
+    height: auto !important;
+    margin: 0 9px 0 0 !important;
+    padding: 0 !important;
+    transform: none !important;
+    vertical-align: middle !important;
+    background: none !important;
+    font-family: "Material Symbols Outlined" !important;
+    font-size: 31px !important;
+    line-height: 1 !important;
+    font-weight: 400 !important;
+    color: #8a2be2 !important;
+    -webkit-font-feature-settings: "liga" !important;
+    font-feature-settings: "liga" !important;
+  }
+
+  #view > .analysis-screen.team-screen > .analysis-title h2::before {
+    content: "groups" !important;
+  }
+
+  #view > .analysis-screen:has(.opponent-team-list-header) > .analysis-title h2::before {
+    content: "shield" !important;
+  }
+
+  #view > .analysis-screen > .analysis-title h2 small {
+    color: #d4d4d4 !important;
+    font-size: 12px !important;
+    line-height: 1 !important;
+    font-weight: 500 !important;
+    margin-left: 10px !important;
+    align-self: flex-end !important;
+    padding-bottom: 3px !important;
+  }
+
+  /* Shorten the opponent English subtitle so it cannot collide with the season selector. */
+  #view > .analysis-screen:has(.opponent-team-list-header) > .analysis-title h2 small {
+    font-size: 0 !important;
+    margin-left: 8px !important;
+  }
+
+  #view > .analysis-screen:has(.opponent-team-list-header) > .analysis-title h2 small::after {
+    content: "VS TEAM";
+    font-size: 11px;
+    line-height: 1;
+    font-weight: 500;
+    color: #d4d4d4;
+    white-space: nowrap;
   }
 }
