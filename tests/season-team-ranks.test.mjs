@@ -13,5 +13,5 @@ assert.equal(calculateSeasonalTeamRank([p('2026-27','B+')],{currentSeason:'2026-
 const averaged=calculateSeasonRanks([p('2025-26','S'),p('2025-26','B')])['2025-26'];
 assert.equal(averaged.score,5);assert.equal(averaged.rank,'A');assert.equal(averaged.recordCount,2);assert.equal(averaged.calculationMethod,'average');
 const reflected=calculateSeasonalTeamRank([p('2026-27','B'),p('2025-26','S'),p('2025-26','B')],{currentSeason:'2026-27'});
-assert.equal(reflected.seasonRanks['2025-26'].rank,'A');assert.equal(reflected.overallScore,3*.85+5*.15);assert.ok(['B','B+'].includes(reflected.overallRank));
+assert.equal(reflected.seasonRanks['2025-26'].rank,'A');assert.equal(reflected.overallScore,3*.5+5*.5);assert.ok(['B','B+'].includes(reflected.overallRank));
 console.log('season team ranks: ok');

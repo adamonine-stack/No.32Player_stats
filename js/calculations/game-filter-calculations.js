@@ -26,7 +26,9 @@ export function opponentCategoryForGame(game, opponentTeams = []) {
 
 export function opponentRankForGame(game, opponentTeams = []) {
   const team = resolveOpponentTeam(game, opponentTeams);
-  return String(team?.calculatedRank || team?.teamRank || team?.rank || "").trim();
+  const seasonId = game?.seasonId || "season_2026_27";
+  const label = seasonId.replace(/^season_/, "").replace("_", "-");
+  return String(game?.opponentRankAtGame || team?.teamSeasonData?.[seasonId]?.rank || team?.seasonRanks?.[label]?.rank || team?.calculatedRank || team?.teamRank || team?.rank || "").trim();
 }
 
 export function getOpponentCategoryOptions(games = []) {
@@ -35,7 +37,7 @@ export function getOpponentCategoryOptions(games = []) {
 }
 
 export function getOpponentRankOptions(opponentTeams = [], rankDefinitions = []) {
-  const values = opponentTeams.flatMap(team => [team.calculatedRank, team.teamRank, team.rank]);
+  const values = opponentTeams.flatMap(team => [team.calculatedRank, team.teamRank, team.rank, ...Object.values(team.teamSeasonData || {}).map(item=>item?.rank), ...Object.values(team.seasonRanks || {}).map(item=>item?.rank)]);
   const available = new Set(values.map(value => String(value || "").trim()).filter(Boolean));
   const defined = rankDefinitions.filter(rank => available.has(rank));
   const extra = [...available].filter(rank => !rankDefinitions.includes(rank)).sort((a, b) => a.localeCompare(b, "ja", { numeric: true }));
