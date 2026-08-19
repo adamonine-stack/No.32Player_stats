@@ -4,7 +4,7 @@ import { HYOGO_OPPONENT_TEAM_MERGES } from '../js/data/2025-hyogo-jr-winter-men.
 const names=new Map(HYOGO_OPPONENT_TEAM_MERGES.map(item=>[item.sourceName,item.targetName]));
 assert.equal(names.get('All Blacks A'),'All blacks');
 assert.equal(names.get('TEDDY BASKETBALL CLUB'),'UNICORN BASKETBALL CLUB(旧TEDDY)');
-assert.equal(names.has('All Blacks B'),false);assert.equal(names.has('BRAVEBIRDS u14'),false);assert.equal(names.has('EPIC BASKETBALL CLUB U14'),false);
+assert.equal(names.has('All Blacks B'),false);assert.equal(names.get('BRAVEBIRDS u14'),'BRAVE BIRDS u14');assert.equal(names.has('EPIC BASKETBALL CLUB U14'),false);
 const merged=mergeOpponentTeamRecords({teamName:'North Wave',tournamentPlacements:[{tournamentId:'new'}],playerNumbers:['4']},{teamName:'NorthWave',tournamentPlacements:[{tournamentId:'old'},{tournamentId:'new'}],playerNumbers:['7']});
 assert.deepEqual(merged.playerNumbers,['4','7']);assert.deepEqual(merged.tournamentPlacements.map(item=>item.tournamentId),['new','old']);assert.ok(merged.aliases.includes('NorthWave'));
 assert.deepEqual(opponentReferencePatch({opponentTeamId:'old',opponent:'NorthWave'},{id:'old',teamName:'NorthWave'},{id:'new',teamName:'North Wave'}),{opponentTeamId:'new',opponent:'North Wave'});

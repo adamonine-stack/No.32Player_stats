@@ -3,6 +3,7 @@ export const HYOGO_OPPONENT_TEAM_MERGES=[
   ['All Blacks A','All blacks'],
   ['BAYCROWN JUNIOR','BAY CROWN JUNIOR'],
   ['BRAVEBIRDS','BRAVE BIRDS'],
+  ['BRAVEBIRDS u14','BRAVE BIRDS u14'],
   ['EPIC BASKETBALL CLUB U15','EPIC BASKETBALL CLUB'],
   ['NorthWave','North Wave'],
   ['teamDENY','team DENY'],
