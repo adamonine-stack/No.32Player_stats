@@ -1,23 +1,41 @@
 /* Mobile page vertical position tuning
-   Keep primary page controls below the iPhone camera/status safe area while
-   moving every page's main content closer to the top of the screen. */
+   Place the actual page UI directly below the iPhone safe area.
+   The large decorative hero must not reserve vertical space on list/dashboard pages. */
 @media (max-width: 800px) {
-  .mobile-hero {
-    height: 190px;
+  :root {
+    --r32-mobile-safe-top: max(env(safe-area-inset-top), 50px);
   }
 
-  .content {
-    /* Content starts 12px below the effective iPhone safe area.
-       Fallback 54px protects browser/PWA layouts where env() resolves to 0. */
-    margin-top: calc(-190px + max(env(safe-area-inset-top), 54px) + 12px);
+  body.bg-dashboard .mobile-hero,
+  body.bg-list .mobile-hero {
+    display: none !important;
+    height: 0 !important;
+    margin: 0 !important;
+    border: 0 !important;
   }
 
-  #view {
+  body.bg-dashboard .content,
+  body.bg-list .content {
+    margin-top: 0 !important;
+  }
+
+  body.bg-dashboard #view,
+  body.bg-list #view {
     position: relative;
+    padding-top: calc(var(--r32-mobile-safe-top) + 6px) !important;
   }
 
-  .season-switcher {
-    top: 0;
-    right: 8px;
+  /* The season control shares the first safe row with each page title. */
+  body.bg-dashboard .season-switcher,
+  body.bg-list .season-switcher {
+    top: calc(var(--r32-mobile-safe-top) + 6px) !important;
+    right: 8px !important;
+  }
+
+  /* app.css previously added safe-area padding a second time on Home.
+     Remove that duplicate so Home also moves upward, but keep enough room
+     below the season selector before the full-width login/logout action. */
+  body.bg-dashboard .home-mobile {
+    padding-top: 50px !important;
   }
 }
