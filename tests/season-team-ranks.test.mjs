@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { calculateSeasonalTeamRank, placementLabelToRank, rankToScore } from '../js/calculations/opponent-team-calculations.js';
+import { calculateSeasonRanks, calculateSeasonalTeamRank, placementLabelToRank, rankToScore } from '../js/calculations/opponent-team-calculations.js';
 const p=(season,rank)=>({season,seasonRank:rank,placementRank:rank});
 assert.deepEqual(['D','C','B','B+','A','A+','S'].map(rankToScore),[1,2,3,4,5,6,7]);
 assert.equal(placementLabelToRank('1回戦敗退'),'E');
@@ -10,4 +10,8 @@ assert.ok(['A','B+'].includes(calculateSeasonalTeamRank([p('2026-27','A'),p('202
 assert.equal(calculateSeasonalTeamRank([p('2026-27','A'),p('2025-26','A')],{currentSeason:'2026-27'}).rank,'A');
 assert.equal(calculateSeasonalTeamRank([p('2025-26','S')],{currentSeason:'2026-27'}).overallRankStatus,'provisional');
 assert.equal(calculateSeasonalTeamRank([p('2026-27','B+')],{currentSeason:'2026-27'}).rank,'B+');
+const averaged=calculateSeasonRanks([p('2025-26','S'),p('2025-26','B')])['2025-26'];
+assert.equal(averaged.score,5);assert.equal(averaged.rank,'A');assert.equal(averaged.recordCount,2);assert.equal(averaged.calculationMethod,'average');
+const reflected=calculateSeasonalTeamRank([p('2026-27','B'),p('2025-26','S'),p('2025-26','B')],{currentSeason:'2026-27'});
+assert.equal(reflected.seasonRanks['2025-26'].rank,'A');assert.equal(reflected.overallScore,3*.85+5*.15);assert.ok(['B','B+'].includes(reflected.overallRank));
 console.log('season team ranks: ok');
