@@ -1,0 +1,16 @@
+import assert from 'node:assert/strict';
+import { TOURNAMENT_2025_HYOGO_JR_WINTER_MEN, TEAMS_2025_HYOGO_JR_WINTER_MEN } from '../js/data/2025-hyogo-jr-winter-men.js';
+import { readFileSync } from 'node:fs';
+assert.equal(TOURNAMENT_2025_HYOGO_JR_WINTER_MEN.season,'2025-26');
+assert.equal(TEAMS_2025_HYOGO_JR_WINTER_MEN.length,50);
+assert.equal(new Set(TEAMS_2025_HYOGO_JR_WINTER_MEN.map(team=>team.normalizedTeamName)).size,50);
+assert.deepEqual(Object.fromEntries(['S','A+','A','B+','B'].map(rank=>[rank,TEAMS_2025_HYOGO_JR_WINTER_MEN.filter(team=>team.rank===rank).length])),{S:1,'A+':1,A:2,'B+':4,B:8});
+assert.equal(TEAMS_2025_HYOGO_JR_WINTER_MEN.find(team=>team.teamName==='ゴッドドア').wins,5);
+assert.notEqual(TEAMS_2025_HYOGO_JR_WINTER_MEN.find(team=>team.teamName==='BRAVEBIRDS').normalizedTeamName,TEAMS_2025_HYOGO_JR_WINTER_MEN.find(team=>team.teamName==='BRAVEBIRDS u14').normalizedTeamName);
+assert.equal(TEAMS_2025_HYOGO_JR_WINTER_MEN.find(team=>team.teamName==='BRAVEBIRDS u14').ageGroup,'U14');
+const app=readFileSync(new URL('../js/app.js',import.meta.url),'utf8');
+assert.ok(app.includes('seasonRanks:rank.seasonRanks'));
+assert.ok(app.includes('overallRankStatus:rank.overallRankStatus'));
+assert.ok(app.includes('import2025HyogoJrWinterMen()'));
+assert.ok(app.includes('placementSeason(item)===season'));
+console.log('2025 Hyogo Jr Winter men: ok');
