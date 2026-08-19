@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 const app = await readFile(new URL('../js/app.js', import.meta.url), 'utf8');
 const css = await readFile(new URL('../styles/opponent-teams.css', import.meta.url), 'utf8');
 assert.match(app, /opponentTeamDetailView/);
+assert.match(app, /openOpponentTeamDetail=id=>.*renderDetailAtTop/);
 assert.match(app, /game\.opponentTeamId===team\.id/);
 assert.match(app, /!game\.opponentTeamId/);
 assert.match(app, /tournamentPlacements/);
