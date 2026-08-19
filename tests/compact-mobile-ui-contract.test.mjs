@@ -12,8 +12,8 @@ assert.match(mobileCss, /shot-entry-viewport \.shot-result \{[\s\S]*min-height: 
 assert.match(mobileCss, /shot-entry-viewport \.shot-foul-check \{[\s\S]*min-height: 34px/);
 assert.match(opponentCss, /\.opponent-team-detail>\.card\{margin-bottom:10px;padding:12px\}/);
 assert.match(opponentCss, /opponent-detail-summary\{grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/);
-assert.match(index, /opponent-detail-compact-v2/);
+assert.match(index, /20260819-season-ranks-v1/);
 assert.match(index, /shot-entry-original-court-v3/);
-assert.match(index, /opponent-result-display-v2/);
+assert.match(index, /20260819-season-ranks-v1/);
 
 console.log('compact mobile UI contract: ok');

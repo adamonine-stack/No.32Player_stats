@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import { calculateSeasonalTeamRank, rankToScore } from '../js/calculations/opponent-team-calculations.js';
+const p=(season,rank)=>({season,seasonRank:rank,placementRank:rank});
+assert.deepEqual(['D','C','B','B+','A','A+','S'].map(rankToScore),[1,2,3,4,5,6,7]);
+assert.ok(['B','B+'].includes(calculateSeasonalTeamRank([p('2026-27','B'),p('2025-26','S')],{currentSeason:'2026-27'}).rank));
+assert.notEqual(calculateSeasonalTeamRank([p('2026-27','B'),p('2025-26','S')],{currentSeason:'2026-27'}).rank,'A');
+assert.ok(['A','B+'].includes(calculateSeasonalTeamRank([p('2026-27','A'),p('2025-26','D')],{currentSeason:'2026-27'}).rank));
+assert.equal(calculateSeasonalTeamRank([p('2026-27','A'),p('2025-26','A')],{currentSeason:'2026-27'}).rank,'A');
+assert.equal(calculateSeasonalTeamRank([p('2025-26','S')],{currentSeason:'2026-27'}).overallRankStatus,'provisional');
+assert.equal(calculateSeasonalTeamRank([p('2026-27','B+')],{currentSeason:'2026-27'}).rank,'B+');
+console.log('season team ranks: ok');
