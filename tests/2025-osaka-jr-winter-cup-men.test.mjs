@@ -1,0 +1,28 @@
+import assert from 'node:assert/strict';
+import { TOURNAMENT_2025_OSAKA_JR_WINTER_CUP_MEN as tournament, TEAMS_2025_OSAKA_JR_WINTER_CUP_MEN as teams } from '../js/data/2025-osaka-jr-winter-cup-men.js';
+import { normalizeTeamNameForMatching, normalizeTeamBaseNameForMatching, findImportedTeamMatch } from '../js/calculations/team-name-matching.js';
+
+assert.equal(tournament.name,'大阪府Jr.ウィンターカップ2025');
+assert.equal(tournament.season,'2025-26');
+assert.equal(teams.length,83);
+assert.equal(new Set(teams.map(team=>team.normalizedTeamName)).size,83);
+assert.deepEqual(Object.fromEntries(['S','A+','A','B+','B','C','D'].map(rank=>[rank,teams.filter(team=>team.rank===rank).length])),{S:1,'A+':1,A:2,'B+':4,B:5,C:29,D:41});
+assert.deepEqual(Object.fromEntries(['優勝','準優勝','ベスト4','ベスト8','ベスト16','ベスト32'].map(result=>[result,teams.filter(team=>team.placementLabel===result).length])),{優勝:1,準優勝:1,ベスト4:2,ベスト8:4,ベスト16:8,ベスト32:16});
+assert.equal(teams.filter(team=>team.losses===0).length,1);
+assert.ok(teams.filter(team=>team.wins===0).every(team=>team.rank==='D'));
+assert.equal(teams.find(team=>team.rank==='S').teamName,'REDFORCES');
+assert.equal(teams.find(team=>team.rank==='A+').teamName,'KAGO CLUB');
+assert.equal(normalizeTeamNameForMatching('sHow time'),normalizeTeamNameForMatching('SHOW TIME'));
+assert.equal(normalizeTeamNameForMatching('TEAM GRIT'),normalizeTeamNameForMatching('TEAM  GRIT'));
+assert.equal(normalizeTeamNameForMatching('TEAM GRIT'),normalizeTeamNameForMatching('TEAMGRIT'));
+assert.equal(normalizeTeamNameForMatching('monolith U-15'),normalizeTeamNameForMatching('monolith U 15'));
+assert.equal(normalizeTeamBaseNameForMatching('monolith U15'),normalizeTeamBaseNameForMatching('monolith'));
+assert.notEqual(normalizeTeamNameForMatching('monolith U14'),normalizeTeamNameForMatching('monolith U15'));
+assert.notEqual(normalizeTeamNameForMatching('monolith U13'),normalizeTeamNameForMatching('monolith U15'));
+assert.notEqual(normalizeTeamNameForMatching('大阪エヴェッサU-15（ユース）'),normalizeTeamNameForMatching('大阪エヴェッサU-15（クラブ）'));
+assert.equal(findImportedTeamMatch('monolith U15','U15',[{id:'base',teamName:'monolith'}]).team.id,'base');
+assert.equal(findImportedTeamMatch('monolith U15','U15',[{id:'u14',teamName:'monolith U14',category:'U14'}]).result,'NEW_TEAM');
+const first=teams.map(team=>({...team,tournamentPlacements:[]}));
+const apply=list=>list.map(team=>({...team,tournamentPlacements:[...team.tournamentPlacements.filter(item=>item.tournamentId!==tournament.id),{tournamentId:tournament.id}]}));
+assert.equal(apply(apply(first)).reduce((sum,team)=>sum+team.tournamentPlacements.length,0),83);
+console.log('2025 Osaka Jr. Winter Cup men import data: ok');
