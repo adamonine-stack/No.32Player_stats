@@ -225,7 +225,7 @@ const PREFECTURES=['北海道','青森県','岩手県','宮城県','秋田県','
 let opponentDraft=null,opponentTeamSearch='',opponentPrefectureFilter='',opponentTeamSort='name';
 function escapeHtml(value=''){return String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]))}
 function shotTypeButtonLabel(id){return id==='running_shot'?'ランニング/<br>ステップイン':escapeHtml(SHOT_TYPES[id]||'')}
-function opponentPlacements(team={}){return Array.isArray(team.tournamentPlacements)?team.tournamentPlacements:[]}
+function opponentPlacements(team={}){return Array.isArray(team?.tournamentPlacements)?team.tournamentPlacements:[]}
 function opponentTeamNameCompare(a,b){return String(a.teamName||'').localeCompare(String(b.teamName||''),'ja',{sensitivity:'base',numeric:true})}
 function visibleOpponentTeams(){const query=String(opponentTeamSearch||'').normalize('NFKC').trim().toLocaleLowerCase('ja'),rankOrder=[...OPPONENT_RANKS].reverse();return state.opponentTeams.filter(team=>{const name=String(team.teamName||'').normalize('NFKC').toLocaleLowerCase('ja');return (!query||name.includes(query))&&(!opponentPrefectureFilter||(opponentPrefectureFilter==='未設定'?!team.prefecture:team.prefecture===opponentPrefectureFilter))}).sort((a,b)=>{if(opponentTeamSort==='rank'){const ai=rankOrder.indexOf(a.calculatedRank),bi=rankOrder.indexOf(b.calculatedRank),ar=ai<0?rankOrder.length:ai,br=bi<0?rankOrder.length:bi;return ar-br||opponentTeamNameCompare(a,b)}return opponentTeamNameCompare(a,b)})}
 function normalizedOpponentName(value=''){return String(value||'').normalize('NFKC').trim().toLocaleLowerCase('ja')}
