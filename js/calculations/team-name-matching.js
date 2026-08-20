@@ -17,7 +17,10 @@ export function normalizeTeamBaseNameForMatching(name,category='U15'){
 }
 
 function teamCategories(team={}){
-  return new Set([team.category,...(Array.isArray(team.categories)?team.categories:[]),categoryFromTeamName(team.teamName)].filter(Boolean).map(value=>String(value).toUpperCase()));
+  return new Set([team.category,...(Array.isArray(team.categories)?team.categories:[]),categoryFromTeamName(team.teamName)].filter(Boolean).map(value=>{
+    const normalized=String(value).normalize('NFKC').toUpperCase(),match=normalized.match(/U[\s-]*1([345])/u);
+    return match?`U1${match[1]}`:normalized;
+  }));
 }
 
 function isEligibleCategory(team,category){

@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { TOURNAMENT_2025_OSAKA_JR_WINTER_CUP_MEN as tournament, TEAMS_2025_OSAKA_JR_WINTER_CUP_MEN as teams } from '../js/data/2025-osaka-jr-winter-cup-men.js';
+import { TOURNAMENT_2025_OSAKA_JR_WINTER_CUP_MEN as tournament, TEAMS_2025_OSAKA_JR_WINTER_CUP_MEN as teams, OSAKA_2025_DUPLICATE_TEAM_MERGES as merges } from '../js/data/2025-osaka-jr-winter-cup-men.js';
 import { normalizeTeamNameForMatching, normalizeTeamBaseNameForMatching, findImportedTeamMatch } from '../js/calculations/team-name-matching.js';
 import fs from 'node:fs';
 
@@ -23,6 +23,13 @@ assert.notEqual(normalizeTeamNameForMatching('monolith U13'),normalizeTeamNameFo
 assert.notEqual(normalizeTeamNameForMatching('大阪エヴェッサU-15（ユース）'),normalizeTeamNameForMatching('大阪エヴェッサU-15（クラブ）'));
 assert.equal(findImportedTeamMatch('monolith U15','U15',[{id:'base',teamName:'monolith'}]).team.id,'base');
 assert.equal(findImportedTeamMatch('monolith U15','U15',[{id:'u14',teamName:'monolith U14',category:'U14'}]).result,'NEW_TEAM');
+assert.equal(findImportedTeamMatch('ANGRY OWLS','U15',[{id:'existing',teamName:'ANGRY OWLS',category:'U15男子'}]).team.id,'existing');
+assert.equal(merges.length,19);
+assert.equal(new Set(merges.map(item=>item.sourceId)).size,19);
+assert.ok(merges.some(item=>item.teamName==='BC Alma枚方'));
+assert.ok(merges.some(item=>item.teamName==='EAST.O.ACADEMY'));
+assert.ok(merges.some(item=>item.teamName==='T-SMILE'));
+assert.ok(!merges.some(item=>item.teamName==='TITANS'));
 const first=teams.map(team=>({...team,tournamentPlacements:[]}));
 const apply=list=>list.map(team=>({...team,tournamentPlacements:[...team.tournamentPlacements.filter(item=>item.tournamentId!==tournament.id),{tournamentId:tournament.id}]}));
 assert.equal(apply(apply(first)).reduce((sum,team)=>sum+team.tournamentPlacements.length,0),83);
@@ -33,4 +40,5 @@ assert.equal(Function(`${opponentPlacementsSource};return opponentPlacements(nul
 assert.match(app,/id="osakaImportProgress"/);
 assert.match(app,/OSAKA_JR_WINTER_CUP_IMPORT_FAILED/);
 assert.match(app,/window\.import2025OsakaJrWinterCupMen=import2025OsakaJrWinterCupMen/);
+assert.match(app,/window\.consolidate2025OsakaOpponentTeams=consolidate2025OsakaOpponentTeams/);
 console.log('2025 Osaka Jr. Winter Cup men import data: ok');
