@@ -24,11 +24,15 @@ assert.notEqual(normalizeTeamNameForMatching('大阪エヴェッサU-15（ユー
 assert.equal(findImportedTeamMatch('monolith U15','U15',[{id:'base',teamName:'monolith'}]).team.id,'base');
 assert.equal(findImportedTeamMatch('monolith U15','U15',[{id:'u14',teamName:'monolith U14',category:'U14'}]).result,'NEW_TEAM');
 assert.equal(findImportedTeamMatch('ANGRY OWLS','U15',[{id:'existing',teamName:'ANGRY OWLS',category:'U15男子'}]).team.id,'existing');
-assert.equal(merges.length,19);
-assert.equal(new Set(merges.map(item=>item.sourceId)).size,19);
+assert.equal(merges.length,23);
+assert.equal(new Set(merges.map(item=>item.sourceId)).size,23);
 assert.ok(merges.some(item=>item.teamName==='BC Alma枚方'));
 assert.ok(merges.some(item=>item.teamName==='EAST.O.ACADEMY'));
 assert.ok(merges.some(item=>item.teamName==='T-SMILE'));
+assert.ok(merges.some(item=>item.teamName==='FRONTIER SPIRITS'));
+assert.ok(merges.some(item=>item.teamName==='IBBC'));
+assert.ok(merges.some(item=>item.teamName==='Secret Base'));
+assert.ok(merges.some(item=>item.teamName==='大阪市立三国中学校'));
 assert.ok(!merges.some(item=>item.teamName==='TITANS'));
 const first=teams.map(team=>({...team,tournamentPlacements:[]}));
 const apply=list=>list.map(team=>({...team,tournamentPlacements:[...team.tournamentPlacements.filter(item=>item.tournamentId!==tournament.id),{tournamentId:tournament.id}]}));
