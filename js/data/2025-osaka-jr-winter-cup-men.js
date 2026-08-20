@@ -34,3 +34,25 @@ export const TEAMS_2025_OSAKA_JR_WINTER_CUP_MEN=[...LEFT,...RIGHT].map(([teamNam
   const [placementLabel,rank,placement]=resultFor(teamName,wins);
   return {teamName,normalizedTeamName:normalizeTeamNameForMatching(teamName),placementLabel,placement,wins,losses:teamName==='REDFORCES'?0:1,rank};
 });
+
+export const OSAKA_2025_DUPLICATE_TEAM_MERGES=[
+  ['2025-osaka-jr-winter-cup-men-01','2026-osaka-u15-club-men-13','REDFORCES'],
+  ['2025-osaka-jr-winter-cup-men-04','2026-osaka-u15-club-men-19','RED FROGS'],
+  ['2025-osaka-jr-winter-cup-men-06','2026-osaka-u15-club-men-04','sHow time'],
+  ['2025-osaka-jr-winter-cup-men-08','2026-osaka-u15-club-men-07','ANGRY OWLS'],
+  ['2025-osaka-jr-winter-cup-men-21','2026-osaka-u15-club-men-24','T-SMILE'],
+  ['2025-osaka-jr-winter-cup-men-34','2026-osaka-u15-club-men-05','RGS'],
+  ['2025-osaka-jr-winter-cup-men-41','2026-osaka-u15-club-men-10','NEXTEST'],
+  ['2025-osaka-jr-winter-cup-men-42','2026-osaka-u15-club-men-01','KAGO CLUB'],
+  ['2025-osaka-jr-winter-cup-men-45','2026-osaka-u15-club-men-18','AIR'],
+  ['2025-osaka-jr-winter-cup-men-48','2026-osaka-u15-club-men-12','SUN HEARTS'],
+  ['2025-osaka-jr-winter-cup-men-50','2026-osaka-u15-club-men-16','B☆MAX'],
+  ['2025-osaka-jr-winter-cup-men-57','2026-osaka-u15-club-men-02','ENERGY'],
+  ['2025-osaka-jr-winter-cup-men-60','2026-osaka-u15-club-men-08','HOOPERS'],
+  ['2025-osaka-jr-winter-cup-men-62','2026-osaka-u15-club-men-11','CLUB SPIRITS'],
+  ['2025-osaka-jr-winter-cup-men-65','2026-osaka-u15-club-men-15','BLACK UNICORN'],
+  ['2025-osaka-jr-winter-cup-men-66','2026-osaka-u15-club-men-17','BC Alma枚方'],
+  ['2025-osaka-jr-winter-cup-men-73','2026-osaka-u15-club-men-09','HOSOGO GIBSONS'],
+  ['2025-osaka-jr-winter-cup-men-79','2026-osaka-u15-club-men-06','大阪GOLDEN EGG'],
+  ['2025-osaka-jr-winter-cup-men-83','2026-osaka-u15-club-men-20','EAST.O.ACADEMY']
+].map(([sourceId,targetId,teamName])=>({sourceId,targetId,teamName}));
