@@ -20,6 +20,18 @@
   font-size: 14px;
 }
 
+.game-participation-entry {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.game-participation-entry p {
+  margin: 4px 0 0;
+}
+
 .detail-stat-view-seg .detail-stat-view-btn.unsaved.active {
   background: #101010 !important;
   border: 2px solid #ffffff !important;
@@ -27,6 +39,11 @@
 }
 
 @media (max-width: 800px) {
+  .game-participation-entry {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
   .detail-stats-actions {
     gap: 5px !important;
     overflow: visible !important;

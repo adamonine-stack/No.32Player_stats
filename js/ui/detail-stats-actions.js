@@ -3,7 +3,7 @@ export function detailStatsActionBar(gameId, playerId, canEdit) {
     ? `<button class="btn" onclick="openDetailStatsForm('${gameId}')">個人スタッツ修正</button><button class="btn danger" onclick="deletePlayerStats('${gameId}', '${playerId}')">個人スタッツ削除</button>`
     : "";
   const gameEdit = canEdit
-    ? `<button class="btn small detail-game-edit" onclick="openGameForm('${gameId}')">試合修正</button>`
+    ? `<button class="btn small detail-game-edit" onclick="openGameForm('${gameId}')">試合情報修正</button>`
     : "";
   return `<div id="detailStatsActions" class="analysis-back-row detail-stats-actions"><div class="detail-primary-actions"><button class="btn ghost" onclick="goBackGames()">戻る</button>${editActions}</div>${gameEdit}</div>`;
 }
