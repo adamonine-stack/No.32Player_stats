@@ -7,7 +7,7 @@ body.modal-open { position:fixed; left:0; right:0; width:100%; }
 .shot-modal-head { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
 .shot-close { min-width:44px; min-height:44px; font-size:24px; }
 .shot-court { box-sizing:border-box; width:100%; max-width:560px; height:auto; aspect-ratio:100 / 108; display:block; margin:12px auto; background:#000; border-radius:12px; touch-action:manipulation; cursor:crosshair; }
-.court-bg { fill:#000; }.court-zones,.court-lines { fill:none; stroke:#fff; stroke-width:.7; pointer-events:none; }.court-zone-guides { fill:none; stroke:#fff; stroke-width:.7; pointer-events:none; }.court-tap-surface { fill:transparent; cursor:crosshair; }
+.court-bg { fill:#000; }.court-zones,.court-lines { fill:none; stroke:#fff; stroke-width:.7; pointer-events:none; }.court-tap-surface { fill:transparent; cursor:crosshair; }
 .shot-area-label { fill:#fff; font:700 3.4px "Noto Sans JP",sans-serif; text-anchor:middle; pointer-events:none; paint-order:stroke; stroke:#000; stroke-width:.65px; }
 .shot-marker { vector-effect:non-scaling-stroke; stroke:#fff; stroke-width:1.2px; pointer-events:none; }.shot-marker.made { fill:#1687ff; }.shot-marker.missed { fill:#ef3028; }.shot-marker.current { fill:#7c3aed; }
 .shot-foul-ring,.shot-selection-ring { fill:none; vector-effect:non-scaling-stroke; pointer-events:none; }.shot-foul-ring { stroke:#ffd43b; stroke-width:2px; }.shot-selection-ring { stroke:#c4b5fd; stroke-width:2.5px; }
