@@ -69,6 +69,32 @@ export function gamePlayingTime(game = {}) {
   return totals;
 }
 
+export function playerPlayingTime(game = {}, playerId = "", quarter = null) {
+  const quarters = quarter == null
+    ? Array.from({ length: Math.max(1, integer(game.quarters || game.quarterCount || 4)) }, (_, index) => index + 1)
+    : [Math.max(1, integer(quarter))];
+  let registered = false, seconds = 0;
+  for (const quarterNumber of quarters) {
+    const participation = quarterParticipation(game, quarterNumber);
+    if (unique(participation.starters).length !== 5) continue;
+    const result = validateQuarterParticipation({ ...participation, durationSeconds: quarterDurationSeconds(game) });
+    if (!result.valid) continue;
+    registered = true;
+    seconds += integer(result.secondsByPlayer[playerId]);
+  }
+  return { registered, seconds };
+}
+
+export function averagePlayerPlayingTime(games = [], playerId = "") {
+  const registered = games.map(game => playerPlayingTime(game, playerId)).filter(item => item.registered);
+  if (!registered.length) return { registered: false, seconds: 0, gameCount: 0 };
+  return {
+    registered: true,
+    seconds: Math.round(registered.reduce((total, item) => total + item.seconds, 0) / registered.length),
+    gameCount: registered.length
+  };
+}
+
 export function formatClock(value) {
   const seconds = Math.max(0, integer(value));
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
