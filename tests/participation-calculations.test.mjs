@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { createTemporaryPlayer, formatClock, gamePlayingTime, parseRemainingTime, quarterDurationSeconds, sortSubstitutions, validateQuarterParticipation } from "../js/calculations/participation-calculations.js";
+import { averagePlayerPlayingTime, createTemporaryPlayer, formatClock, gamePlayingTime, parseRemainingTime, playerPlayingTime, quarterDurationSeconds, sortSubstitutions, validateQuarterParticipation } from "../js/calculations/participation-calculations.js";
 
 const starters = ["p1", "p2", "t1", "t2", "t3"];
 const substitutions = [
@@ -44,6 +44,20 @@ const totals = gamePlayingTime({ quarters: 1, quarterDurationMinutes: 8, quarter
 ] } } });
 assert.equal(totals.a, 268);
 assert.equal(totals.f, 212);
+
+const timedGame = { quarters: 2, quarterDurationMinutes: 8, quarterParticipation: {
+  q1: { starters: ["target", "b", "c", "d", "e"], substitutions: [{ remainingSeconds: 372, playerOutId: "target", playerInId: "f" }] },
+  q2: { starters: ["target", "b", "c", "d", "e"], substitutions: [{ remainingSeconds: 333, playerOutId: "target", playerInId: "f" }] }
+} };
+assert.deepEqual(playerPlayingTime(timedGame, "target", 1), { registered: true, seconds: 108 });
+assert.deepEqual(playerPlayingTime(timedGame, "target", 2), { registered: true, seconds: 147 });
+assert.deepEqual(playerPlayingTime(timedGame, "target"), { registered: true, seconds: 255 });
+assert.deepEqual(playerPlayingTime({}, "target"), { registered: false, seconds: 0 });
+assert.deepEqual(playerPlayingTime(timedGame, "bench"), { registered: true, seconds: 0 });
+const average = averagePlayerPlayingTime([timedGame, {}, { ...timedGame, quarterParticipation: { q1: { starters: ["target", "b", "c", "d", "e"], substitutions: [{ remainingSeconds: 225, playerOutId: "target", playerInId: "f" }] } } }], "target");
+assert.deepEqual(average, { registered: true, seconds: 255, gameCount: 2 });
+assert.deepEqual(averagePlayerPlayingTime([{}], "target"), { registered: false, seconds: 0, gameCount: 0 });
+assert.equal(formatClock(3912), "65:12");
 
 const invalid = validateQuarterParticipation({ starters: ["a", "b", "c", "d", "e"], durationSeconds: 480, substitutions: [{ id: "bad", remainingSeconds: 300, playerOutId: "x", playerInId: "f" }] });
 assert.equal(invalid.valid, false);
