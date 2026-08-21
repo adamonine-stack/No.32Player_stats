@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { detailStatsActionBar, selectedStatsDeleteTarget, detailStatsScrollOptions, renderDetailAtTop, saveStatsAndReturnToTop } from "../js/ui/detail-stats-actions.js";
 
 const actions = detailStatsActionBar("game-1", "player-1", true);
-const labels = ["戻る", "個人スタッツ修正", "個人スタッツ削除", "試合修正"];
+const labels = ["戻る", "個人スタッツ修正", "個人スタッツ削除", "試合情報修正"];
 let previous = -1;
 for (const label of labels) {
   const position = actions.indexOf(`>${label}</button>`);
@@ -11,7 +11,7 @@ for (const label of labels) {
 }
 assert.match(actions, /detail-primary-actions/);
 assert.match(actions, /detail-game-edit/);
-assert.doesNotMatch(detailStatsActionBar("game-1", "player-1", false), /個人スタッツ修正|個人スタッツ削除|試合修正/);
+assert.doesNotMatch(detailStatsActionBar("game-1", "player-1", false), /個人スタッツ修正|個人スタッツ削除|試合情報修正/);
 assert.deepEqual(selectedStatsDeleteTarget("game", "game"), { type: "game" });
 assert.deepEqual(selectedStatsDeleteTarget("quarter", "game"), { type: "game" });
 assert.deepEqual(selectedStatsDeleteTarget("quarter", "q2"), { type: "quarter", quarter: 2 });
