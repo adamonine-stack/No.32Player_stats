@@ -5,7 +5,7 @@ const index = readFileSync(new URL("../index.html", import.meta.url), "utf8");
 for (const marker of ["participationMode:'required'", "quarterDurationMinutes:durationMinutes", "Q開始メンバーを5人設定してください", "statsPlayerOut", "stats-player-out-button", "＋ 未登録選手を追加", "前Q終了メンバーをコピー", "sortSubstitutions(substitutions)"]) assert.ok(app.includes(marker), marker);
 assert.ok(app.includes("participationRequired(g)&&mode==='quarter'"));
 assert.ok(index.includes("participation.css?v=20260822-stats-out-v2"));
-assert.ok(index.includes("app.js?v=20260822-stats-out-actions-v4"));
+assert.ok(index.includes("app.js?v=20260822-game-history-v1"));
 assert.ok(index.includes("min-display.css?v=20260821-3"));
 assert.ok(app.includes("averagePlayerPlayingTime(gamesWithStats(targetGames(),p.id),p.id)"));
 assert.ok(app.includes("selectedGamePlayingTime(game,p.id)"));

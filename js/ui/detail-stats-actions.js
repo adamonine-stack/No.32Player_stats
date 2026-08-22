@@ -5,7 +5,7 @@ export function detailStatsActionBar(gameId, playerId, canEdit) {
   const gameEdit = canEdit
     ? `<button class="btn small detail-game-edit" onclick="openGameForm('${gameId}')">試合情報修正</button>`
     : "";
-  return `<div id="detailStatsActions" class="analysis-back-row detail-stats-actions"><div class="detail-primary-actions"><button class="btn ghost" onclick="goBackGames()">戻る</button>${editActions}</div>${gameEdit}</div>`;
+  return `<div id="detailStatsActions" class="analysis-back-row detail-stats-actions"><div class="detail-primary-actions"><button class="btn ghost" onclick="goBackGames()">戻る</button><button class="btn ghost" onclick="openGameHistory('${gameId}')">履歴</button>${editActions}</div>${gameEdit}</div>`;
 }
 
 export function selectedStatsDeleteTarget(registrationType, selectedView) {

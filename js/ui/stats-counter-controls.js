@@ -157,6 +157,7 @@
     event.preventDefault();
     const delta = button.classList.contains('stat-counter-plus') ? 1 : -1;
     changeValue(input, delta);
+    window.recordPendingStatEvent?.(input.id, delta);
   });
 
   document.addEventListener('input', event => {
