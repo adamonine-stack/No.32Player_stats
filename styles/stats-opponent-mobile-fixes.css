@@ -1,0 +1,7 @@
+.stats-player-out-action{margin:24px 0 8px;padding:16px;border:1px solid rgba(239,68,68,.55);border-radius:14px;background:rgba(127,29,29,.14);text-align:center}.stats-player-out-action p{margin:0 0 10px;color:var(--muted);font-size:12px;font-weight:800}.stats-player-out-action .btn{width:100%;min-height:48px}
+@media(max-width:600px){
+  #modalRoot>.modal.stats-entry-modal{min-height:100dvh;height:100dvh;overflow:hidden}
+  #modalRoot>.modal.stats-entry-modal>.card{height:auto;max-height:calc(100dvh - max(12px,calc(env(safe-area-inset-top) + 8px)) - max(12px,env(safe-area-inset-bottom)));padding-bottom:calc(96px + env(safe-area-inset-bottom))!important;overflow-x:hidden;overflow-y:auto!important;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;scroll-padding-bottom:calc(96px + env(safe-area-inset-bottom))!important}
+  #modalRoot>.modal.opponent-team-form-modal input,#modalRoot>.modal.opponent-team-form-modal select,#modalRoot>.modal.opponent-team-form-modal textarea{font-size:16px!important}
+  #modalRoot>.modal.opponent-team-form-modal>.card{padding-bottom:calc(28px + env(safe-area-inset-bottom))!important}
+}
