@@ -13,9 +13,11 @@ assert.ok(app.includes("withGameMatchLayout(withPlayingTimeHeading(html))"));
 assert.match(css, /\.analysis-match-copy\{[^}]*display:flex[^}]*flex-direction:column/);
 assert.match(css, /\.basic-stats-title\{[^}]*display:flex[^}]*align-items:baseline[^}]*justify-content:space-between/);
 assert.match(css, /\.basic-stats-min\{[^}]*color:var\(--analysis-orange\)/);
+assert.match(css, /\.basic-stats-fouls\{[^}]*justify-content:flex-end[^}]*color:var\(--analysis-orange\)/);
+assert.match(app, /basic-stats-fouls[^`]*FOUL[^`]*被FOUL/);
 assert.match(appCss, /\.analysis-screen\{--analysis-orange:#ff9800\}/);
 assert.doesNotMatch(css, /\.basic-stats-title\{[^}]*flex-direction:column/);
-assert.match(index, /min-display\.css\?v=20260821-3/);
-assert.match(index, /js\/app\.js\?v=20260822-game-history-v1/);
+assert.match(index, /min-display\.css\?v=20260822-foul-stats-v2/);
+assert.match(index, /js\/app\.js\?v=20260822-foul-stats-v2/);
 
 console.log("analysis game info layout contract passed");

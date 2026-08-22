@@ -1,3 +1,4 @@
 .basic-stats-title{display:flex;align-items:baseline;justify-content:space-between;gap:12px}.basic-stats-title>span:first-child{min-width:0}.basic-stats-min{flex:0 0 auto;color:var(--analysis-orange);font-size:.9em;font-weight:900;font-variant-numeric:tabular-nums;white-space:nowrap}
+.basic-stats-fouls{display:flex;justify-content:flex-end;gap:14px;margin-top:8px;color:var(--analysis-orange);font-size:.9em;font-weight:900;font-variant-numeric:tabular-nums;white-space:nowrap}
 .analysis-game-match{align-items:flex-start}.analysis-match-copy{display:flex;min-width:0;flex-direction:column;gap:5px}.analysis-match-tournament,.analysis-match-opponent{display:block;min-width:0}.analysis-match-tournament{overflow-wrap:anywhere}.analysis-match-opponent{line-height:1.25}
 @media(max-width:480px){.basic-stats-title{gap:8px}.basic-stats-title .basic-stats-min{font-size:.85em}.analysis-match-copy{gap:4px}}

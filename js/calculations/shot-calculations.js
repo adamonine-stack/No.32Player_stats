@@ -157,6 +157,10 @@ export function shotTotals(shots = []) {
   }, { twoPa: 0, twoPm: 0, threePa: 0, threePm: 0 });
 }
 
+export function shotReceivedFoulCount(shots = []) {
+  return shots.filter(shot => normalizeShot(shot).wasFouled === true).length;
+}
+
 export function mergeShotTotals(source = {}, previousShots = [], nextShots = []) {
   const previous = shotTotals(previousShots);
   const next = shotTotals(nextShots);

@@ -29,7 +29,8 @@ export const STAT_KEYS = [
   "catchMiss",
   "violation",
   "otherTo",
-  "pf"
+  "pf",
+  "fouled"
 ];
 
 function blankStats() {
@@ -53,12 +54,18 @@ function blankStats() {
     catchMiss: 0,
     violation: 0,
     otherTo: 0,
-    pf: 0
+    pf: 0,
+    fouled: 0
   };
 }
 
 function addStatValues(result, source = {}) {
-  for (const key of STAT_KEYS) result[key] += num(source[key]);
+  for (const key of STAT_KEYS) {
+    const legacyShotFouls = key === "fouled" && source.shotFouledCount === undefined
+      ? (source.shots || []).filter(shot => shot?.wasFouled === true).length
+      : 0;
+    result[key] += num(source[key]) + legacyShotFouls;
+  }
 }
 
 export function getStatRegistrationType(stat = {}) {
