@@ -8,7 +8,7 @@ assert.match(app,/opponent-team-form-modal/);
 assert.match(css,/stats-entry-modal[^}]*100dvh/);
 assert.match(css,/padding-bottom:calc\(96px \+ env\(safe-area-inset-bottom\)\)/);
 assert.match(css,/opponent-team-form-modal input.*font-size:16px!important/s);
-assert.ok(index.includes("stats-opponent-mobile-fixes.css?v=20260822-v2"));
+assert.ok(index.includes("stats-opponent-mobile-fixes.css?v=20260822-v3"));
 assert.ok(!index.includes("user-scalable=no"));
 assert.ok(!index.includes("maximum-scale=1"));
 console.log("stats/opponent mobile fixes contract: ok");
