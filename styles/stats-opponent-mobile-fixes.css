@@ -5,3 +5,12 @@
   #modalRoot>.modal.opponent-team-form-modal input,#modalRoot>.modal.opponent-team-form-modal select,#modalRoot>.modal.opponent-team-form-modal textarea{font-size:16px!important}
   #modalRoot>.modal.opponent-team-form-modal>.card{padding-bottom:calc(28px + env(safe-area-inset-bottom))!important}
 }
+
+.modal > .card .participation-card{width:auto;max-width:none;max-height:none;overflow:visible}
+.modal > .card .participation-player-grid{max-height:none;overflow:visible}
+.game-history-modal{max-height:min(92dvh,900px);overflow-y:auto;overscroll-behavior:contain;padding-bottom:calc(20px + env(safe-area-inset-bottom))}
+.game-history-list{display:grid;gap:7px;margin:12px 0}
+.game-history-row{display:grid;grid-template-columns:38px 56px minmax(0,1fr) auto;gap:8px;align-items:center;padding:9px 7px;border:1px solid rgba(255,255,255,.14);border-radius:9px;background:rgba(255,255,255,.04)}
+.game-history-drag{min-width:38px;min-height:42px;padding:0;touch-action:none;cursor:grab}
+.game-history-meta{color:var(--muted,#aaa);font-size:12px}.game-history-content{min-width:0}.game-history-unknown{border-style:dashed}.game-history-row.dragging{opacity:.62;outline:2px solid var(--accent,#ff8a00)}
+@media(max-width:600px){.game-history-row{grid-template-columns:38px 46px minmax(0,1fr)}.game-history-actions{grid-column:2/4;display:flex;justify-content:flex-end;gap:6px}}

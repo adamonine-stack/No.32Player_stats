@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { detailStatsActionBar, selectedStatsDeleteTarget, detailStatsScrollOptions, renderDetailAtTop, saveStatsAndReturnToTop } from "../js/ui/detail-stats-actions.js";
 
 const actions = detailStatsActionBar("game-1", "player-1", true);
-const labels = ["戻る", "個人スタッツ修正", "個人スタッツ削除", "試合情報修正"];
+const labels = ["戻る", "履歴", "個人スタッツ修正", "個人スタッツ削除", "試合情報修正"];
 let previous = -1;
 for (const label of labels) {
   const position = actions.indexOf(`>${label}</button>`);

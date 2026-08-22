@@ -28,7 +28,8 @@ export const STAT_KEYS = [
   "dribbleMiss",
   "catchMiss",
   "violation",
-  "otherTo"
+  "otherTo",
+  "pf"
 ];
 
 function blankStats() {
@@ -51,7 +52,8 @@ function blankStats() {
     dribbleMiss: 0,
     catchMiss: 0,
     violation: 0,
-    otherTo: 0
+    otherTo: 0,
+    pf: 0
   };
 }
 

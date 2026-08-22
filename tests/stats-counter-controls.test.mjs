@@ -17,6 +17,6 @@ assert.match(controls, /z-index:3/);
 assert.doesNotMatch(controls, /minus\.addEventListener/);
 assert.doesNotMatch(controls, /plus\.addEventListener/);
 assert.doesNotMatch(index, /stats-counter-event-guard\.js/);
-assert.match(index, /stats-counter-controls\.js\?v=20260806-root-counter-delegation-v4/);
+assert.match(index, /stats-counter-controls\.js\?v=20260822-game-history-v1/);
 
 console.log('stats counter delegation contract passed');
