@@ -1,0 +1,47 @@
+/* Safe FOUL / 被FOUL layout adjustment.
+   CSS only: no MutationObserver or runtime DOM reordering. */
+
+/* Keep the summary FOUL labels vertically aligned. */
+.basic-stats-fouls {
+  align-items: center;
+}
+.basic-stats-fouls > span {
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+  min-height: 1.2em;
+}
+
+/* On mobile stats-entry forms, visually move FOUL / 被FOUL directly below FTA / FTM.
+   The existing markup order is:
+   1 FTA, 2 FTM, 3 AST, 4 BLK, ... 15 FOUL, 16 被FOUL.
+   CSS order preserves the DOM and event bindings while changing only presentation. */
+@media (max-width: 800px) {
+  .stats-form-grid:not(.shooting-number-grid) > label:nth-child(1)  { order: 1; }
+  .stats-form-grid:not(.shooting-number-grid) > label:nth-child(2)  { order: 2; }
+  .stats-form-grid:not(.shooting-number-grid) > label:nth-child(15) { order: 3; grid-column: auto !important; }
+  .stats-form-grid:not(.shooting-number-grid) > label:nth-child(16) { order: 4; grid-column: auto !important; }
+  .stats-form-grid:not(.shooting-number-grid) > label:nth-child(3)  { order: 5; }
+  .stats-form-grid:not(.shooting-number-grid) > label:nth-child(4)  { order: 6; }
+  .stats-form-grid:not(.shooting-number-grid) > label:nth-child(5)  { order: 7; }
+  .stats-form-grid:not(.shooting-number-grid) > label:nth-child(6)  { order: 8; }
+  .stats-form-grid:not(.shooting-number-grid) > label:nth-child(7)  { order: 9; }
+  .stats-form-grid:not(.shooting-number-grid) > label:nth-child(8)  { order: 10; }
+  .stats-form-grid:not(.shooting-number-grid) > label:nth-child(9)  { order: 11; }
+  .stats-form-grid:not(.shooting-number-grid) > label:nth-child(10) { order: 12; }
+  .stats-form-grid:not(.shooting-number-grid) > label:nth-child(11) { order: 13; }
+  .stats-form-grid:not(.shooting-number-grid) > label:nth-child(12) { order: 14; }
+  .stats-form-grid:not(.shooting-number-grid) > label:nth-child(13) { order: 15; }
+  .stats-form-grid:not(.shooting-number-grid) > label:nth-child(14) { order: 16; }
+
+  /* Make FOUL / 被FOUL use the same field box dimensions as AST / BLK. */
+  .stats-form-grid:not(.shooting-number-grid) > label:nth-child(15),
+  .stats-form-grid:not(.shooting-number-grid) > label:nth-child(16) {
+    min-width: 0;
+    width: auto;
+  }
+  .stats-form-grid:not(.shooting-number-grid) > label:nth-child(15) .num-wrap,
+  .stats-form-grid:not(.shooting-number-grid) > label:nth-child(16) .num-wrap {
+    width: 100%;
+  }
+}
