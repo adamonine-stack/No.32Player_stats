@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 const app=readFileSync(new URL("../js/app.js",import.meta.url),"utf8");
 const css=readFileSync(new URL("../styles/stats-opponent-mobile-fixes.css",import.meta.url),"utf8");
 const index=readFileSync(new URL("../index.html",import.meta.url),"utf8");
-assert.match(app,/activateNavigationTab\(tab\).*tab==='opponentTeams'.*selectedOpponentTeamId=''.*window\.scrollTo\(\{top:0,behavior:wasOpponentList\?'smooth':'auto'\}\)/s);
+assert.match(app,/activateNavigationTab\(tab\).*tab==='opponentTeams'&&state\.tab==='opponentTeams'.*window\.scrollTo\(\{top:0,behavior:'smooth'\}\);return.*selectedOpponentTeamId=''.*window\.scrollTo\(\{top:0,behavior:'auto'\}\)/s);
 assert.match(app,/opponent-team-form-modal/);
 assert.match(css,/stats-entry-modal[^}]*100dvh/);
 assert.match(css,/padding-bottom:calc\(96px \+ env\(safe-area-inset-bottom\)\)/);

@@ -16,6 +16,6 @@ assert.match(css, /\.basic-stats-min\{[^}]*color:var\(--analysis-orange\)/);
 assert.match(appCss, /\.analysis-screen\{--analysis-orange:#ff9800\}/);
 assert.doesNotMatch(css, /\.basic-stats-title\{[^}]*flex-direction:column/);
 assert.match(index, /min-display\.css\?v=20260821-3/);
-assert.match(index, /js\/app\.js\?v=20260822-stats-out-nav-v2/);
+assert.match(index, /js\/app\.js\?v=20260822-stats-out-nav-v3/);
 
 console.log("analysis game info layout contract passed");
