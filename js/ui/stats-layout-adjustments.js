@@ -1,6 +1,7 @@
 (() => {
   const ROWS = [
     ['FTA', 'FTM'],
+    ['FOUL', '被FOUL'],
     ['AST', 'BLK'],
     ['OR', 'DR'],
     ['ドリブルカット', 'パスカット', 'その他STL'],
