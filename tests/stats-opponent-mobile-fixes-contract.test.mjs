@@ -1,0 +1,14 @@
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+const app=readFileSync(new URL("../js/app.js",import.meta.url),"utf8");
+const css=readFileSync(new URL("../styles/stats-opponent-mobile-fixes.css",import.meta.url),"utf8");
+const index=readFileSync(new URL("../index.html",import.meta.url),"utf8");
+assert.match(app,/activateNavigationTab\(tab\).*tab==='opponentTeams'.*selectedOpponentTeamId=''.*window\.scrollTo\(\{top:0,behavior:wasOpponentList\?'smooth':'auto'\}\)/s);
+assert.match(app,/opponent-team-form-modal/);
+assert.match(css,/stats-entry-modal[^}]*100dvh/);
+assert.match(css,/padding-bottom:calc\(96px \+ env\(safe-area-inset-bottom\)\)/);
+assert.match(css,/opponent-team-form-modal input.*font-size:16px!important/s);
+assert.ok(index.includes("stats-opponent-mobile-fixes.css?v=20260822-v2"));
+assert.ok(!index.includes("user-scalable=no"));
+assert.ok(!index.includes("maximum-scale=1"));
+console.log("stats/opponent mobile fixes contract: ok");
