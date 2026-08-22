@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { allowedShotTypes, createShot, shotTotals, mergeShotTotals, detailedShotTotals, collectShots, filterShots, aggregateShots, SHOT_AREA_ORDER, SHOT_COURT_SIZE, HALF_COURT_HEIGHT, legacyShotSlots, isLegacyShotBreakdownTarget, createLegacyBreakdownShots, detectShotArea, SHOT_AREA_MODEL_VERSION, shotAreaForRecord, normalizedShotArea, normalizedShotType, reclassifyShots, countsAsFieldGoalAttempt, normalizeShot, shotSequence } from "../js/calculations/shot-calculations.js";
+import { allowedShotTypes, createShot, shotTotals, shotReceivedFoulCount, mergeShotTotals, detailedShotTotals, collectShots, filterShots, aggregateShots, SHOT_AREA_ORDER, SHOT_COURT_SIZE, HALF_COURT_HEIGHT, legacyShotSlots, isLegacyShotBreakdownTarget, createLegacyBreakdownShots, detectShotArea, SHOT_AREA_MODEL_VERSION, shotAreaForRecord, normalizedShotArea, normalizedShotType, reclassifyShots, countsAsFieldGoalAttempt, normalizeShot, shotSequence } from "../js/calculations/shot-calculations.js";
 
 assert.equal(detectShotArea(3, 10), "left_corner_3p");
 assert.equal(detectShotArea(25, 10), "left_zero_mid");
@@ -40,6 +40,7 @@ assert.equal(countsAsFieldGoalAttempt(fouledThreeMiss), false);
 assert.equal(countsAsFieldGoalAttempt(fouledMade), true);
 assert.equal(countsAsFieldGoalAttempt(centerMissed), true);
 assert.deepEqual(shotTotals([fouledTwoMiss, fouledThreeMiss, fouledMade]), { twoPa: 0, twoPm: 0, threePa: 1, threePm: 1 });
+assert.equal(shotReceivedFoulCount([fouledTwoMiss, fouledThreeMiss, fouledMade, centerMissed]), 3);
 assert.equal(normalizeShot({ result: "missed" }).wasFouled, false);
 
 const underMade = createShot({ ...base, shotArea: "under_basket", shotType: "jump_shot", result: "made", createdAt: 3 });

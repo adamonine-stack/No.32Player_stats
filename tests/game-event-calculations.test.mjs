@@ -1,9 +1,12 @@
 import assert from 'node:assert/strict';
 import {buildGameHistory,createPlayEvent,reconcileStatEvents} from '../js/calculations/game-event-calculations.js';
+import {sumStats} from '../js/calculations/stats-calculations.js';
 const players=[{id:'p1',number:'32',name:'R32'},{id:'p2',number:'15',name:'IN'}],game={id:'g1',quarters:1,statsRegistrationType:'quarter',playEvents:[createPlayEvent({id:'e1',gameId:'g1',quarter:1,player:players[0],type:'stat',statKey:'ast',sequence:10})],quarterParticipation:{q1:{substitutions:[{id:'s1',sequence:30,remainingSeconds:272,playerOutId:'p1',playerInId:'p2'}]}}};
 const stats=[{id:'g1_p1',gameId:'g1',playerId:'p1',quarters:{q1:{ast:2,dr:1,shots:[{id:'shot1',createdAt:20,shotValue:2,shotTypeLabel:'レイアップ',result:'made'}]}}}];
 const history=buildGameHistory(game,stats,players);assert.deepEqual(history.filter(item=>item.precise).map(item=>item.type),['stat','shot','substitution']);assert.equal(history.filter(item=>!item.precise).length,2);assert.equal(history.find(item=>item.sourceKind==='substitution').remainingSeconds,272);
 const reconciled=reconcileStatEvents({game,player:players[0],quarter:1,previous:{ast:1},next:{ast:2},pending:[{statKey:'ast',delta:1,sequence:12}]});assert.equal(reconciled.added.length,1);assert.equal(reconciled.playEvents.filter(item=>item.statKey==='ast').length,2);
+const fouls=reconcileStatEvents({game,player:players[0],quarter:1,previous:{pf:0,fouled:0},next:{pf:1,fouled:1},pending:[{statKey:'pf',delta:1,sequence:13},{statKey:'fouled',delta:1,sequence:14}]});assert.deepEqual(fouls.added.map(item=>item.type),['foul','foulReceived']);
 const legacyId=history.find(item=>!item.precise).eventId,ordered=buildGameHistory({...game,eventSequenceOverrides:{[legacyId]:5}},stats,players);assert.equal(ordered[0].eventId,legacyId);assert.equal(ordered[0].precise,true);
 const manyEvents=Array.from({length:60},(_,index)=>createPlayEvent({id:`many-${index}`,gameId:'many',quarter:1,player:players[0],type:'stat',statKey:'ast',sequence:index+1}));assert.equal(buildGameHistory({id:'many',quarters:1,playEvents:manyEvents},[],players).length,60);
+assert.equal(sumStats([{id:'legacy',gameId:'legacy-game',shots:[{wasFouled:true}]}],[{id:'legacy-game'}]).fouled,1);assert.equal(sumStats([{id:'current',gameId:'current-game',fouled:2,shotFouledCount:1,shots:[{wasFouled:true}]}],[{id:'current-game'}]).fouled,2);
 console.log('game event calculations: ok');
