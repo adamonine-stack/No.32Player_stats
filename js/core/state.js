@@ -1,6 +1,8 @@
 import { getGameSortDirection, getLastPlayerId, getSelectedSeasonId } from "./storage.js";
 import { DEFAULT_SEASON_ID, DEFAULT_SEASONS } from "../calculations/season-calculations.js";
 
+const initialLastPlayerId = getLastPlayerId();
+
 export const state = {
   user: null,
   tab: "home",
@@ -18,7 +20,7 @@ export const state = {
   selectedOpponentTeamId: "",
   analysisCalendarMonth: "",
   teamCalendarMonth: "",
-  lastPlayerId: getLastPlayerId(),
+  _lastPlayerId: initialLastPlayerId,
   statsMode: "game",
   homeStatsMode: "total",
   targetId: "",
@@ -44,6 +46,22 @@ export const state = {
   teamReturn: null,
   teamDetail: null
 };
+
+Object.defineProperty(state, "lastPlayerId", {
+  enumerable: true,
+  configurable: false,
+  get() {
+    return this._lastPlayerId;
+  },
+  set(playerId) {
+    const nextPlayerId = playerId || "";
+    // Firestore snapshots can arrive before the players collection. During that
+    // temporary empty state, keep the player restored from localStorage so the
+    // home screen opens on the last player the user viewed.
+    if (!nextPlayerId && this._lastPlayerId) return;
+    this._lastPlayerId = nextPlayerId;
+  }
+});
 
 const listeners = new Set();
 
