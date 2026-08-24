@@ -7,6 +7,7 @@ const calculations = readFileSync(new URL("../js/calculations/shot-calculations.
 const css = readFileSync(new URL("../styles/shot-registration.css", import.meta.url), "utf8");
 const detailCss = readFileSync(new URL("../styles/detail-stats-actions.css", import.meta.url), "utf8");
 const teamAnalysis = readFileSync(new URL("../js/ui/team-shot-analysis.js", import.meta.url), "utf8");
+const selectedAreaHighlight = readFileSync(new URL("../js/ui/shot-selected-area-highlight.js", import.meta.url), "utf8");
 
 assert.match(app, /selectedShotId=normalizedEditing\?\.id\|\|''/);
 assert.match(app, /function shotTypeButtonLabel\(id\)\{return id==='running_shot'\?'ランニング\/<br>ステップイン':escapeHtml\(SHOT_TYPES\[id\]\|\|''\)\}/);
@@ -66,6 +67,10 @@ assert.match(css, /\.modal \.card \{ overscroll-behavior:contain; -webkit-overfl
 assert.match(css, /\.shot-foul-ring/);
 assert.match(css, /\.shot-selection-ring/);
 assert.doesNotMatch(css, /\.court-zone-guides/);
+assert.match(selectedAreaHighlight, /const STEP = 0\.25;/);
+assert.match(selectedAreaHighlight, /const areaPathCache = new Map\(\);/);
+assert.match(selectedAreaHighlight, /let runStart = null;/);
+assert.match(selectedAreaHighlight, /areaPathCache\.set\(areaId, d\);/);
 assert.doesNotMatch(css, /shot-selection-pulse/);
 assert.doesNotMatch(css, /running_shot[\s\S]{0,160}::before/);
 assert.doesNotMatch(css, /running_shot[\s\S]{0,160}font-size\s*:\s*0/);

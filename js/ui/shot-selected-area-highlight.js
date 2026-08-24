@@ -4,7 +4,8 @@
   const COURT_WIDTH = 100;
   const COURT_HEIGHT = 108;
   const HALF_COURT_HEIGHT = 93.333;
-  const STEP = 2;
+  const STEP = 0.25;
+  const areaPathCache = new Map();
 
   const FIBA = Object.freeze({
     basketX: 50,
@@ -64,15 +65,23 @@
   }
 
   function areaPath(areaId) {
+    if (areaPathCache.has(areaId)) return areaPathCache.get(areaId);
+
     let d = '';
     for (let y = 0; y < COURT_HEIGHT; y += STEP) {
-      for (let x = 0; x < COURT_WIDTH; x += STEP) {
-        if (detectShotArea(x + STEP / 2, y + STEP / 2) !== areaId) continue;
-        const width = Math.min(STEP, COURT_WIDTH - x);
+      let runStart = null;
+      for (let x = 0; x <= COURT_WIDTH; x += STEP) {
+        const isArea = x < COURT_WIDTH && detectShotArea(x + STEP / 2, y + STEP / 2) === areaId;
+        if (isArea && runStart === null) runStart = x;
+        if (isArea || runStart === null) continue;
+
+        const width = Math.min(x, COURT_WIDTH) - runStart;
         const height = Math.min(STEP, COURT_HEIGHT - y);
-        d += `M${x} ${y}h${width}v${height}h-${width}z`;
+        d += `M${runStart} ${y}h${width}v${height}h-${width}z`;
+        runStart = null;
       }
     }
+    areaPathCache.set(areaId, d);
     return d;
   }
 
