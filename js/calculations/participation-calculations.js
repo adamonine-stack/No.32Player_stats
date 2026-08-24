@@ -108,6 +108,21 @@ export function parseRemainingTime(minutes, seconds, durationSeconds) {
   return { valid: true, remainingSeconds: value };
 }
 
+export function parseCompactRemainingTime(value, durationSeconds) {
+  const digits = String(value ?? "").trim();
+  if (!/^\d+$/.test(digits)) return { valid: false, error: "残り時間を数字で入力してください。" };
+  const secondsDigits = digits.length > 2 ? digits.slice(-2) : digits;
+  const minutesDigits = digits.length > 2 ? digits.slice(0, -2) : "0";
+  return parseRemainingTime(minutesDigits, secondsDigits, durationSeconds);
+}
+
+export function formatCompactRemainingTime(value) {
+  const seconds = Math.max(0, integer(value));
+  const minutes = Math.floor(seconds / 60);
+  const remainder = seconds % 60;
+  return minutes ? `${minutes}${String(remainder).padStart(2, "0")}` : String(remainder);
+}
+
 export function createTemporaryPlayer({ id, gameId, number = "", name = "" } = {}) {
   const uniqueId = id || `temp_${gameId || "game"}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 9)}`;
   return { id: uniqueId, type: "unregistered", gameId: gameId || "", number: String(number || ""), name: String(name || "") };

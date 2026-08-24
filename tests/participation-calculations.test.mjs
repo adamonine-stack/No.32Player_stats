@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { averagePlayerPlayingTime, createTemporaryPlayer, formatClock, gamePlayingTime, parseRemainingTime, playerPlayingTime, quarterDurationSeconds, sortSubstitutions, validateQuarterParticipation } from "../js/calculations/participation-calculations.js";
+import { averagePlayerPlayingTime, createTemporaryPlayer, formatClock, formatCompactRemainingTime, gamePlayingTime, parseCompactRemainingTime, parseRemainingTime, playerPlayingTime, quarterDurationSeconds, sortSubstitutions, validateQuarterParticipation } from "../js/calculations/participation-calculations.js";
 
 const starters = ["p1", "p2", "t1", "t2", "t3"];
 const substitutions = [
@@ -34,6 +34,14 @@ assert.equal(validateQuarterParticipation({ starters: ["p1", "p2", ...unregister
 assert.equal(parseRemainingTime(5, 78, 480).valid, false);
 assert.equal(parseRemainingTime(8, 31, 480).valid, false);
 assert.equal(parseRemainingTime(5, 42, 480).remainingSeconds, 342);
+assert.deepEqual(parseCompactRemainingTime("615", 480), { valid: true, remainingSeconds: 375 });
+assert.deepEqual(parseCompactRemainingTime("30", 480), { valid: true, remainingSeconds: 30 });
+assert.deepEqual(parseCompactRemainingTime("800", 480), { valid: true, remainingSeconds: 480 });
+assert.equal(parseCompactRemainingTime("675", 480).valid, false);
+assert.equal(parseCompactRemainingTime("", 480).valid, false);
+assert.equal(formatCompactRemainingTime(375), "615");
+assert.equal(formatCompactRemainingTime(30), "30");
+assert.equal(formatCompactRemainingTime(480), "800");
 assert.equal(quarterDurationSeconds({}), 480);
 assert.equal(quarterDurationSeconds({ quarterDurationMinutes: 6 }), 360);
 assert.equal(quarterDurationSeconds({ quarterDurationSeconds: 600 }), 600);
