@@ -6,7 +6,7 @@ const participationCss = readFileSync(new URL("../styles/participation.css", imp
 for (const marker of ["participationMode:'required'", "quarterDurationMinutes:durationMinutes", "Q開始メンバーを5人設定してください", "statsPlayerOut", "stats-player-out-button", "＋ 未登録選手を追加", "前Q終了メンバーをコピー", "sortSubstitutions(substitutions)"]) assert.ok(app.includes(marker), marker);
 assert.ok(app.includes("participationRequired(g)&&mode==='quarter'"));
 assert.ok(index.includes("participation.css?v=20260824-compact-sub-time-v3"));
-assert.ok(index.includes("app.js?v=20260824-compact-sub-time-v4"));
+assert.ok(index.includes("app.js?v=20260825-sub-time-caret-v5"));
 assert.ok(index.includes("min-display.css?v=20260822-foul-stats-v2"));
 assert.ok(app.includes("averagePlayerPlayingTime(gamesWithStats(targetGames(),p.id),p.id)"));
 assert.ok(app.includes("selectedGamePlayingTime(game,p.id)"));
@@ -21,6 +21,8 @@ assert.ok(app.includes("filter(id=>!onCourt.includes(id))"));
 assert.ok(app.includes('id="subTime"'));
 assert.ok(app.includes("例：6分15秒は 615"));
 assert.ok(app.includes("parseCompactRemainingTime($('#subTime').value,duration)"));
+assert.ok(app.includes("timeInput.onfocus=placeTimeCaretAtEnd"));
+assert.ok(app.includes("timeInput.setSelectionRange(end,end)"));
 assert.ok(!app.includes('id="subMinutes"'));
 assert.ok(!app.includes('id="subSeconds"'));
 assert.match(participationCss, /\.participation-sub-form input,\.participation-sub-form select\{font-size:16px\}/);
