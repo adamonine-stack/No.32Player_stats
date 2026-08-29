@@ -96,6 +96,7 @@ export function averagePlayerPlayingTime(games = [], playerId = "") {
 }
 
 export function formatClock(value) {
+  if (value === "") return "--:--";
   const seconds = Math.max(0, integer(value));
   return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, "0")}`;
 }
