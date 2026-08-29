@@ -6,9 +6,13 @@ for(const marker of ['function quickStatsForm','function quickPlayerSheet','func
 for(const key of ['passCut','dribbleCut','stealOther','passMiss','dribbleMiss','catchMiss','violation','otherTo'])assert.ok(app.includes(`key:'${key}'`),key);
 assert.match(app,/currentPlayersAt\(game,quarter,remainingSeconds\)/);
 assert.match(app,/if\(saving\)return/);
+assert.match(app,/data-quick-close/);
+assert.match(app,/addEventListener\('pointerup',close\)/);
+assert.doesNotMatch(app,/class="quick-close" id="closeModal"/);
 assert.match(app,/remainingSeconds:''/);
 assert.match(app,/quickSetSession\(game,quarter,\{remainingSeconds,undo:/);
 assert.match(css,/env\(safe-area-inset-bottom\)/);
 assert.match(css,/font-size:18px!important/);
-assert.match(app,/quick-input\.css\?v=20260829-quick-input-v1/);
+assert.match(css,/\.quick-head-close/);
+assert.match(app,/quick-input\.css\?v=20260829-quick-close-v2/);
 console.log('quick input contract: ok');
