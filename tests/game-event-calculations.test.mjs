@@ -9,5 +9,8 @@ const timed=reconcileStatEvents({game:{...game,playEvents:[]},player:players[0],
 const fouls=reconcileStatEvents({game,player:players[0],quarter:1,previous:{pf:0,fouled:0},next:{pf:1,fouled:1},pending:[{statKey:'pf',delta:1,sequence:13},{statKey:'fouled',delta:1,sequence:14}]});assert.deepEqual(fouls.added.map(item=>item.type),['foul','foulReceived']);
 const legacyId=history.find(item=>!item.precise).eventId,ordered=buildGameHistory({...game,eventSequenceOverrides:{[legacyId]:5}},stats,players);assert.equal(ordered[0].eventId,legacyId);assert.equal(ordered[0].precise,true);
 const manyEvents=Array.from({length:60},(_,index)=>createPlayEvent({id:`many-${index}`,gameId:'many',quarter:1,player:players[0],type:'stat',statKey:'ast',sequence:index+1}));assert.equal(buildGameHistory({id:'many',quarters:1,playEvents:manyEvents},[],players).length,60);
+const initialTimeHistory=buildGameHistory({id:'initial-time',quarters:1,quarterDurationMinutes:8,playEvents:[createPlayEvent({id:'later-input',gameId:'initial-time',quarter:1,player:players[0],type:'stat',statKey:'blk',sequence:20,remainingSeconds:480}),createPlayEvent({id:'earlier-input',gameId:'initial-time',quarter:1,player:players[0],type:'stat',statKey:'ast',sequence:10,remainingSeconds:480})]},[],players);
+assert.deepEqual(initialTimeHistory.map(item=>item.id),['earlier-input','later-input']);
+assert.deepEqual(initialTimeHistory.map(item=>item.remainingSeconds),[null,null]);
 assert.equal(sumStats([{id:'legacy',gameId:'legacy-game',shots:[{wasFouled:true}]}],[{id:'legacy-game'}]).fouled,1);assert.equal(sumStats([{id:'current',gameId:'current-game',fouled:2,shotFouledCount:1,shots:[{wasFouled:true}]}],[{id:'current-game'}]).fouled,2);
 console.log('game event calculations: ok');

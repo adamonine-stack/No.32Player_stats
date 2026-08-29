@@ -631,9 +631,9 @@ function statsEntryForm(gameId,quarter=null,preferredMode=''){
   const mobile=matchMedia('(max-width: 800px)').matches,mode=preferredMode||(mobile?'quick':'normal');
   if(mode==='quick')quickStatsForm(gameId,quarter);else{window.__r32NormalStatsEntry=true;statsForm(gameId,quarter);delete window.__r32NormalStatsEntry}
 }
-function quickSession(game,quarter){const key=`${game.id}:${quarter}`,duration=quarterDurationSeconds(game),saved=quickInputSessions.get(key)||{},hasTime=Object.prototype.hasOwnProperty.call(saved,'remainingSeconds');return {remainingSeconds:hasTime?saved.remainingSeconds:duration,undo:saved.undo||null}}
+function quickSession(game,quarter){const key=`${game.id}:${quarter}`,saved=quickInputSessions.get(key)||{},hasTime=Object.prototype.hasOwnProperty.call(saved,'remainingSeconds');return {remainingSeconds:hasTime?saved.remainingSeconds:'',undo:saved.undo||null}}
 function quickSource(game,stat,quarter){return getGameStatsRegistrationType(game)==='quarter'?(stat.quarters?.[quarterKey(quarter)]||{}):stat}
-function quickPlayers(game,quarter,remainingSeconds){const q=quarterParticipation(game,quarter),hasLineup=(q.starters||[]).length===5,ids=hasLineup?currentPlayersAt(game,quarter,remainingSeconds):[];return ids.length===5?ids.map(id=>participationPlayer(game,id)):participationPlayers(game)}
+function quickPlayers(game,quarter,remainingSeconds){const q=quarterParticipation(game,quarter),hasLineup=(q.starters||[]).length===5,result=hasLineup&&remainingSeconds===''?validateQuarterParticipation({...q,durationSeconds:quarterDurationSeconds(game)}):null,ids=hasLineup?(remainingSeconds===''?(result?.currentPlayers||[]):currentPlayersAt(game,quarter,remainingSeconds)):[];return ids.length===5?ids.map(id=>participationPlayer(game,id)):participationPlayers(game)}
 function quickClockValue(value){return value==null||value===''?'':String(Math.floor(value/60)*100+(value%60)).padStart(3,'0')}
 function quickParseClock(value,duration){const input=String(value||'').replace(/\D/g,'');return input?parseCompactRemainingTime(input,duration):{valid:true,remainingSeconds:''}}
 function quickSetSession(game,quarter,patch){const key=`${game.id}:${quarter}`,next={...quickSession(game,quarter),...patch};quickInputSessions.set(key,next);return next}
@@ -641,7 +641,7 @@ function quickModalClass(name=''){const root=document.querySelector('#modalRoot>
 async function saveQuickStats(game,quarter,player,changes,remainingSeconds,label){
   const id=`${game.id}_${player.id}`,stat=state.stats.find(item=>item.id===id)||{id,gameId:game.id,playerId:player.id},source=quickSource(game,stat,quarter),next={...source};
   for(const [key,delta] of Object.entries(changes))next[key]=num(source[key])+delta;
-  const pending=Object.entries(changes).flatMap(([statKey,delta])=>Array.from({length:Math.max(0,delta)},(_,index)=>({statKey,delta:1,remainingSeconds,sequence:Date.now()+index/1000}))),reconciled=reconcileStatEvents({game,player,quarter:getGameStatsRegistrationType(game)==='quarter'?quarter:null,previous:source,next,pending});
+  const pending=Object.entries(changes).flatMap(([statKey,delta])=>Array.from({length:Math.max(0,delta)},(_,index)=>({statKey,delta:1,sequence:Date.now()+index/1000,...(remainingSeconds===''?{}:{remainingSeconds})}))),reconciled=reconcileStatEvents({game,player,quarter:getGameStatsRegistrationType(game)==='quarter'?quarter:null,previous:source,next,pending});
   const data={gameId:game.id,playerId:player.id,seasonId:effectiveSeasonId(game,state.selectedSeasonId),updatedAt:serverTimestamp()};
   if(getGameStatsRegistrationType(game)==='quarter')data.quarters={[quarterKey(quarter)]:{...next,registered:true,quarter}};else Object.assign(data,next,{quarters:game.quarters||4});
   await Promise.all([setDoc(doc(db,'stats',id),data,{merge:true}),setDoc(doc(db,'games',game.id),{playEvents:reconciled.playEvents,updatedAt:serverTimestamp()},{merge:true})]);
