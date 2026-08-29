@@ -109,7 +109,7 @@ export function countsAsFieldGoalAttempt(shot = {}) {
   return shot.result === "missed";
 }
 
-export function createShot({ id, gameId, playerId, quarter = null, shotArea, shotX = null, shotY = null, shotType, result, wasFouled = false, createdAt = Date.now() }) {
+export function createShot({ id, gameId, playerId, quarter = null, shotArea, shotX = null, shotY = null, shotType, result, wasFouled = false, remainingSeconds = null, createdAt = Date.now() }) {
   const requestedArea = shotArea;
   const hasCoordinates = shotX !== null && shotX !== undefined && shotY !== null && shotY !== undefined;
   const coordinateArea = hasCoordinates ? detectShotArea(shotX, shotY) : null;
@@ -138,6 +138,7 @@ export function createShot({ id, gameId, playerId, quarter = null, shotArea, sho
     shotTypeLabel: SHOT_TYPES[shotType],
     result,
     wasFouled: wasFouled === true,
+    remainingSeconds: remainingSeconds !== "" && Number.isFinite(Number(remainingSeconds)) ? Number(remainingSeconds) : null,
     points: result === "made" ? shotValue : 0,
     createdAt
   };

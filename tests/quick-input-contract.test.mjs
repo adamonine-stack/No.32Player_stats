@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+const app=fs.readFileSync(new URL('../js/app.js',import.meta.url),'utf8');
+const css=fs.readFileSync(new URL('../styles/quick-input.css',import.meta.url),'utf8');
+for(const marker of ['function quickStatsForm','function quickPlayerSheet','function quickShotRegistration','function saveQuickStats','1つ戻す','通常入力','data-quick-action="reb"','data-quick-action="fouled"'])assert.ok(app.includes(marker),marker);
+for(const key of ['passCut','dribbleCut','stealOther','passMiss','dribbleMiss','catchMiss','violation','otherTo'])assert.ok(app.includes(`key:'${key}'`),key);
+assert.match(app,/currentPlayersAt\(game,quarter,remainingSeconds\)/);
+assert.match(app,/if\(saving\)return/);
+assert.match(app,/remainingSeconds:''/);
+assert.match(app,/quickSetSession\(game,quarter,\{remainingSeconds,undo:/);
+assert.match(css,/env\(safe-area-inset-bottom\)/);
+assert.match(css,/font-size:18px!important/);
+assert.match(app,/quick-input\.css\?v=20260829-quick-input-v1/);
+console.log('quick input contract: ok');
