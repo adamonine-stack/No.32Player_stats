@@ -18,6 +18,6 @@ assert.match(app, /basic-stats-fouls[^`]*FOUL[^`]*被FOUL/);
 assert.match(appCss, /\.analysis-screen\{--analysis-orange:#ff9800\}/);
 assert.doesNotMatch(css, /\.basic-stats-title\{[^}]*flex-direction:column/);
 assert.match(index, /min-display\.css\?v=20260822-foul-stats-v2/);
-assert.match(index, /js\/app\.js\?v=20260829-court-filter-state-v5/);
+assert.match(index, /js\/app\.js\?v=20260830-court-filter-redesign-v1/);
 
 console.log("analysis game info layout contract passed");
