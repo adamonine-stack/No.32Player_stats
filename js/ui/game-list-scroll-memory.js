@@ -74,7 +74,7 @@ style.textContent = `
   padding:6px;
   border:1px solid rgba(255,255,255,.14);
   border-radius:14px;
-  background:rgba(7,17,38,.96);
+  background:rgba(0,0,0,.96);
   box-shadow:0 8px 24px rgba(0,0,0,.32);
   backdrop-filter:blur(12px);
   -webkit-backdrop-filter:blur(12px);
