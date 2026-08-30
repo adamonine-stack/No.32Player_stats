@@ -5,6 +5,7 @@ const css=fs.readFileSync(new URL('../styles/quick-input.css',import.meta.url),'
 const viewportScript=fs.readFileSync(new URL('../js/ui/mobile-modal-viewport-fit.js',import.meta.url),'utf8');
 const viewportCss=fs.readFileSync(new URL('../styles/mobile-modal-viewport-fit.css',import.meta.url),'utf8');
 for(const marker of ['function quickStatsForm','function quickPlayerSheet','function quickShotRegistration','function saveQuickStats','1つ戻す','通常入力','data-quick-action="reb"','data-quick-action="fouled"'])assert.ok(app.includes(marker),marker);
+for(const marker of ['<h2>選手を選択</h2>','function quickActionSheet','quick-selected-player','id="quickChangePlayer"','data-quick-action="out"'])assert.ok(app.includes(marker),marker);
 for(const key of ['passCut','dribbleCut','stealOther','passMiss','dribbleMiss','catchMiss','violation','otherTo'])assert.ok(app.includes(`key:'${key}'`),key);
 assert.match(app,/currentPlayersAt\(game,quarter,remainingSeconds\)/);
 assert.match(app,/if\(saving\)return/);
