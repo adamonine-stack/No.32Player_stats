@@ -9,7 +9,9 @@ export function quarterDurationSeconds(game = {}) {
 }
 
 export function participationRequired(game = {}) {
-  return game.participationMode === "required";
+  if (game.participationMode === "required") return true;
+  if (game.participationMode === "disabled") return false;
+  return integer(game.registrationDefaultsVersion) >= 2;
 }
 
 export function quarterParticipation(game = {}, quarter = 1) {
