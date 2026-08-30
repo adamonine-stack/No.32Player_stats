@@ -41,6 +41,38 @@
     return 'neutral';
   }
 
+  function styleShotResult(span){
+    if(span.dataset.historyShotStyled)return;
+    const text=span.textContent||'';
+    if(!/\b(Made|Miss)\b/i.test(text))return;
+    const parts=text.split(/(Made|Miss)/i);
+    span.textContent='';
+    parts.forEach(part=>{
+      if(/^Made$/i.test(part)||/^Miss$/i.test(part)){
+        const marker=document.createElement('strong');
+        marker.className=`game-history-shot-result game-history-shot-${part.toLowerCase()}`;
+        marker.textContent=part;
+        span.appendChild(marker);
+      }else span.appendChild(document.createTextNode(part));
+    });
+    span.dataset.historyShotStyled='1';
+  }
+
+  function styleCategoryDetail(span,prefix,className){
+    const key=`history${prefix}Styled`;
+    if(span.dataset[key])return;
+    const text=span.textContent||'';
+    const match=text.match(new RegExp(`^(${prefix})([：:])(.*)$`));
+    if(!match)return;
+    span.textContent='';
+    span.appendChild(document.createTextNode(`${match[1]}${match[2]}`));
+    const detail=document.createElement('strong');
+    detail.className=className;
+    detail.textContent=match[3];
+    span.appendChild(detail);
+    span.dataset[key]='1';
+  }
+
   function styleSubstitution(span){
     if(span.dataset.historySubStyled)return;
     const text=span.textContent||'';
@@ -67,6 +99,9 @@
       const tone=historyTone(span.textContent);
       row.classList.remove(...TONE_CLASSES);
       row.classList.add(`history-tone-${tone}`);
+      if(tone==='made'||tone==='miss')styleShotResult(span);
+      if(tone==='to')styleCategoryDetail(span,'TO','game-history-category-detail');
+      if(tone==='reb')styleCategoryDetail(span,'REB','game-history-category-detail');
       if(tone==='sub')styleSubstitution(span);
     });
   }
