@@ -4,7 +4,7 @@
 
   let editMode=false;
   let scheduled=false;
-  const TONE_CLASSES=['history-tone-made','history-tone-miss','history-tone-mixed','history-tone-ast','history-tone-reb','history-tone-stl','history-tone-blk','history-tone-to','history-tone-foul','history-tone-fouled','history-tone-sub','history-tone-neutral'];
+  const TONE_CLASSES=['history-tone-shot2','history-tone-shot3','history-tone-ft','history-tone-ast','history-tone-reb','history-tone-stl','history-tone-blk','history-tone-to','history-tone-foul','history-tone-fouled','history-tone-sub','history-tone-neutral'];
 
   function actionSpan(content){
     let span=content.querySelector('.game-history-action-text');
@@ -29,15 +29,9 @@
     if(/^STL[：:]/.test(value))return 'stl';
     if(/^BLK\b/.test(value))return 'blk';
     if(/^TO[：:]/.test(value))return 'to';
-    const ft=value.match(/^FT\s+(\d+)\/(\d+)/i);
-    if(ft){
-      const made=Number(ft[1]),attempts=Number(ft[2]);
-      if(attempts>0&&made===attempts)return 'made';
-      if(made===0)return 'miss';
-      return 'mixed';
-    }
-    if(/\bMade\b/i.test(value))return 'made';
-    if(/\bMiss\b/i.test(value))return 'miss';
+    if(/^FT\b/i.test(value))return 'ft';
+    if(/^2PT\b/i.test(value))return 'shot2';
+    if(/^3PT\b/i.test(value))return 'shot3';
     return 'neutral';
   }
 
@@ -97,9 +91,12 @@
       const span=actionSpan(content);
       if(!span)return;
       const tone=historyTone(span.textContent);
-      row.classList.remove(...TONE_CLASSES);
-      row.classList.add(`history-tone-${tone}`);
-      if(tone==='made'||tone==='miss')styleShotResult(span);
+      const nextClass=`history-tone-${tone}`;
+      if(!row.classList.contains(nextClass)){
+        row.classList.remove(...TONE_CLASSES);
+        row.classList.add(nextClass);
+      }
+      if(tone==='shot2'||tone==='shot3')styleShotResult(span);
       if(tone==='to')styleCategoryDetail(span,'TO','game-history-category-detail');
       if(tone==='reb')styleCategoryDetail(span,'REB','game-history-category-detail');
       if(tone==='sub')styleSubstitution(span);
