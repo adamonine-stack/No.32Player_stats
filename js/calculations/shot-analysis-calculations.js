@@ -69,12 +69,13 @@ export function registeredShotTypeIds(shots = []) {
   return [...new Set(shots.map(normalizeShot).map(normalizedShotType).filter(Boolean))];
 }
 
-export function filterShotsBySelections(shots = [], { areaIds = [], results = [], typeIds = [] } = {}) {
-  const areas = new Set(areaIds), selectedResults = new Set(results), types = new Set(typeIds);
-  if (!areas.size || !selectedResults.size || !types.size) return [];
+export function filterShotsBySelections(shots = [], { areaIds = [], result = '', fouledOnly = false, typeIds = [] } = {}) {
+  const areas = new Set(areaIds), types = new Set(typeIds);
+  if (!areas.size) return [];
   return shots.map(normalizeShot).filter(shot => areas.has(shotAreaForRecord(shot))
-    && types.has(normalizedShotType(shot))
-    && (selectedResults.has(shot.result) || (selectedResults.has('fouled') && shot.wasFouled === true)));
+    && (!result || shot.result === result)
+    && (!fouledOnly || shot.wasFouled === true)
+    && (!types.size || types.has(normalizedShotType(shot))));
 }
 
 export function insideAnalysisSide(xValue) {
