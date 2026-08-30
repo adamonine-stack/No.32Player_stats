@@ -17,7 +17,7 @@
 .game-history-mode-toggle{margin-left:auto;white-space:nowrap}
 .game-history-readonly .game-history-insert,.game-history-readonly .game-history-drag,.game-history-readonly .game-history-actions,.game-history-readonly .game-history-editor-note{display:none!important}
 .game-history-readonly .game-history-row{grid-template-columns:56px minmax(0,1fr);gap:10px;padding:10px 9px;border-left-width:4px;border-left-color:var(--history-tone,rgba(255,255,255,.18));background:linear-gradient(90deg,var(--history-wash,rgba(255,255,255,.025)),rgba(255,255,255,.025) 44%)}
-.game-history-readonly .game-history-content{line-height:1.45}.game-history-readonly .game-history-action-text{color:var(--history-tone,#e9edf2);font-weight:800}.game-history-readonly .game-history-meta{color:color-mix(in srgb,var(--history-tone,#aaa) 70%,#aaa)}
+.game-history-readonly .game-history-content{line-height:1.45}.game-history-readonly .game-history-action-text{color:#fff;font-weight:800}.game-history-readonly .game-history-meta{color:color-mix(in srgb,var(--history-tone,#aaa) 70%,#aaa)}
 .game-history-readonly .history-tone-made{--history-tone:#58d68d;--history-wash:rgba(46,204,113,.13)}
 .game-history-readonly .history-tone-miss{--history-tone:#ff6b6b;--history-wash:rgba(255,82,82,.12)}
 .game-history-readonly .history-tone-mixed{--history-tone:#f4d03f;--history-wash:rgba(244,208,63,.11)}
@@ -30,6 +30,8 @@
 .game-history-readonly .history-tone-fouled{--history-tone:#ffd54f;--history-wash:rgba(255,213,79,.11)}
 .game-history-readonly .history-tone-sub{--history-tone:#90a4ae;--history-wash:rgba(144,164,174,.1)}
 .game-history-readonly .history-tone-neutral{--history-tone:#b0bec5;--history-wash:rgba(176,190,197,.07)}
+.game-history-readonly .game-history-shot-made{color:#58d68d}.game-history-readonly .game-history-shot-miss{color:#ff6b6b}
+.game-history-readonly .history-tone-to .game-history-category-detail,.game-history-readonly .history-tone-reb .game-history-category-detail{color:var(--history-tone)}
 .game-history-readonly .game-history-sub-out{color:#ff8a80}.game-history-readonly .game-history-sub-in{color:#69f0ae}
-.game-history-editing .game-history-row{--history-tone:transparent;--history-wash:transparent}.game-history-editing .game-history-action-text,.game-history-editing .game-history-sub-out,.game-history-editing .game-history-sub-in{color:inherit;font-weight:inherit}
+.game-history-editing .game-history-row{--history-tone:transparent;--history-wash:transparent}.game-history-editing .game-history-action-text,.game-history-editing .game-history-shot-result,.game-history-editing .game-history-category-detail,.game-history-editing .game-history-sub-out,.game-history-editing .game-history-sub-in{color:inherit;font-weight:inherit}
 @media(max-width:600px){.game-history-row{grid-template-columns:38px 46px minmax(0,1fr)}.game-history-actions{grid-column:2/4;display:flex;justify-content:flex-end;gap:6px}.game-history-readonly .game-history-row{grid-template-columns:46px minmax(0,1fr)}.game-history-mode-toggle{margin-left:auto}}
