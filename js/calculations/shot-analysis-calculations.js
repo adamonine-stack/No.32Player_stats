@@ -1,4 +1,14 @@
-import { FIBA_COURT, detectShotArea, countsAsFieldGoalAttempt, normalizeShot } from './shot-calculations.js?v=20260810-under-basket-v20';
+import { FIBA_COURT, SHOT_AREAS, SHOT_AREA_ORDER, detectShotArea, countsAsFieldGoalAttempt, normalizeShot, normalizedShotType, shotAreaForRecord } from './shot-calculations.js?v=20260822-foul-stats-v2';
+
+export const SHOT_ANALYSIS_AREA_SHORTCUTS = Object.freeze([
+  ['two', '2P'],
+  ['three', '3P'],
+  ['mid', 'ミドルシュート'],
+  ['paint', 'ゴール下＋インサイド'],
+  ['left', '左'],
+  ['center', '正面'],
+  ['right', '右']
+]);
 
 export const SHOT_ANALYSIS_DISTANCE_OPTIONS = Object.freeze([
   ['all', '全て'],
@@ -43,6 +53,29 @@ const DISTANCE_BY_AREA = Object.freeze({
   right_corner_3p: 'three',
   backcourt_3p: 'three'
 });
+
+export function shotAnalysisAreaIds(shortcut = '') {
+  return SHOT_AREA_ORDER.filter(id => {
+    const area = SHOT_AREAS[id];
+    if (shortcut === 'two') return area?.value === 2;
+    if (shortcut === 'three') return area?.value === 3;
+    if (shortcut === 'mid') return DISTANCE_BY_AREA[id] === 'mid';
+    if (shortcut === 'paint') return DISTANCE_BY_AREA[id] === 'under' || DISTANCE_BY_AREA[id] === 'inside';
+    return SIDE_BY_AREA[id] === shortcut;
+  });
+}
+
+export function registeredShotTypeIds(shots = []) {
+  return [...new Set(shots.map(normalizeShot).map(normalizedShotType).filter(Boolean))];
+}
+
+export function filterShotsBySelections(shots = [], { areaIds = [], results = [], typeIds = [] } = {}) {
+  const areas = new Set(areaIds), selectedResults = new Set(results), types = new Set(typeIds);
+  if (!areas.size || !selectedResults.size || !types.size) return [];
+  return shots.map(normalizeShot).filter(shot => areas.has(shotAreaForRecord(shot))
+    && types.has(normalizedShotType(shot))
+    && (selectedResults.has(shot.result) || (selectedResults.has('fouled') && shot.wasFouled === true)));
+}
 
 export function insideAnalysisSide(xValue) {
   const x = Number(xValue);
