@@ -8,9 +8,9 @@ const analysis=app.slice(start,end);
 const playerChange=analysis.match(/const bindPlayerPicker=.*?const bindFilters=/s)?.[0]||'';
 
 assert.ok(start>=0&&end>start,'court analysis implementation exists');
-for(const marker of ["selectedAreas=new Set(SHOT_AREA_ORDER)","selectedResults=new Set(['made','missed','fouled'])","selectedTypes=new Set(registeredShotTypeIds"])assert.ok(analysis.includes(marker),marker);
+for(const marker of ["selectedAreas=new Set(SHOT_AREA_ORDER)","selectedTypes=new Set()","selectedResult=''","fouledOnly=false"])assert.ok(analysis.includes(marker),marker);
 assert.match(playerChange,/state\.lastPlayerId=nextId;setLastPlayerId\(nextId\);/);
 assert.match(playerChange,/renderAnalysis\(\)/);
-assert.doesNotMatch(playerChange,/selectedAreas\.clear\(\)|selectedResults\.clear\(\)|selectedTypes\.clear\(\)/);
+assert.doesNotMatch(playerChange,/selectedAreas\.clear\(\)|selectedResult=''|fouledOnly=false|selectedTypes\.clear\(\)/);
 assert.match(analysis,/const allShots=\(\)=>collectShots\(analysisShotItems\(\)\)/);
 console.log('court analysis player filter state: ok');
