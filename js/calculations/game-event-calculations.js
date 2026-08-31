@@ -14,7 +14,27 @@ export function buildGameHistory(game={},stats=[],players=[]){const byPlayer=new
   const substitutions=[];for(let quarter=1;quarter<=Number(game.quarters||game.quarterCount||4);quarter++){for(const item of game.quarterParticipation?.[`q${quarter}`]?.substitutions||[]){const out=byPlayer.get(item.playerOutId)||game.temporaryPlayers?.find(player=>player.id===item.playerOutId)||{},inside=byPlayer.get(item.playerInId)||game.temporaryPlayers?.find(player=>player.id===item.playerInId)||{},id=`sub:${quarter}:${item.id}`;substitutions.push({id,eventId:id,gameId:game.id,quarter,type:'substitution',sourceKind:'substitution',sourceId:item.id,playerId:item.playerOutId,playerNumber:String(out.number||''),playerName:out.name||'',content:`#${out.number||'-'} ${out.name||''} OUT → #${inside.number||'-'} ${inside.name||''} IN`,remainingSeconds:integer(item.remainingSeconds),sortValue:orderedValue(game,id,Number(item.sequence)||0),precise:true})}}
   const precise=[...stored,...shots,...substitutions,...legacy.filter(item=>item.precise)].sort((a,b)=>(a.sortValue??Infinity)-(b.sortValue??Infinity)||String(a.id).localeCompare(String(b.id))),unknown=legacy.filter(item=>!item.precise).sort((a,b)=>(a.quarter||0)-(b.quarter||0)||String(a.playerNumber).localeCompare(String(b.playerNumber),undefined,{numeric:true})||a.content.localeCompare(b.content));return [...precise,...unknown]
 }
-export function historyInsertionOverrides(items=[],addedIds=[],afterId=null){const added=new Set(addedIds),base=items.map(item=>item.eventId).filter(id=>!added.has(id)),index=afterId==null?0:Math.max(0,base.indexOf(afterId)+1),ordered=[...base.slice(0,index),...addedIds,...base.slice(index)];return Object.fromEntries(ordered.map((id,position)=>[id,position+1]))}
+// Presentation groups only. The independent source events and counters are untouched.
+export function groupGameHistory(items=[]){
+  const byId=new Map(items.map(item=>[item.eventId,item])),linked=new Map(),hidden=new Set();
+  for(const shot of items){
+    const made=shot.type==='shot'?shot.result==='made':['twoPm','threePm'].includes(shot.statKey);
+    const assist=byId.get(shot.assistEventId);
+    if(!made||!assist||assist.type!=='stat'||assist.statKey!=='ast'||assist.shotEventId!==shot.eventId||!shot.playId||assist.playId!==shot.playId||Number(assist.quarter||0)!==Number(shot.quarter||0)||assist.playerId===shot.playerId)continue;
+    linked.set(shot.eventId,assist);hidden.add(assist.eventId);
+  }
+  return items.filter(item=>!hidden.has(item.eventId)).map(item=>{
+    const linkedAssist=linked.get(item.eventId);
+    return {...item,linkedAssist,eventIds:linkedAssist?[item.eventId,linkedAssist.eventId]:[item.eventId]};
+  });
+}
+export function historyActionOrderOverrides(actions=[]){return Object.fromEntries(actions.flatMap(item=>item.eventIds||[item.eventId]).map((id,index)=>[id,index+1]))}
+export function historyInsertionOverrides(items=[],addedIds=[],afterId=null){
+  const added=new Set(addedIds),actions=groupGameHistory(items),base=actions.flatMap(item=>item.eventIds).filter(id=>!added.has(id));
+  const anchor=actions.find(item=>item.eventIds.includes(afterId)),anchorId=anchor?.eventIds.at(-1)||afterId;
+  const index=afterId==null?0:Math.max(0,base.indexOf(anchorId)+1),ordered=[...base.slice(0,index),...addedIds,...base.slice(index)];
+  return Object.fromEntries(ordered.map((id,position)=>[id,position+1]));
+}
 export function reconcileStatEvents({game={},player={},quarter=null,previous={},next={},pending=[]}={}){const events=[...(game.playEvents||[])],added=[],removed=[];for(const statKey of Object.keys(STAT_EVENT_LABELS)){let delta=integer(next[statKey])-integer(previous[statKey]),type=statKey==='pf'?'foul':statKey==='fouled'?'foulReceived':'stat';const matchingPending=pending.filter(item=>item.statKey===statKey&&item.delta>0);while(delta>0){const pendingItem=matchingPending.shift(),event=createPlayEvent({gameId:game.id,quarter,player,type,statKey,sequence:pendingItem?.sequence||nextGameEventSequence({...game,playEvents:[...events,...added]}),...(pendingItem?.remainingSeconds!==undefined?{remainingSeconds:pendingItem.remainingSeconds}:{})});added.push(event);delta--}while(delta<0){const index=events.map((item,i)=>({item,i})).filter(({item})=>item.type===type&&item.statKey===statKey&&item.playerId===player.id&&Number(item.quarter||0)===Number(quarter||0)).at(-1)?.i;if(index==null)break;removed.push(events[index].id);events.splice(index,1);delta++}}
   return {playEvents:[...events.filter(item=>!removed.includes(item.id)),...added],added,removed}
 }
