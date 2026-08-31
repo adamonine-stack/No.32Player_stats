@@ -35,3 +35,5 @@
 .game-history-readonly .game-history-sub-out{color:#ff8a80}.game-history-readonly .game-history-sub-in{color:#69f0ae}
 .game-history-editing .game-history-row{--history-tone:transparent;--history-wash:transparent}.game-history-editing .game-history-action-text,.game-history-editing .game-history-shot-result,.game-history-editing .game-history-category-detail,.game-history-editing .game-history-sub-out,.game-history-editing .game-history-sub-in{color:inherit;font-weight:inherit}
 @media(max-width:600px){.game-history-row{grid-template-columns:38px 46px minmax(0,1fr)}.game-history-actions{grid-column:2/4;display:flex;justify-content:flex-end;gap:6px}.game-history-readonly .game-history-row{grid-template-columns:46px minmax(0,1fr)}.game-history-mode-toggle{margin-left:auto}}
+
+.game-history-action{display:grid;gap:7px;min-width:0}.game-history-action.dragging .game-history-row{opacity:.62;outline:2px solid var(--accent,#ff8a00)}.game-history-action .game-history-actions{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;max-width:240px}

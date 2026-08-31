@@ -1,4 +1,4 @@
-import { buildGameHistory, createPlayEvent, reconcileStatEvents } from './game-event-calculations.js?v=20260831-assist-v1';
+import { buildGameHistory, createPlayEvent, reconcileStatEvents } from './game-event-calculations.js?v=20260831-grouped-history-v1';
 import { currentPlayersAt, quarterParticipation, quarterDurationSeconds, validateQuarterParticipation } from './participation-calculations.js?v=20260824-compact-sub-time-v3';
 import { detailedShotTotals, shotReceivedFoulCount } from './shot-calculations.js?v=20260822-foul-stats-v2';
 
