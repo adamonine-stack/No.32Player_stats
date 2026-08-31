@@ -1,0 +1,31 @@
+// Generates a disposable local page from the actual app functions. No Firebase
+// import or production writes: the adapter uses the same pure mutation planner.
+import fs from 'node:fs';
+const app=fs.readFileSync(new URL('../js/app.js',import.meta.url),'utf8');
+const names=['quickShotRegistration','assistSelectionSheet','assistHistoryEditor','assistHistoryNote','assistPlayerLabel','saveAssistPlay','quickModalClass','quickPlayers','quickSession','quickSetSession','quickSource','quickClockValue','quickParseClock','quickStatsForm','quickActionSheet','quickSelectedHeader','gameHistoryForm','editHistoryItem','historyPlayerLabel','historyClock','historyInsertButton','insertionSession','bindHistoryDrag','saveHistoryOrder','courtPoint','shotCourtSvg','shotMarkerPoints','analysisAreaOverlaySvg','shotTypeButtonLabel','participationPlayers','participationPlayer'];
+const functions=names.map(name=>{const start=app.search(new RegExp(`^(?:async )?function ${name}\\(`,'m'));if(start<0)throw Error(name);const tail=app.slice(start);const end=tail.search(/\n(?:async function |function |const |window\.)/);return end<0?tail:tail.slice(0,end)}).join('\n');
+const dir=new URL('../tmp/assist-qa/',import.meta.url);fs.mkdirSync(dir,{recursive:true});
+const html=`<!doctype html><html lang="ja"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>R32 assist isolated QA</title>${['app','shot-registration','quick-input','stats-opponent-mobile-fixes','participation','mobile-modal-viewport-fit'].map(n=>`<link rel="stylesheet" href="../../styles/${n}.css">`).join('')}<body><div style="padding:12px"><h1>R32 アシスト動作確認</h1><p>架空データ・本番への書込みなし</p><button class="btn" id="start">クイック登録</button><button class="btn" id="history">履歴</button><button class="btn" id="sub">No.8 OUT / No.12 IN</button><button class="btn" id="fail">次の保存を失敗させる</button><button class="btn" id="legacy">旧試合データ</button><output id="totals"></output><p id="message"></p></div><div id="modalRoot"></div><script type="module" src="fixture.js"></script><script src="../../js/ui/game-history-view-mode.js"></script><script src="../../js/ui/quick-input-touch-fix.js"></script></body></html>`;
+const prefix=`import {assistCandidates,isAssistEvent,isMadeEvent,nearbyMadeShots,planAssistMutation} from '../../js/calculations/assist-play-calculations.js';
+import {buildGameHistory,historyInsertionOverrides} from '../../js/calculations/game-event-calculations.js';
+import {SHOT_AREAS,SHOT_TYPES,SHOT_COURT_SIZE,allowedShotTypes,createShot,detectShotArea,normalizeShot,shotAreaForRecord} from '../../js/calculations/shot-calculations.js';
+import {currentPlayersAt,quarterParticipation,quarterDurationSeconds,validateQuarterParticipation,participationRequired,formatClock,parseCompactRemainingTime} from '../../js/calculations/participation-calculations.js';
+import {num,getGameStatsRegistrationType,quarterKey,sumStats} from '../../js/calculations/stats-calculations.js';
+const players=[4,7,8,21,32,12].map(n=>({id:String(n),number:String(n),name:'選手'+n}));
+const game={id:'qa',opponent:'テスト',statsRegistrationType:'quarter',quarters:4,participationMode:'required',quarterParticipation:{q1:{starters:['4','7','8','21','32'],substitutions:[]}}};
+const state={players,games:[game],stats:[],user:{},lastPlayerId:'32'},quickInputSessions=new Map();
+const $=s=>document.querySelector(s),escapeHtml=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const modal=html=>{$('#modalRoot').innerHTML='<div class="modal"><div class="card">'+html+'</div></div>';document.body.classList.add('modal-open')};
+const closeModal=()=>{$('#modalRoot').innerHTML='';document.body.classList.remove('modal-open')};
+const toast=message=>{$('#message').textContent=message},requireLogin=()=>true,detailStatsView=()=> 'q1',setLastPlayerId=()=>{},statsForm=()=>closeModal();
+const statsEntryForm=()=>closeModal(),participationForm=()=>{},quickAfterSave=()=>{closeModal();renderTotals()},db={},doc=(_,collection,id)=>({collection,id}),serverTimestamp=()=>123;
+const setDoc=async(ref,data)=>{if(ref.collection==='games')Object.assign(game,data)},startHistoryInsertion=()=>{quickSetSession(game,1,{returnToHistory:true,insertAfterId:null});quickStatsForm(game.id,1)},deleteHistoryItem=()=>{},substitutionForm=()=>{},quickFreeThrowEdit=()=>{},openShotRegistration=()=>{};
+let failNext=false;
+async function commitAssistMutation(g,stats,players,action,insertion){if(failNext){failNext=false;throw Error('テスト用保存失敗：再タップできます')}const result=planAssistMutation(g,stats,players,{...action,now:Date.now(),playId:crypto.randomUUID(),assistId:crypto.randomUUID()});return result}
+function renderTotals(){const t=sumStats(state.stats,[game]);$('#totals').textContent=' 3PM '+t.threePm+' / 2PM '+t.twoPm+' / AST '+t.ast}
+`;
+const suffix=`$('#start').onclick=()=>quickStatsForm(game.id,1);$('#history').onclick=()=>gameHistoryForm(game.id);$('#fail').onclick=()=>{failNext=true;toast('次の保存のみ失敗します')};$('#sub').onclick=()=>{game.quarterParticipation.q1.substitutions=[{id:'sub1',playerOutId:'8',playerInId:'12',remainingSeconds:300,sequence:Date.now()}];toast('No.8 OUT / No.12 IN')};$('#legacy').onclick=()=>{game.quarterParticipation={};game.participationMode='disabled';game.playEvents=[];state.stats=[{id:'qa_32',gameId:'qa',playerId:'32',quarters:{q1:{registered:true,threePm:1,threePa:1}}},{id:'qa_8',gameId:'qa',playerId:'8',quarters:{q1:{registered:true,ast:1}}}];renderTotals();gameHistoryForm(game.id)};renderTotals();`;
+// root-relative imports from the disposable page.
+fs.writeFileSync(new URL('index.html',dir),html);
+fs.writeFileSync(new URL('fixture.js',dir),prefix+functions+'\n'+suffix);
+console.log('Generated tmp/assist-qa/index.html');
