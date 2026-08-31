@@ -15,11 +15,18 @@ export function selectedStatsDeleteTarget(registrationType, selectedView) {
   return { type: "game" };
 }
 
-export const detailStatsScrollOptions = Object.freeze({ top: 0, behavior: "smooth" });
+export const detailStatsScrollOptions = Object.freeze({ top: 0, left: 0, behavior: "auto" });
 
 export function renderDetailAtTop({ render, schedule, scroll }) {
   render();
-  schedule(() => scroll(detailStatsScrollOptions));
+  // iOS/WebKit can restore the previous document scroll position after the first
+  // animation frame. Force the detail view to the top immediately and again on
+  // the following frames so navigation from a deeply scrolled game list is stable.
+  scroll(detailStatsScrollOptions);
+  schedule(() => {
+    scroll(detailStatsScrollOptions);
+    schedule(() => scroll(detailStatsScrollOptions));
+  });
 }
 
 function showSavedToast() {
