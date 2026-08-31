@@ -11,3 +11,5 @@
 @media(max-width:800px){.quick-shot-modal .quick-selected-player{display:none}.quick-shot-modal>.card{padding-top:8px}.quick-shot-modal .shot-modal-head{margin-top:0}}
 @media(min-width:801px){.quick-entry-modal{align-items:center}.quick-action-grid{grid-template-columns:repeat(3,1fr)}}
 @media(max-height:700px) and (max-width:800px){.quick-entry-modal>.card{padding-top:9px}.quick-head h2{font-size:20px}.quick-clock-control{margin:6px 0}.quick-action-grid{gap:6px}.quick-action-grid button{min-height:50px}.quick-footer{margin-top:6px}.quick-action-grid button[data-quick-action]::after{font-size:10px;margin-top:3px}}
+
+.assist-player-grid .quick-player{min-height:64px;touch-action:manipulation}.assist-editor-actions{display:grid;gap:10px;margin:16px 0}.assist-editor-actions .btn{min-height:48px;white-space:normal;text-align:left}.history-assist-link{font-size:12px;line-height:1.5}

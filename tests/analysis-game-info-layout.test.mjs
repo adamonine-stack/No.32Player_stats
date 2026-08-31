@@ -18,7 +18,7 @@ assert.match(app, /basic-stats-fouls[^`]*FOUL[^`]*被FOUL/);
 assert.match(appCss, /\.analysis-screen\{--analysis-orange:#ff9800\}/);
 assert.doesNotMatch(css, /\.basic-stats-title\{[^}]*flex-direction:column/);
 assert.match(index, /min-display\.css\?v=20260830-team-history-button-v1/);
-assert.match(index, /js\/app\.js\?v=20260830-team-history-button-v1/);
+assert.match(index, /js\/app\.js\?v=20260831-assist-v1/);
 assert.match(app, /function teamStatsHeading\(game\)/);
 assert.match(app, /teamStatsHeading\(state\.teamMode==='game'\?g:null\)/);
 assert.match(app, /onclick="openGameHistory\('\$\{game\.id\}'\)"/);
