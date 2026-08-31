@@ -5,7 +5,6 @@
   #modalRoot>.modal.opponent-team-form-modal input,#modalRoot>.modal.opponent-team-form-modal select,#modalRoot>.modal.opponent-team-form-modal textarea{font-size:16px!important}
   #modalRoot>.modal.opponent-team-form-modal>.card{padding-bottom:calc(28px + env(safe-area-inset-bottom))!important}
 }
-
 .modal > .card .participation-card{width:auto;max-width:none;max-height:none;overflow:visible}
 .modal > .card .participation-player-grid{max-height:none;overflow:visible}
 .game-history-modal{max-height:min(92dvh,900px);overflow-y:auto;overscroll-behavior:contain;padding-bottom:calc(20px + env(safe-area-inset-bottom))}
@@ -35,5 +34,5 @@
 .game-history-readonly .game-history-sub-out{color:#ff8a80}.game-history-readonly .game-history-sub-in{color:#69f0ae}
 .game-history-editing .game-history-row{--history-tone:transparent;--history-wash:transparent}.game-history-editing .game-history-action-text,.game-history-editing .game-history-shot-result,.game-history-editing .game-history-category-detail,.game-history-editing .game-history-sub-out,.game-history-editing .game-history-sub-in{color:inherit;font-weight:inherit}
 @media(max-width:600px){.game-history-row{grid-template-columns:38px 46px minmax(0,1fr)}.game-history-actions{grid-column:2/4;display:flex;justify-content:flex-end;gap:6px}.game-history-readonly .game-history-row{grid-template-columns:46px minmax(0,1fr)}.game-history-mode-toggle{margin-left:auto}}
-
 .game-history-action{display:grid;gap:7px;min-width:0}.game-history-action.dragging .game-history-row{opacity:.62;outline:2px solid var(--accent,#ff8a00)}.game-history-action .game-history-actions{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;max-width:240px}
+.assist-history-selection-head{position:sticky;top:-1px;z-index:4;display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:4px 0 10px;background:var(--card,#151515)}.assist-history-selection-head h2{margin:0 0 4px}.assist-history-source{position:sticky;top:70px;z-index:3;display:flex;gap:8px;align-items:center;padding:9px 11px;border:1px solid rgba(255,152,0,.55);border-radius:9px;background:#21180e}.assist-history-source small{color:#ffb04a}.assist-history-selection-list .game-history-row{grid-template-columns:46px minmax(0,1fr);cursor:default}.assist-history-selection-list .assist-history-selectable .game-history-row{cursor:pointer;border-color:#ff9800;box-shadow:inset 3px 0 #ff9800;background:rgba(255,152,0,.1)}.assist-history-selection-list .assist-history-selectable .game-history-row::after{content:'選択';color:#ffb04a;font-size:12px;font-weight:800}.assist-history-selection-list .assist-history-disabled{opacity:.42}.assist-history-selection-list .assist-history-disabled .game-history-row{pointer-events:none}.assist-history-selection-list .saving{opacity:.55;pointer-events:none}
