@@ -34,13 +34,20 @@ export function assistCandidates(game, quarter, shot, players, stats = []) {
 // Event IDs remain stable even when a legacy aggregate is materialized on demand.
 export function planAssistMutation(originalGame, originalStats, players, action) {
   const game = {...originalGame,playEvents:(originalGame.playEvents||[]).map(e=>({...e}))};
-  const stats = originalStats.map(s=>({...s,quarters:s.quarters && typeof s.quarters==='object'?Object.fromEntries(Object.entries(s.quarters).map(([k,q])=>[k,{...q,shots:q.shots?.map(v=>({...v}))}])):s.quarters,shots:s.shots?.map(v=>({...v}))}));
+  const isQuarterMap = value => value != null && typeof value === 'object' && !Array.isArray(value);
+  // Legacy game totals may store `quarters` as a number, and deleted Q entries may
+  // leave primitive values behind. Preserve those until the selected Q needs to be
+  // materialized, then replace only that incompatible container/entry with a map.
+  const stats = originalStats.map(s=>({...s,quarters:isQuarterMap(s.quarters)?Object.fromEntries(Object.entries(s.quarters).map(([k,q])=>[k,isQuarterMap(q)?{...q,shots:q.shots?.map(v=>({...v}))}:q])):s.quarters,shots:s.shots?.map(v=>({...v}))}));
   const changed = new Set(), addedIds = [];
   const quarterMode = game.statsRegistrationType === 'quarter';
   const sourceFor = (playerId,quarter) => {
     let stat=stats.find(s=>s.playerId===playerId);
     if(!stat){stat={id:`${game.id}_${playerId}`,gameId:game.id,playerId};stats.push(stat)}
-    if(quarterMode){stat.quarters ||= {};stat.quarters[`q${quarter}`] ||= {registered:true,quarter};}
+    if(quarterMode){
+      if(!isQuarterMap(stat.quarters))stat.quarters={};
+      if(!isQuarterMap(stat.quarters[`q${quarter}`]))stat.quarters[`q${quarter}`]={registered:true,quarter};
+    }
     return {stat,source:quarterMode?stat.quarters[`q${quarter}`]:stat};
   };
   const history = () => buildGameHistory(game,stats,players);
