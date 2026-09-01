@@ -1,4 +1,4 @@
-import { collection, deleteDoc, doc, onSnapshot, serverTimestamp, setDoc, db } from "../core/firebase.js?v=20260901-persistent-cache-v1";
+import { collection, deleteDoc, doc, onSnapshot, serverTimestamp, setDoc, db } from "../core/firebase.js?v=20260901-startup-hotfix-v2";
 
 export function watchStats(onData) {
   return onSnapshot(collection(db, "stats"), snapshot => {
