@@ -5,8 +5,10 @@ import test from "node:test";
 const firebase = readFileSync(new URL("../js/core/firebase.js", import.meta.url), "utf8");
 const app = readFileSync(new URL("../js/app.js", import.meta.url), "utf8");
 
-test("Firestore startup remains compatible across browsers", () => {
+test("Firestore persistence is optional and startup waits for its safe fallback", () => {
   assert.match(firebase, /getFirestore\(app\)/);
-  assert.doesNotMatch(firebase, /persistentLocalCache|persistentMultipleTabManager/);
-  assert.match(app, /core\/firebase\.js\?v=20260901-startup-hotfix-v2/);
+  assert.match(firebase, /tryEnableFirestorePersistence\(enableIndexedDbPersistence,\s*db\)/);
+  assert.doesNotMatch(firebase, /initializeFirestore|persistentLocalCache|persistentMultipleTabManager/);
+  assert.match(app, /await firestorePersistenceReady;syncOnce\(\)/);
+  assert.match(app, /core\/firebase\.js\?v=20260901-fallback-v1/);
 });
