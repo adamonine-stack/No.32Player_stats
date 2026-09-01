@@ -65,3 +65,16 @@
 - summaryは派生データであり、削除しても原データから再構築できる。
 - summary欠落時は従来queryへfallbackする。
 - 原データとsummaryが1項目でも不一致なら管理再構築結果を不一致として扱う。
+
+## 本番構築・公開確認
+
+- `playerSeasonSummaries`作成前: 0件
+- 作成対象: 2世代×20選手
+- 作成後: 40件
+- 原データと全項目一致: 40件
+- 欠落・不一致: 0件
+- stats / games / 履歴の削除・内容変更: 0件
+- GitHub Pages公開後、現在世代ホームの試合数、Q数、PTS、AST、REB、シュート率、出場時間をsummaryから表示できることを確認
+- 公開確認時の`Quota exceeded` / `RESOURCE_EXHAUSTED`: 0件
+
+作成後バックアップ: `C:\Users\takas\AppData\Local\Temp\r32-firestore-post-home-summary-20260901.json`
