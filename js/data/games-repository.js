@@ -1,4 +1,4 @@
-import { collection, deleteDoc, doc, onSnapshot, serverTimestamp, setDoc, db } from "../core/firebase.js?v=20260901-startup-hotfix-v2";
+import { collection, deleteDoc, doc, onSnapshot, serverTimestamp, setDoc, db } from "../core/firebase.js?v=20260901-fallback-v1";
 
 export function watchGames(onData) {
   return onSnapshot(collection(db, "games"), snapshot => {
