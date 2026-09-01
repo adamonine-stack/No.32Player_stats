@@ -13,3 +13,11 @@ test("startup scopes growing collections and defers opponent teams",()=>{
   assert.match(app,/\['opponentTeams','games','stats','team'\]\.includes\(tab\)\)ensureOpponentTeamsSync\(\)/);
   assert.match(app,/for\(const key of \['playerSeasons','games'\]\)firestoreListeners\.remove\(key\)/);
 });
+
+test("home reads one player-season summary and defers stats",()=>{
+  assert.match(app,/doc\(db,'playerSeasonSummaries',key\)/);
+  assert.match(app,/if\(state\.tab==='home'\)\{ensureHomeSummarySync\(\);return\}/);
+  assert.match(app,/snapshot\.exists\(\)\)\{state\.homeSummary=.*ensureStatsSync\(\[\],seasonId\)/);
+  assert.match(app,/window\.rebuildHomeSummaries=async/);
+  assert.match(app,/queueHomeSummaryRefresh\(changed\)/);
+});
