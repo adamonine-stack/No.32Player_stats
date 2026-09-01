@@ -1,5 +1,5 @@
 import { runTransaction } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js';
-import { db,doc,serverTimestamp } from './firebase.js';
+import { db,doc,serverTimestamp } from './firebase.js?v=20260901-scoped-reads-v1';
 import { planAssistMutation } from '../calculations/assist-play-calculations.js?v=20260831-grouped-history-v1';
 import { buildGameHistory,historyInsertionOverrides } from '../calculations/game-event-calculations.js?v=20260831-grouped-history-v1';
 

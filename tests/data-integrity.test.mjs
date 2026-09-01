@@ -1,0 +1,8 @@
+import assert from "node:assert/strict";
+import test from "node:test";
+import { auditR32Data, compareIntegrityMetrics, integrityMetrics } from "../js/diagnostics/data-integrity.js";
+
+const players=[{id:"p1"},{id:"p2"},{id:"p3"},{id:"p4"},{id:"p5"},{id:"p6"}],games=[{id:"g1",quarters:1,statsRegistrationType:"quarter",opponentTeamId:"missing",quarterParticipation:{q1:{starters:["p1","p2","p3","p4","p5"],substitutions:[{id:"s1",playerOutId:"p6",playerInId:"p1",remainingSeconds:300}]}},playEvents:[{id:"ast1",statKey:"ast",playerId:"p2",quarter:1,shotEventId:"missing-shot"}]}],stats=[{id:"g1_p1",gameId:"g1",playerId:"p1",quarters:{q1:{registered:true,twoPa:1,twoPm:2,shots:[{id:"shot1",result:"made"}]},q2:null}},{id:"orphan",gameId:"missing",playerId:"missing",quarters:4}];
+
+test("integrity audit detects legacy, orphan, stat, Q, participation and AST issues",()=>{const result=auditR32Data({games,players,stats,opponentTeams:[]});for(const code of ["LEGACY_NUMERIC_QUARTERS","ORPHAN_STAT_GAME","ORPHAN_STAT_PLAYER","ORPHAN_OPPONENT","MADE_EXCEEDS_ATTEMPT","LEGACY_SHOT","QUARTER_OUT_OF_RANGE","DELETED_QUARTER_NULL","PARTICIPATION_INVALID","AST_SHOT_MISSING"])assert.ok(result.counts[code]>=1,code)});
+test("migration metric comparison stops on any aggregate difference",()=>{const before=integrityMetrics({games,stats}),same=compareIntegrityMetrics(before,{...before}),changed=compareIntegrityMetrics(before,{...before,ast:before.ast+1});assert.equal(same.equal,true);assert.equal(changed.equal,false);assert.deepEqual(changed.differences[0],{key:"ast",before:before.ast,after:before.ast+1})});
