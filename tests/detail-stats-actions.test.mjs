@@ -15,7 +15,7 @@ assert.doesNotMatch(detailStatsActionBar("game-1", "player-1", false), /個人�
 assert.deepEqual(selectedStatsDeleteTarget("game", "game"), { type: "game" });
 assert.deepEqual(selectedStatsDeleteTarget("quarter", "game"), { type: "game" });
 assert.deepEqual(selectedStatsDeleteTarget("quarter", "q2"), { type: "quarter", quarter: 2 });
-assert.deepEqual(detailStatsScrollOptions, { top: 0, behavior: "smooth" });
+assert.deepEqual(detailStatsScrollOptions, { top: 0, left: 0, behavior: "auto" });
 
 const openEvents = [];
 renderDetailAtTop({
@@ -23,7 +23,14 @@ renderDetailAtTop({
   schedule: callback => { openEvents.push("scheduled"); callback(); },
   scroll: options => openEvents.push(["scrolled", options])
 });
-assert.deepEqual(openEvents, ["rendered", "scheduled", ["scrolled", detailStatsScrollOptions]]);
+assert.deepEqual(openEvents, [
+  "rendered",
+  ["scrolled", detailStatsScrollOptions],
+  "scheduled",
+  ["scrolled", detailStatsScrollOptions],
+  "scheduled",
+  ["scrolled", detailStatsScrollOptions]
+]);
 
 const successEvents = [];
 assert.equal(await saveStatsAndReturnToTop({

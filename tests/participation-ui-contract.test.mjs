@@ -7,7 +7,7 @@ for (const marker of ["participationMode:'required'", "quarterDurationMinutes:du
 assert.ok(app.includes("participationRequired(g)&&mode==='quarter'"));
 assert.ok(index.includes("participation.css?v=20260824-compact-sub-time-v3"));
 assert.ok(index.includes("app.js?v=20260831-grouped-history-v1"));
-assert.ok(index.includes("min-display.css?v=20260830-team-history-button-v1"));
+assert.ok(index.includes("min-display.css?v=20260901-team-detail-min-v2"));
 assert.ok(app.includes("averagePlayerPlayingTime(gamesWithStats(targetGames(),p.id),p.id)"));
 assert.ok(app.includes("selectedGamePlayingTime(game,p.id)"));
 assert.ok(app.includes("MIN ${value.registered?formatClock(value.seconds):'--:--'}"));

@@ -1,4 +1,4 @@
-import { db, collection, doc, getDocs, deleteDoc } from '../core/firebase.js';
+import { db, collection, doc, getDocs, deleteDoc } from '../core/firebase.js?v=20260901-persistent-cache-v1';
 
 async function removePlayerSeasonMemberships(playerId) {
   const snapshot = await getDocs(collection(db, 'playerSeasons'));
