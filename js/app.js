@@ -1,6 +1,6 @@
 import { assistCandidates, isAssistEvent, isMadeEvent, nearbyMadeShots } from './calculations/assist-play-calculations.js?v=20260831-grouped-history-v1';
 import { commitAssistMutation } from './core/assist-play-store.js?v=20260831-grouped-history-v1';
-import { auth, db, signInWithEmailAndPassword, signOut, onAuthStateChanged, collection, doc, getDoc, getDocs, setDoc, deleteDoc, onSnapshot, serverTimestamp } from "./core/firebase.js?v=20260901-persistent-cache-v1";
+import { auth, db, signInWithEmailAndPassword, signOut, onAuthStateChanged, collection, doc, getDoc, getDocs, setDoc, deleteDoc, onSnapshot, serverTimestamp } from "./core/firebase.js?v=20260901-startup-hotfix-v2";
 import { state } from "./core/state.js";
 import { setGameSortDirection, setLastPlayerId, setSelectedSeasonId } from "./core/storage.js";
 import { num, pct, one, sumStats as sumStatsBase, derived, STAT_KEYS, getGameStatsRegistrationType, quarterKey, registeredQuarterNumbers, statHasRegisteredData } from "./calculations/stats-calculations.js";
