@@ -1,0 +1,27 @@
+import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { dirname, resolve } from "node:path";
+import { auditR32Data } from "../js/diagnostics/data-integrity.js";
+import { planSeasonIdMigration, verifySeasonIdMigration } from "../js/diagnostics/season-migration-plan.js";
+
+const collections=["seasons","settings","players","playerSeasons","games","stats","opponentTeams","tournaments","tournamentGames"];
+const outputArg=process.argv.find(value=>value.startsWith("--output="))?.slice(9);
+if(!outputArg)throw new Error("Use --output=<absolute backup path>");
+const config=await readFile(new URL("../js/config/firebase-config.js",import.meta.url),"utf8"),projectId=config.match(/projectId:\s*"([^"]+)"/)?.[1],apiKey=config.match(/apiKey:\s*"([^"]+)"/)?.[1];
+if(!projectId||!apiKey)throw new Error("Firebase public configuration was not found");
+
+function decode(value){if(!value)return null;if("nullValue" in value)return null;if("stringValue" in value)return value.stringValue;if("booleanValue" in value)return value.booleanValue;if("integerValue" in value)return Number(value.integerValue);if("doubleValue" in value)return Number(value.doubleValue);if("timestampValue" in value)return value.timestampValue;if("arrayValue" in value)return (value.arrayValue.values||[]).map(decode);if("mapValue" in value)return Object.fromEntries(Object.entries(value.mapValue.fields||{}).map(([key,item])=>[key,decode(item)]));if("referenceValue" in value)return value.referenceValue;return value;}
+async function readCollection(name){const documents=[];let pageToken="";do{const url=new URL(`https://firestore.googleapis.com/v1/projects/${projectId}/databases/(default)/documents/${name}`);url.searchParams.set("pageSize","1000");url.searchParams.set("key",apiKey);if(pageToken)url.searchParams.set("pageToken",pageToken);const response=await fetch(url);const body=await response.json();if(!response.ok)throw new Error(`${name}: ${body.error?.status||response.status} ${body.error?.message||""}`);for(const document of body.documents||[])documents.push({id:document.name.split("/").at(-1),...Object.fromEntries(Object.entries(document.fields||{}).map(([key,value])=>[key,decode(value)]))});pageToken=body.nextPageToken||""}while(pageToken);return documents;}
+const data={exportedAt:new Date().toISOString(),schema:"r32-firestore-audit-v1",projectId,collections:{}};
+for(const name of collections){data.collections[name]=await readCollection(name);process.stdout.write(`${name}: ${data.collections[name].length}\n`)}
+const fields=Object.fromEntries(collections.map(name=>[name,[...new Set(data.collections[name].flatMap(document=>Object.keys(document).filter(key=>key!=="id")))].sort()]));
+const diagnostics=auditR32Data({games:data.collections.games,players:data.collections.players,stats:data.collections.stats,opponentTeams:data.collections.opponentTeams});
+const seasonCoverage=Object.fromEntries(["playerSeasons","games","stats","tournaments","tournamentGames"].map(name=>[name,{total:data.collections[name].length,missingSeasonId:data.collections[name].filter(document=>!document.seasonId).length}]));
+const activeSeasonId=data.collections.settings.find(document=>document.id==="app")?.activeSeasonId||"season_2026_27",inSeason=name=>data.collections[name].filter(document=>document.seasonId===activeSeasonId).length;
+const readsBefore=data.collections.seasons.length+1+data.collections.players.length+data.collections.playerSeasons.length+data.collections.opponentTeams.length+data.collections.games.length+data.collections.stats.length;
+const activeGameIds=new Set(data.collections.games.filter(document=>document.seasonId===activeSeasonId).map(document=>document.id)),activeStats=data.collections.stats.filter(document=>activeGameIds.has(document.gameId)).length;
+const readsAfterHome=data.collections.seasons.length+1+data.collections.players.length+inSeason("playerSeasons")+inSeason("games")+activeStats;
+const readEstimate={activeSeasonId,before:{initialHome:readsBefore,secondPageLoadWithoutPersistence:readsBefore},after:{initialHome:readsAfterHome,opponentDependentFirstNavigation:data.collections.opponentTeams.length,repeatedNavigation:0,detailFromLoadedSeason:0,historyFromLoadedSeason:0},initialReduction:readsBefore?Number(((readsBefore-readsAfterHome)/readsBefore*100).toFixed(1)):0};
+const seasonMigrationPatches=planSeasonIdMigration({games:data.collections.games,stats:data.collections.stats},activeSeasonId),seasonMigrationVerification=verifySeasonIdMigration({games:data.collections.games,stats:data.collections.stats},seasonMigrationPatches);
+data.audit={fields,seasonCoverage,readEstimate,diagnostics,seasonMigrationDryRun:{patchCount:seasonMigrationPatches.length,patches:seasonMigrationPatches,aggregateNeutral:seasonMigrationVerification.equal,differences:seasonMigrationVerification.differences}};
+const output=resolve(outputArg);await mkdir(dirname(output),{recursive:true});await writeFile(output,JSON.stringify(data,null,2),"utf8");
+process.stdout.write(JSON.stringify({output,counts:Object.fromEntries(collections.map(name=>[name,data.collections[name].length])),seasonCoverage,readEstimate,integrityIssueCounts:diagnostics.counts,seasonMigrationDryRun:{patchCount:seasonMigrationPatches.length,aggregateNeutral:seasonMigrationVerification.equal,differences:seasonMigrationVerification.differences}},null,2)+"\n");

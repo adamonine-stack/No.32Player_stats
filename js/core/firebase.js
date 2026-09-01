@@ -17,10 +17,12 @@ import {
   setDoc,
   deleteDoc,
   onSnapshot,
+  query,
+  where,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js";
 import { firebaseConfig } from "../config/firebase-config.js";
-import { tryEnableFirestorePersistence } from "./firestore-persistence.js?v=20260901-fallback-v1";
+import { tryEnableFirestorePersistence } from "./firestore-persistence.js?v=20260901-scoped-reads-v1";
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -44,5 +46,7 @@ export {
   setDoc,
   deleteDoc,
   onSnapshot,
+  query,
+  where,
   serverTimestamp
 };
