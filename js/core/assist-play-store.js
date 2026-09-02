@@ -1,7 +1,7 @@
 import { runTransaction } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js';
 import { db,doc,serverTimestamp } from './firebase.js?v=20260901-scoped-reads-v1';
-import { planAssistMutation } from '../calculations/assist-play-calculations.js?v=20260831-grouped-history-v1';
-import { buildGameHistory,historyInsertionOverrides } from '../calculations/game-event-calculations.js?v=20260831-grouped-history-v1';
+import { planAssistMutation } from '../calculations/assist-play-calculations.js?v=20260902-history-order-v1';
+import { buildGameHistory,historyInsertionOverrides } from '../calculations/game-event-calculations.js?v=20260902-history-order-v1';
 
 function clean(value) {
   if(Array.isArray(value))return value.map(clean);
@@ -9,7 +9,7 @@ function clean(value) {
   return value;
 }
 export async function commitAssistMutation(game,stats,players,action,insertion=null) {
-  const request={...action,now:Date.now(),playId:crypto.randomUUID(),assistId:crypto.randomUUID()};
+  const request={...action,now:action.now||Date.now(),playId:action.playId||crypto.randomUUID(),assistId:action.assistId||crypto.randomUUID()};
   const ids=[...new Set([...stats.filter(s=>s.gameId===game.id).map(s=>s.id),...players.map(p=>`${game.id}_${p.id}`)])];
   return runTransaction(db,async transaction=>{
     const gameRef=doc(db,'games',game.id),gameSnap=await transaction.get(gameRef);
