@@ -18,7 +18,6 @@ export function assistCandidates(game, quarter, shot, players, stats = []) {
     if (shot.remainingSeconds !== '' && shot.remainingSeconds != null) ids = currentPlayersAt(game,quarter,shot.remainingSeconds);
     else if (Array.isArray(shot.onCourtPlayerIds)) ids = shot.onCourtPlayerIds;
     else {
-      // Untimed historical shots use original recording order, never drag order.
       const recorded = Number(shot.createdAt);
       const substitutions = (q.substitutions || []).filter(event => !recorded || Number(event.sequence) <= recorded);
       ids = validateQuarterParticipation({...q,substitutions,durationSeconds:quarterDurationSeconds(game)}).currentPlayers || [];
@@ -30,14 +29,9 @@ export function assistCandidates(game, quarter, shot, players, stats = []) {
   return [...new Set(ids)].filter(id=>id!==shot.playerId).map(id=>players.find(p=>p.id===id)||{id,number:'-',name:'未登録選手'});
 }
 
-// Pure mutation planner. The caller commits all changed documents in one transaction.
-// Event IDs remain stable even when a legacy aggregate is materialized on demand.
 export function planAssistMutation(originalGame, originalStats, players, action) {
   const game = {...originalGame,playEvents:(originalGame.playEvents||[]).map(e=>({...e}))};
   const isQuarterMap = value => value != null && typeof value === 'object' && !Array.isArray(value);
-  // Legacy game totals may store `quarters` as a number, and deleted Q entries may
-  // leave primitive values behind. Preserve those until the selected Q needs to be
-  // materialized, then replace only that incompatible container/entry with a map.
   const stats = originalStats.map(s=>({...s,quarters:isQuarterMap(s.quarters)?Object.fromEntries(Object.entries(s.quarters).map(([k,q])=>[k,isQuarterMap(q)?{...q,shots:q.shots?.map(v=>({...v}))}:q])):s.quarters,shots:s.shots?.map(v=>({...v}))}));
   const changed = new Set(), addedIds = [];
   const quarterMode = game.statsRegistrationType === 'quarter';
@@ -52,14 +46,31 @@ export function planAssistMutation(originalGame, originalStats, players, action)
   };
   const history = () => buildGameHistory(game,stats,players);
   const resolve = id => {
-    const item=history().find(e=>e.eventId===id);
+    let item=history().find(e=>e.eventId===id);
+    if(!item && String(id).startsWith('shot:')) {
+      for(const stat of stats.filter(s=>s.gameId===game.id)) {
+        const sources=quarterMode&&isQuarterMap(stat.quarters)
+          ? Object.entries(stat.quarters).filter(([,value])=>isQuarterMap(value)).map(([key,value])=>({quarter:Number(key.replace(/\D/g,''))||null,source:value}))
+          : [{quarter:null,source:stat}];
+        for(const {quarter,source} of sources) {
+          const shot=(source.shots||[]).find(candidate=>`shot:${stat.id||`${game.id}_${stat.playerId}`}:${quarter||0}:${candidate.id}`===id);
+          if(!shot)continue;
+          const player=players.find(p=>p.id===stat.playerId)||{id:stat.playerId,number:'',name:'不明な選手'};
+          const shotValue=Number(shot.shotValue)||(/^3/.test(shot.shotArea||'')?3:2);
+          item={id,eventId:id,gameId:game.id,quarter:quarter||shot.quarter||null,playerId:stat.playerId,playerNumber:String(player.number||''),playerName:player.name||'',type:'shot',sourceKind:'shot',sourceId:shot.id,statId:stat.id,result:shot.result,playId:shot.playId,assistPlayerId:shot.assistPlayerId,assistEventId:shot.assistEventId,shotAreaLabel:shot.shotAreaLabel,onCourtPlayerIds:shot.onCourtPlayerIds,remainingSeconds:shot.remainingSeconds,createdAt:shot.createdAt,content:`${shotValue}PT ${shot.shotTypeLabel||shot.shotType||''} ${shot.result==='made'?'Made':'Miss'}${shot.wasFouled?'・被FOUL':''}`};
+          break;
+        }
+        if(item)break;
+      }
+    }
     if(!item)throw new Error('対象の履歴が変更されています。履歴を開き直してください。');
     if(item.sourceKind==='shot'){
       const {stat,source}=sourceFor(item.playerId,item.quarter);
-      return {item,record:source.shots.find(s=>s.id===item.sourceId),stat};
+      const record=(source.shots||[]).find(s=>s.id===item.sourceId);
+      if(!record)throw new Error('対象のシュートが変更されています。履歴を開き直してください。');
+      return {item,record,stat};
     }
     if(item.sourceKind==='legacyStat') {
-      // Materialize the entire matching remainder, preserving every legacy row ID.
       for(const legacy of history().filter(e=>e.sourceKind==='legacyStat'&&e.playerId===item.playerId&&sameQuarter(e,item)&&e.statKey===item.statKey)) {
         game.playEvents.push(createPlayEvent({id:legacy.eventId,gameId:game.id,quarter:legacy.quarter,player:players.find(p=>p.id===legacy.playerId)||{id:legacy.playerId},statKey:legacy.statKey,sequence:legacy.sortValue||action.now,createdAt:action.now}));
       }
@@ -87,14 +98,13 @@ export function planAssistMutation(originalGame, originalStats, players, action)
     const reconciled=reconcileStatEvents({game,player:players.find(p=>p.id===action.playerId)||{id:action.playerId},quarter:action.quarter,previous:source,next,pending:action.pending||[]});
     for(const id of reconciled.removed){const item=history().find(e=>e.eventId===id);if(item?.shotEventId||item?.assistEventId)unlink(resolve(id))}
     game.playEvents=[...game.playEvents.filter(e=>!reconciled.removed.includes(e.id)),...reconciled.added];
-    // Do not overwrite link cleanup or fresh shot arrays with a stale form snapshot.
     Object.assign(source,action.values);changed.add(stat.id);
     return {game,stats:stats.filter(s=>changed.has(s.id)),addedIds:reconciled.added.map(e=>e.id)};
   } else if(action.kind==='saveShot') {
     const shot={...action.shot},quarter=quarterMode?shot.quarter:null,{stat,source}=sourceFor(shot.playerId,quarter);
     const eventId=`shot:${stat.id}:${quarter||0}:${shot.id}`;
     const previous=(source.shots||[]).find(s=>s.id===shot.id);
-    if(previous && !action.edit)return {game:originalGame,stats:[],addedIds:[]}; // retry of the same operation
+    if(previous && !action.edit)return {game:originalGame,stats:[],addedIds:[]};
     if(previous){Object.assign(shot,{playId:previous.playId||null,assistPlayerId:previous.assistPlayerId||null,assistEventId:previous.assistEventId||null,...(previous.onCourtPlayerIds?{onCourtPlayerIds:previous.onCourtPlayerIds}:{})});if(shot.result!=='made'){unlink(resolve(eventId));shot.assistPlayerId=null;shot.assistEventId=null}}
     else {shot.playId=action.playId;shot.assistPlayerId=null;shot.assistEventId=null;addedIds.push(eventId)}
     replaceShots(shot.playerId,quarter,[...(source.shots||[]).filter(s=>s.id!==shot.id),shot]);
@@ -116,8 +126,6 @@ export function planAssistMutation(originalGame, originalStats, players, action)
     if(!playerId||playerId===shotRef.item.playerId)throw new Error('シューター以外を選択してください。');
     const candidates=assistCandidates(game,shotRef.item.quarter||1,shotRef.record,players,action.kind==='saveShot'?originalStats:stats);
     if(!candidates.some(p=>p.id===playerId))throw new Error('そのプレー時点の出場選手を選択してください。');
-    // Reuse the current AST when changing its player. Prefer an existing unlinked
-    // AST for the selected player; never silently create a second counted AST.
     const current=shotRef.record.assistEventId?resolve(shotRef.record.assistEventId):null;
     const existing=action.kind==='saveShot'?[]:history().filter(e=>isAssistEvent(e)&&sameQuarter(e,shotRef.item)&&e.playerId===playerId&&!e.shotEventId);
     if(current?.item.playerId===playerId)assistRef=current;
