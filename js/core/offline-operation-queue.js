@@ -1,6 +1,7 @@
 const DB_NAME = 'r32-offline-operations';
 const DB_VERSION = 1;
 const STORE_NAME = 'operations';
+const OPEN_TIMEOUT_MS = 1500;
 
 let databasePromise;
 
@@ -8,6 +9,17 @@ function openDatabase() {
   if (!('indexedDB' in globalThis)) return Promise.reject(new Error('端末内保存を利用できません。'));
   if (databasePromise) return databasePromise;
   databasePromise = new Promise((resolve, reject) => {
+    let settled = false;
+    const finish = (fn, value) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      fn(value);
+    };
+    const timer = setTimeout(() => {
+      databasePromise = undefined;
+      finish(reject, new Error('端末内保存の初期化がタイムアウトしました。'));
+    }, OPEN_TIMEOUT_MS);
     const request = indexedDB.open(DB_NAME, DB_VERSION);
     request.onupgradeneeded = () => {
       const db = request.result;
@@ -16,8 +28,18 @@ function openDatabase() {
         store.createIndex('createdAt', 'createdAt');
       }
     };
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error || new Error('端末内保存を開けません。'));
+    request.onsuccess = () => {
+      if (settled) { request.result.close(); return; }
+      finish(resolve, request.result);
+    };
+    request.onerror = () => {
+      databasePromise = undefined;
+      finish(reject, request.error || new Error('端末内保存を開けません。'));
+    };
+    request.onblocked = () => {
+      databasePromise = undefined;
+      finish(reject, new Error('端末内保存が別の画面で使用中です。'));
+    };
   });
   return databasePromise;
 }
