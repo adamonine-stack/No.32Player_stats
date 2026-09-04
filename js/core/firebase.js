@@ -29,13 +29,21 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const firestorePersistenceReady = tryEnableFirestorePersistence(enableIndexedDbPersistence, db);
 
-await setPersistence(auth, browserLocalPersistence);
+// Auth persistence is useful, but it must never gate loading the application.
+// Safari/PWA can leave IndexedDB-backed persistence initialization pending when
+// storage is locked or being migrated. Keep startup live and let Auth restore
+// its state asynchronously instead of blocking the entire ES module graph.
+const authPersistenceReady = setPersistence(auth, browserLocalPersistence).catch(error => {
+  console.warn("Auth persistence unavailable; continuing without blocking startup.", error);
+  return false;
+});
 
 export {
   app,
   auth,
   db,
   firestorePersistenceReady,
+  authPersistenceReady,
   signInWithEmailAndPassword,
   signOut,
   onAuthStateChanged,
