@@ -45,19 +45,28 @@ export function planAssistMutation(originalGame, originalStats, players, action)
     return {stat,source:quarterMode?stat.quarters[`q${quarter}`]:stat};
   };
   const history = () => buildGameHistory(game,stats,players);
+  const shotItem = (stat,quarter,shot) => {
+    const player=players.find(p=>p.id===stat.playerId)||{id:stat.playerId,number:'',name:'不明な選手'};
+    const eventId=`shot:${stat.id||`${game.id}_${stat.playerId}`}:${quarter||0}:${shot.id}`;
+    const shotValue=Number(shot.shotValue)||(/^3/.test(shot.shotArea||'')?3:2);
+    return {id:eventId,eventId,gameId:game.id,quarter:quarter||shot.quarter||null,playerId:stat.playerId,playerNumber:String(player.number||''),playerName:player.name||'',type:'shot',sourceKind:'shot',sourceId:shot.id,statId:stat.id,result:shot.result,playId:shot.playId,assistPlayerId:shot.assistPlayerId,assistEventId:shot.assistEventId,shotAreaLabel:shot.shotAreaLabel,onCourtPlayerIds:shot.onCourtPlayerIds,remainingSeconds:shot.remainingSeconds,createdAt:shot.createdAt,content:`${shotValue}PT ${shot.shotTypeLabel||shot.shotType||''} ${shot.result==='made'?'Made':'Miss'}${shot.wasFouled?'・被FOUL':''}`};
+  };
+  const directShotRef = (playerId,quarter,shotId) => {
+    const {stat,source}=sourceFor(playerId,quarter),record=(source.shots||[]).find(s=>s.id===shotId);
+    if(!record)return null;
+    return {item:shotItem(stat,quarter,record),record,stat};
+  };
   const resolve = id => {
     let item=history().find(e=>e.eventId===id);
     if(!item && String(id).startsWith('shot:')) {
-      for(const stat of stats.filter(s=>s.gameId===game.id)) {
+      for(const stat of stats) {
         const sources=quarterMode&&isQuarterMap(stat.quarters)
           ? Object.entries(stat.quarters).filter(([,value])=>isQuarterMap(value)).map(([key,value])=>({quarter:Number(key.replace(/\D/g,''))||null,source:value}))
           : [{quarter:null,source:stat}];
         for(const {quarter,source} of sources) {
-          const shot=(source.shots||[]).find(candidate=>`shot:${stat.id||`${game.id}_${stat.playerId}`}:${quarter||0}:${candidate.id}`===id);
+          const shot=(source.shots||[]).find(candidate=>shotItem(stat,quarter,candidate).eventId===id);
           if(!shot)continue;
-          const player=players.find(p=>p.id===stat.playerId)||{id:stat.playerId,number:'',name:'不明な選手'};
-          const shotValue=Number(shot.shotValue)||(/^3/.test(shot.shotArea||'')?3:2);
-          item={id,eventId:id,gameId:game.id,quarter:quarter||shot.quarter||null,playerId:stat.playerId,playerNumber:String(player.number||''),playerName:player.name||'',type:'shot',sourceKind:'shot',sourceId:shot.id,statId:stat.id,result:shot.result,playId:shot.playId,assistPlayerId:shot.assistPlayerId,assistEventId:shot.assistEventId,shotAreaLabel:shot.shotAreaLabel,onCourtPlayerIds:shot.onCourtPlayerIds,remainingSeconds:shot.remainingSeconds,createdAt:shot.createdAt,content:`${shotValue}PT ${shot.shotTypeLabel||shot.shotType||''} ${shot.result==='made'?'Made':'Miss'}${shot.wasFouled?'・被FOUL':''}`};
+          item=shotItem(stat,quarter,shot);
           break;
         }
         if(item)break;
@@ -65,10 +74,9 @@ export function planAssistMutation(originalGame, originalStats, players, action)
     }
     if(!item)throw new Error('対象の履歴が変更されています。履歴を開き直してください。');
     if(item.sourceKind==='shot'){
-      const {stat,source}=sourceFor(item.playerId,item.quarter);
-      const record=(source.shots||[]).find(s=>s.id===item.sourceId);
-      if(!record)throw new Error('対象のシュートが変更されています。履歴を開き直してください。');
-      return {item,record,stat};
+      const ref=directShotRef(item.playerId,item.quarter,item.sourceId);
+      if(!ref)throw new Error('対象のシュートが変更されています。履歴を開き直してください。');
+      return ref;
     }
     if(item.sourceKind==='legacyStat') {
       for(const legacy of history().filter(e=>e.sourceKind==='legacyStat'&&e.playerId===item.playerId&&sameQuarter(e,item)&&e.statKey===item.statKey)) {
@@ -104,11 +112,18 @@ export function planAssistMutation(originalGame, originalStats, players, action)
     const shot={...action.shot},quarter=quarterMode?shot.quarter:null,{stat,source}=sourceFor(shot.playerId,quarter);
     const eventId=`shot:${stat.id}:${quarter||0}:${shot.id}`;
     const previous=(source.shots||[]).find(s=>s.id===shot.id);
+    if(action.edit && !previous)throw new Error('対象のシュートが変更されています。履歴を開き直してください。');
     if(previous && !action.edit)return {game:originalGame,stats:[],addedIds:[]};
-    if(previous){Object.assign(shot,{playId:previous.playId||null,assistPlayerId:previous.assistPlayerId||null,assistEventId:previous.assistEventId||null,...(previous.onCourtPlayerIds?{onCourtPlayerIds:previous.onCourtPlayerIds}:{})});if(shot.result!=='made'){unlink(resolve(eventId));shot.assistPlayerId=null;shot.assistEventId=null}}
-    else {shot.playId=action.playId;shot.assistPlayerId=null;shot.assistEventId=null;addedIds.push(eventId)}
+    if(previous){
+      Object.assign(shot,{playId:previous.playId||null,assistPlayerId:previous.assistPlayerId||null,assistEventId:previous.assistEventId||null,...(previous.onCourtPlayerIds?{onCourtPlayerIds:previous.onCourtPlayerIds}:{})});
+      if(shot.result!=='made'){
+        if(previous.assistEventId){const previousRef=directShotRef(shot.playerId,quarter,shot.id);if(previousRef)unlink(previousRef)}
+        shot.assistPlayerId=null;shot.assistEventId=null;
+      }
+    } else {shot.playId=action.playId;shot.assistPlayerId=null;shot.assistEventId=null;addedIds.push(eventId)}
     replaceShots(shot.playerId,quarter,[...(source.shots||[]).filter(s=>s.id!==shot.id),shot]);
-    shotRef=resolve(eventId);
+    shotRef=directShotRef(shot.playerId,quarter,shot.id);
+    if(!shotRef)throw new Error('対象のシュートが変更されています。履歴を開き直してください。');
     if(!action.assistPlayerId)return {game,stats:stats.filter(s=>changed.has(s.id)),addedIds};
   } else if(action.kind==='unlink') {
     unlink(resolve(action.eventId));return {game,stats:stats.filter(s=>changed.has(s.id)),addedIds};
