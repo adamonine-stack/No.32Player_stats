@@ -6,7 +6,7 @@ const participationCss = readFileSync(new URL("../styles/participation.css", imp
 for (const marker of ["participationMode:'required'", "quarterDurationMinutes:durationMinutes", "Q開始メンバーを5人設定してください", "statsPlayerOut", "stats-player-out-button", "＋ 未登録選手を追加", "前Q終了メンバーをコピー", "sortSubstitutions(substitutions)"]) assert.ok(app.includes(marker), marker);
 assert.ok(app.includes("participationRequired(g)&&mode==='quarter'"));
 assert.ok(index.includes("participation.css?v=20260824-compact-sub-time-v3"));
-assert.ok(index.includes("app.js?v=20260902-history-safety-v1"));
+assert.ok(index.includes("app.js?v=20260904-offline-v1"));
 assert.ok(index.includes("min-display.css?v=20260901-team-detail-min-v2"));
 assert.ok(app.includes("averagePlayerPlayingTime(gamesWithStats(targetGames(),p.id),p.id)"));
 assert.ok(app.includes("selectedGamePlayingTime(game,p.id)"));

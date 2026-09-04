@@ -32,10 +32,11 @@
 <link rel="stylesheet" href="styles/min-display.css?v=20260901-team-detail-min-v2">
 <link rel="stylesheet" href="styles/stats-opponent-mobile-fixes.css?v=20260901-assist-history-select-v1">
 <link rel="stylesheet" href="styles/foul-layout-safe.css?v=20260823-safe-v1">
+<link rel="stylesheet" href="styles/offline-status.css?v=20260904-offline-v1">
 </head>
 <body class="app-bg">
 <div class="app"><div class="mobile-hero"></div><div class="layout"><aside class="sidebar"><div class="brand-art"></div><div class="brand"><h1>R32 Basketball Stats</h1><p>数字で成長を見える化</p></div><nav class="nav" id="pcNav"></nav></aside><main class="content"><div class="topline pc-only"><span class="pill" id="cloudStatus">クラウド接続済み</span><button class="btn ghost" id="pcLoginBtn">管理者としてログイン</button></div><section id="view"></section></main></div></div>
-<nav class="tabbar" id="mobileNav"></nav><div class="toast" id="toast"></div><div id="modalRoot"></div>
+<button type="button" class="sync-status-mobile" id="syncStatus">接続確認中</button><nav class="tabbar" id="mobileNav"></nav><div class="toast" id="toast"></div><div id="modalRoot"></div>
 <script defer src="./js/ui/shot-interactions.js?v=20260805-first-touch-stable-drag-v6"></script>
 <script defer src="./js/ui/shot-selected-area-highlight.js?v=20260824-smooth-boundaries-v2"></script>
 <script defer src="./js/ui/shot-analysis-close-fix.js?v=20260807-shot-analysis-close-v1"></script>
@@ -50,7 +51,7 @@
 <script defer src="./js/ui/game-history-view-mode.js?v=20260830-category-colors-v1"></script>
 <script defer src="./js/ui/assist-history-selection.js?v=20260901-v1"></script>
 <script defer src="./js/ui/game-history-fixed-nav.js?v=20260901-v1"></script>
-<script type="module" src="./js/app.js?v=20260902-history-safety-v1"></script>
+<script type="module" src="./js/app.js?v=20260904-offline-v1"></script>
 <script type="module" src="./js/ui/team-detail-playing-time.js?v=20260901-player-name-v2"></script>
 <script type="module" src="./js/ui/quick-player-order.js?v=20260831-v1"></script>
 <script type="module" src="./js/ui/game-list-scroll-memory.js?v=20260831-v1"></script>

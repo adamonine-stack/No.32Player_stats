@@ -9,5 +9,5 @@ assert.ok(app.includes("getDatesWithRegisteredGames(opponentFilteredGames(scope)
 assert.ok(app.includes("state[field==='start'?'periodStart':'periodEnd']=value"));
 assert.ok(app.includes("state[field==='start'?'teamPeriodStart':'teamPeriodEnd']=value"));
 assert.ok(html.includes("period-calendar.css?v=20260811-v1"));
-assert.ok(html.includes("app.js?v=20260902-history-safety-v1"));
+assert.ok(html.includes("app.js?v=20260904-offline-v1"));
 console.log("period marked calendar contract passed");

@@ -14,8 +14,8 @@ test('quick stats and FT use retry-safe Firestore transactions',()=>{
 });
 
 test('optimistic history is rendered before transaction completion and rolls back on failure',()=>{
-  assert.match(app,/game\.playEvents=reconciled\.playEvents;[\s\S]*gameHistoryForm\(game\.id\);[\s\S]*await commitQuickStatMutation/);
-  assert.match(app,/game\.playEvents=optimisticEvents;[\s\S]*gameHistoryForm\(game\.id\);[\s\S]*await commitQuickFreeThrowMutation/);
+  assert.match(app,/game\.playEvents=reconciled\.playEvents;[\s\S]*gameHistoryForm\(game\.id\);[\s\S]*submitOfflineCapable\('quickStat'[\s\S]*commitQuickStatMutation/);
+  assert.match(app,/game\.playEvents=optimisticEvents;[\s\S]*gameHistoryForm\(game\.id\);[\s\S]*submitOfflineCapable\('freeThrow'[\s\S]*commitQuickFreeThrowMutation/);
   assert.match(app,/catch\(error\)\{game\.playEvents=rollbackOptimisticEvents/);
   assert.match(app,/rollbackOptimisticStats/);
 });
