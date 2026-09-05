@@ -37,7 +37,8 @@ test('quick stats, free throws, shots, assists and participation use the offline
 
 test('service worker caches the app shell and replaces old cache versions', () => {
   assert.match(worker, /APP_SHELL/);
-  assert.match(worker, /firebase-firestore\.js/);
+  // SDK requests use the shared gstatic host branch.
+  assert.match(worker, /requestUrl\.hostname === 'www\.gstatic\.com'/);
   assert.match(worker, /caches\.delete/);
   assert.match(worker, /event\.request\.mode === 'navigate'/);
 });
