@@ -18,6 +18,10 @@ function announce(detail) {
   globalThis.dispatchEvent?.(new CustomEvent('r32-sync-status', {detail}));
 }
 
+function announceOperation(detail) {
+  globalThis.dispatchEvent?.(new CustomEvent('r32-offline-operation-change', {detail}));
+}
+
 async function status(state, extra = {}) {
   const pending = await offlineOperationCount().catch(() => 0);
   announce({state, pending, online: globalThis.navigator?.onLine !== false, ...extra});
@@ -41,14 +45,21 @@ async function execute(operation) {
 
 export async function submitOfflineCapable(type, payload, onlineAction, options = {}) {
   const operation = createOfflineOperation(type, payload, {...options, ownerUid: currentUser?.uid || ''});
+  announceOperation({action: 'started', operation});
   if (globalThis.navigator?.onLine !== false) {
     try {
-      return {queued: false, result: await onlineAction()};
+      const result = await onlineAction();
+      announceOperation({action: 'completed', operationId: operation.id});
+      return {queued: false, result};
     } catch (error) {
-      if (!isRetryableNetworkError(error)) throw error;
+      if (!isRetryableNetworkError(error)) {
+        announceOperation({action: 'completed', operationId: operation.id});
+        throw error;
+      }
     }
   }
   await enqueueOfflineOperation(operation);
+  announceOperation({action: 'queued', operation});
   await status('pending');
   if (globalThis.navigator?.onLine !== false) globalThis.setTimeout?.(() => synchronizeOfflineOperations(), 3000);
   return {queued: true, operation};
@@ -71,6 +82,7 @@ export async function synchronizeOfflineOperations() {
         // A successfully acknowledged operation is removed immediately so
         // synchronized stat payloads never accumulate on the device.
         await removeOfflineOperation(operation.id);
+        announceOperation({action: 'completed', operationId: operation.id});
         await status('syncing');
       } catch (error) {
         if (isRetryableNetworkError(error)) break;
