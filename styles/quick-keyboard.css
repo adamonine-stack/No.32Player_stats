@@ -1,0 +1,28 @@
+@media (min-width: 801px) and (hover: hover) and (pointer: fine) {
+  [data-quick-key] { position: relative; }
+  [data-quick-key]::after {
+    content: attr(data-quick-key);
+    position: absolute;
+    top: 2px;
+    left: 3px;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 2px;
+    border: 1px solid #b8c3d1;
+    border-radius: 4px;
+    background: #fff;
+    color: #172334;
+    font: 700 12px/16px system-ui, sans-serif;
+    text-align: center;
+    pointer-events: none;
+  }
+  .quick-keyboard-pressed {
+    position: fixed;
+    z-index: 100000;
+    pointer-events: none;
+    box-sizing: border-box;
+    border: 2px solid #ed8b24;
+    border-radius: 8px;
+    background: rgb(237 139 36 / 12%);
+  }
+}
