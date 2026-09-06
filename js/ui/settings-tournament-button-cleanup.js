@@ -2,17 +2,29 @@
   const root=document.getElementById('view');
   if(!root)return;
 
-  // Tournament import controls were one-off administrative tools. Keep the
-  // underlying import functions/data for compatibility, but remove their
-  // obsolete buttons from the Settings UI so existing tournament/game data
-  // is untouched.
+  // Keep only the Settings controls that are still required for normal
+  // operation. The underlying one-off maintenance/import functions remain in
+  // app.js for compatibility, so existing tournament/game data is untouched.
+  //
+  // Kept in the generation section:
+  // - 新しい世代を作成
+  // - migration前バックアップ
+  // - Season migration
+  //
+  // Kept in the maintenance row:
+  // - 再読み込み
+  // - 全チームのシーズンランク再計算
   const obsoleteSelectors=[
+    'button[onclick="rebuildHomeSummaries()"]',
     'button[onclick="dryRun2025OsakaJrWinterCupMen()"]',
     'button[onclick="import2025OsakaJrWinterCupMen()"]',
+    'button[onclick="consolidate2025OsakaOpponentTeams()"]',
     'button[onclick="import2026ShigaMen()"]',
     'button[onclick="import2026KyotoMen()"]',
     'button[onclick="import2025HyogoJrWinterMen()"]',
-    'button[onclick="import2025CbgHyogoMen()"]'
+    'button[onclick="import2025CbgHyogoMen()"]',
+    'button[onclick="cleanupCbgDuplicates()"]',
+    'button[onclick="consolidateHyogoOpponentTeams()"]'
   ];
 
   function cleanup(){
