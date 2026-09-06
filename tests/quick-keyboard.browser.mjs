@@ -33,6 +33,9 @@ await page.addScriptTag({content:fs.readFileSync(new URL('../js/ui/quick-keyboar
 const key=async k=>{await page.keyboard.press(k)},start=async()=>{await page.evaluate(()=>start());await page.waitForTimeout(20)},badge=async s=>page.locator(s).getAttribute('data-quick-key');
 assert.equal(await badge('[data-quick-player="32"]'),'1');
 await key('1');assert.equal(await badge('[data-quick-action="out"]'),'0');
+assert.equal(await page.locator('[data-quick-action="reb"]').evaluate(b=>getComputedStyle(b,'::before').content),'"4"');
+assert.equal(await page.locator('[data-quick-action="reb"]').evaluate(b=>getComputedStyle(b,'::after').content),'"リバウンド"');
+await page.waitForTimeout(150);await page.screenshot({path:fileURLToPath(new URL('../tmp/keyboard-actions.png',import.meta.url))});
 await key('4');assert.equal(await badge('[data-quick-detail="dr"]'),'2');await key('2');
 assert.deepEqual(await page.evaluate(()=>saved.pop()),{kind:'stat',player:'32',changes:{dr:1},time:''});
 // Same button handlers and saved arguments for click, main digits and numpad.
