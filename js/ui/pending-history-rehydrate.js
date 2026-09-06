@@ -1,7 +1,7 @@
 import { state } from '../core/state.js';
 import { listOfflineOperations } from '../core/offline-operation-queue.js?v=20260904-offline-v1';
 import { createPlayEvent, reconcileStatEvents } from '../calculations/game-event-calculations.js?v=20260902-history-order-v1';
-import { planAssistMutation } from '../calculations/assist-play-calculations.js?v=20260902-history-order-v1';
+import { planAssistMutation } from '../calculations/assist-play-calculations.js?v=20260906-game-scope-v1';
 import { getGameStatsRegistrationType, quarterKey } from '../calculations/stats-calculations.js';
 
 const activeOperations = new Map();

@@ -1,6 +1,6 @@
-const CACHE_NAME = 'r32-shell-20260906-keyboard-v2';
+const CACHE_NAME = 'r32-shell-20260906-game-scope-v1';
 const APP_SHELL = [
-  './', './index.html', './manifest.json', './styles/quick-keyboard.css?v=20260906-v2', './js/ui/quick-keyboard.js?v=20260905-v1', './js/ui/game-history-edit-position.js?v=20260905-v1', './js/ui/pending-history-rehydrate.js?v=20260905-v1',
+  './', './index.html', './manifest.json', './styles/quick-keyboard.css?v=20260906-v2', './js/ui/quick-keyboard.js?v=20260905-v1', './js/ui/game-history-edit-position.js?v=20260905-v1', './js/ui/pending-history-rehydrate.js?v=20260906-game-scope-v1',
   './assets/r32-background.png', './assets/r32-bg-mobile.svg', './assets/r32-bg-pc.svg', './assets/r32-brand.png', './assets/r32-brand.svg',
   './assets/shot-court/shot-zone-reference.png', './icons/apple-touch-icon.png', './icons/icon-180.png', './icons/icon-192.png', './icons/icon-512.png', './icons/icon.svg',
   './styles/aggregation-filters.css', './styles/app.css', './styles/detail-stats-actions.css', './styles/foul-layout-safe.css', './styles/game-form-ios-focus.css', './styles/game-score-custom-keypad.css', './styles/game-score-input-no-zoom.css', './styles/min-display.css', './styles/mobile-list-title-unified.css', './styles/mobile-modal-viewport-fit.css', './styles/mobile-page-position.css', './styles/offline-status.css', './styles/opponent-teams.css', './styles/participation.css', './styles/pc-optimization.css', './styles/period-calendar.css', './styles/quick-input.css', './styles/registration-standardization.css', './styles/seasons.css', './styles/shot-registration.css', './styles/stats-opponent-mobile-fixes.css', './styles/team-conditions.css', './styles/team-game-periods.css'
