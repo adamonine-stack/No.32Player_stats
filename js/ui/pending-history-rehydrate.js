@@ -185,6 +185,7 @@ window.addEventListener('r32-offline-operation-change', event => {
 });
 
 window.addEventListener('r32-sync-status', () => refreshQueuedOperations());
+window.addEventListener('r32-games-snapshot-applied', () => rehydratePendingHistoryState());
 
 document.addEventListener('click', event => {
   const button = event.target.closest('button');
