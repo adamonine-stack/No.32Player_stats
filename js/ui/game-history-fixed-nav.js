@@ -17,16 +17,42 @@
     card.scrollTo({top:0,behavior:'smooth'});
   }
 
+  function scrollToUnit(card,unit,block='start'){
+    if(!card||!unit)return;
+    const cardRect=card.getBoundingClientRect();
+    const unitRect=unit.getBoundingClientRect();
+    const current=card.scrollTop;
+    let top=current+(unitRect.top-cardRect.top);
+    if(block==='end')top=current+(unitRect.bottom-cardRect.bottom);
+    const max=Math.max(0,card.scrollHeight-card.clientHeight);
+    card.scrollTo({top:Math.max(0,Math.min(max,top)),behavior:'smooth'});
+  }
+
   function jumpNextQuarter(){
     const card=scroller(),history=list();
     if(!card||!history)return;
     const units=[...history.querySelectorAll(':scope > [data-history-action-id]')];
     if(!units.length)return;
-    const cardTop=card.getBoundingClientRect().top;
-    const visible=units.find(unit=>unit.getBoundingClientRect().bottom>cardTop+12)||units[0];
+
+    const cardRect=card.getBoundingClientRect();
+    const visible=units.find(unit=>unit.getBoundingClientRect().bottom>cardRect.top+12)||units[0];
     const currentQuarter=quarterOf(visible);
-    const target=units.find(unit=>quarterOf(unit)>currentQuarter);
-    if(target)target.scrollIntoView({block:'start',behavior:'smooth'});
+    const quarters=[...new Set(units.map(quarterOf).filter(Number.isFinite).filter(q=>q>0))].sort((a,b)=>a-b);
+    const lastQuarter=quarters.at(-1)||0;
+    const nextQuarter=quarters.find(q=>q>currentQuarter);
+
+    if(nextQuarter){
+      const target=units.find(unit=>quarterOf(unit)===nextQuarter);
+      scrollToUnit(card,target,'start');
+      return;
+    }
+
+    // Once the first action of the final Q has been reached, the next press
+    // moves to the final recorded action. This works in both view and edit
+    // modes because both use the same game-history list/navigation.
+    if(currentQuarter===lastQuarter){
+      scrollToUnit(card,units.at(-1),'end');
+    }
   }
 
   function sync(){
