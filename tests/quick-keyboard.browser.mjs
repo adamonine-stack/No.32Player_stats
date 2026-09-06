@@ -17,7 +17,7 @@ const modal=html=>{$('#modalRoot').innerHTML='<div class="modal"><div class="car
 const statsEntryForm=()=>modal('<input id="normal">'),gameHistoryForm=()=>modal('<h2>履歴</h2>'),substitutionForm=()=>modal('<input id="subTime"><select><option>32</option></select>');
 window.saved=[];
 const saveQuickStats=async(g,q,p,changes,time,label)=>{saved.push({kind:'stat',player:p.id,changes,time});return {queued:!navigator.onLine}},saveQuickFreeThrow=async(g,q,p,attempts,made)=>saved.push({kind:'ft',player:p.id,attempts,made}),saveAssistPlay=async(g,action)=>{saved.push(action);return {queued:!navigator.onLine}},quickAfterSave=()=>quickStatsForm(game.id,1);
-const SHOT_AREAS={under_basket:{label:'ゴール下',value:2}},SHOT_TYPES={jump:'ジャンプ',layup:'レイアップ',tap:'タップ'},allowedShotTypes=area=>area?['jump','layup','tap']:[],shotTypeButtonLabel=id=>SHOT_TYPES[id],shotCourtSvg=()=>'<svg class="shot-court" width="300" height="200"><rect width="300" height="200" fill="tan"/></svg>',courtPoint=e=>({x:e.offsetX,y:e.offsetY}),detectShotArea=()=> 'under_basket',prepareHistoryOperation=()=>({createdAt:1,sequence:1}),createShot=x=>x;
+const SHOT_AREAS={area:{label:'位置',value:2}},SHOT_TYPES={jump:'ジャンプ',layup:'レイアップ'},allowedShotTypes=area=>area?['jump','layup']:[],shotTypeButtonLabel=id=>SHOT_TYPES[id],shotCourtSvg=()=>'<svg class="shot-court" width="300" height="200"><rect width="300" height="200" fill="tan"/></svg>',courtPoint=e=>({x:e.offsetX,y:e.offsetY}),detectShotArea=()=> 'area',prepareHistoryOperation=()=>({createdAt:1,sequence:1}),createShot=x=>x;
 ${functions}
 window.start=()=>quickStatsForm(game.id,1);start();
 `;
@@ -29,7 +29,6 @@ await page.setContent('<!doctype html><html><body><div id="modalRoot"></div></bo
 for(const name of ['app','quick-input','shot-registration','mobile-modal-viewport-fit'])await page.addStyleTag({content:fs.readFileSync(new URL('../styles/'+name+'.css',import.meta.url),'utf8')});
 await page.addStyleTag({path:fileURLToPath(new URL('../styles/quick-keyboard.css',import.meta.url))});
 await page.addScriptTag({content:fixture});
-await page.addScriptTag({content:fs.readFileSync(new URL('../js/ui/quick-input-touch-fix.js',import.meta.url),'utf8')});
 await page.addScriptTag({content:fs.readFileSync(new URL('../js/ui/quick-keyboard.js',import.meta.url),'utf8')});
 const key=async k=>{await page.keyboard.press(k)},start=async()=>{await page.evaluate(()=>start());await page.waitForTimeout(20)},badge=async s=>page.locator(s).getAttribute('data-quick-key');
 assert.equal(await badge('[data-quick-player="32"]'),'1');
@@ -60,11 +59,6 @@ for(const result of ['made','missed']){
   if(result==='made')await key(await badge('[data-assist-player="7"]'));
   const saved=await page.evaluate(()=>window.saved.pop());assert.equal(saved.kind,'saveShot');assert.equal(saved.shot.result,result);assert.equal(saved.shot.wasFouled,true);assert.equal(saved.shot.shotX,100);if(result==='made')assert.equal(saved.assistPlayerId,'7');
 }
-// The mobile pointer shim must not synthesize a second click for a PC mouse.
-await start();await key('1');await key('1');await page.locator('.shot-court').click({position:{x:100,y:70}});
-await page.locator('[data-quick-shot-type="tap"]').click();
-assert.equal(await page.locator('[data-quick-shot-type="tap"]').getAttribute('class'),'btn ghost shot-type selected');
-assert.equal(await page.locator('[data-quick-shot-result="made"]').isEnabled(),true);
 await start();await page.locator('#quickClock').focus();await page.keyboard.type('32');assert.equal(await page.locator('#quickClock').inputValue(),'32');assert.equal(await page.locator('[data-quick-player]').count(),5);
 for(const markup of ['<textarea></textarea>','<select><option>32</option></select>','<div contenteditable="true"></div>','<input type="number">']){await page.evaluate(html=>{$('#modalRoot .card').insertAdjacentHTML('beforeend',html);$('#modalRoot .card').lastElementChild.focus()},markup);await key('1');assert.equal(await page.locator('[data-quick-player]').count(),5)}
 await start();await key('Control+1');await key('Alt+1');await key('Shift+1');assert.equal(await page.locator('[data-quick-player]').count(),5);

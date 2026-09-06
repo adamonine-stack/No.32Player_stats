@@ -33,7 +33,6 @@
   }
 
   document.addEventListener('pointerdown', event => {
-    if (event.pointerType === 'mouse') return;
     const control = controlFrom(event.target);
     if (!control || event.button > 0) return;
     active = {
@@ -45,18 +44,15 @@
   }, true);
 
   document.addEventListener('pointermove', event => {
-    if (event.pointerType === 'mouse') return;
     if (!active || active.pointerId !== event.pointerId) return;
     if (Math.hypot(event.clientX - active.x, event.clientY - active.y) > MOVE_TOLERANCE_PX) active = null;
   }, true);
 
   document.addEventListener('pointercancel', event => {
-    if (event.pointerType === 'mouse') return;
     if (active?.pointerId === event.pointerId) active = null;
   }, true);
 
   document.addEventListener('pointerup', event => {
-    if (event.pointerType === 'mouse') return;
     if (!active || active.pointerId !== event.pointerId) return;
     const { control } = active;
     active = null;
