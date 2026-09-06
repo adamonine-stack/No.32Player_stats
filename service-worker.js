@@ -1,4 +1,4 @@
-const CACHE_NAME = 'r32-shell-20260906-immediate-shot-v3';
+const CACHE_NAME = 'r32-shell-20260906-latest-history-v1';
 const APP_SHELL = [
   './', './index.html', './manifest.json', './styles/quick-keyboard.css?v=20260906-v2', './js/ui/quick-keyboard.js?v=20260905-v1', './js/ui/quick-input-touch-fix.js?v=20260906-mouse-v2', './js/ui/game-history-fixed-nav.js?v=20260906-final-action-v1', './js/ui/game-history-edit-position.js?v=20260905-v1', './js/ui/settings-tournament-button-cleanup.js?v=20260906-v1', './js/ui/pending-history-rehydrate.js?v=20260906-immediate-shot-v3',
   './assets/r32-background.png', './assets/r32-bg-mobile.svg', './assets/r32-bg-pc.svg', './assets/r32-brand.png', './assets/r32-brand.svg',
