@@ -1,5 +1,5 @@
 import { db, doc, setDoc, serverTimestamp } from './firebase.js?v=20260901-scoped-reads-v1';
-import { commitAssistMutation } from './assist-play-store.js?v=20260902-history-order-v1';
+import { commitAssistMutation } from './assist-play-store.js?v=20260906-game-scope-v1';
 import { commitQuickFreeThrowMutation, commitQuickStatMutation } from './quick-history-store.js?v=20260902-history-order-v1';
 import {
   createOfflineOperation,
