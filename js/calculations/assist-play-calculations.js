@@ -32,7 +32,9 @@ export function assistCandidates(game, quarter, shot, players, stats = []) {
 export function planAssistMutation(originalGame, originalStats, players, action) {
   const game = {...originalGame,playEvents:(originalGame.playEvents||[]).map(e=>({...e}))};
   const isQuarterMap = value => value != null && typeof value === 'object' && !Array.isArray(value);
-  const stats = originalStats.map(s=>({...s,quarters:isQuarterMap(s.quarters)?Object.fromEntries(Object.entries(s.quarters).map(([k,q])=>[k,isQuarterMap(q)?{...q,shots:q.shots?.map(v=>({...v}))}:q])):s.quarters,shots:s.shots?.map(v=>({...v}))}));
+  // The client holds stats for multiple games; player IDs are shared across games.
+  const gameStats = originalStats.filter(stat=>stat.gameId===game.id);
+  const stats = gameStats.map(s=>({...s,quarters:isQuarterMap(s.quarters)?Object.fromEntries(Object.entries(s.quarters).map(([k,q])=>[k,isQuarterMap(q)?{...q,shots:q.shots?.map(v=>({...v}))}:q])):s.quarters,shots:s.shots?.map(v=>({...v}))}));
   const changed = new Set(), addedIds = [];
   const quarterMode = game.statsRegistrationType === 'quarter';
   const sourceFor = (playerId,quarter) => {
@@ -139,7 +141,7 @@ export function planAssistMutation(originalGame, originalStats, players, action)
   else {
     const playerId=action.assistPlayerId;
     if(!playerId||playerId===shotRef.item.playerId)throw new Error('シューター以外を選択してください。');
-    const candidates=assistCandidates(game,shotRef.item.quarter||1,shotRef.record,players,action.kind==='saveShot'?originalStats:stats);
+    const candidates=assistCandidates(game,shotRef.item.quarter||1,shotRef.record,players,action.kind==='saveShot'?gameStats:stats);
     if(!candidates.some(p=>p.id===playerId))throw new Error('そのプレー時点の出場選手を選択してください。');
     const current=shotRef.record.assistEventId?resolve(shotRef.record.assistEventId):null;
     const existing=action.kind==='saveShot'?[]:history().filter(e=>isAssistEvent(e)&&sameQuarter(e,shotRef.item)&&e.playerId===playerId&&!e.shotEventId);
