@@ -1,6 +1,6 @@
 @media (min-width: 801px) and (hover: hover) and (pointer: fine) {
   [data-quick-key] { position: relative; }
-  [data-quick-key]::after {
+  [data-quick-key]::before {
     content: attr(data-quick-key);
     position: absolute;
     top: 2px;
