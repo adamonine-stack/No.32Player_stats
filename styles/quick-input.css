@@ -15,3 +15,5 @@
 @media(max-width:420px){.quick-latest-row{grid-template-columns:42px minmax(0,1fr) auto;padding:8px 6px;gap:6px}.quick-latest-row .game-history-content{font-size:12px}.quick-latest-row .btn{padding:6px 8px}}
 
 .assist-player-grid .quick-player{min-height:64px;touch-action:manipulation}.assist-editor-actions{display:grid;gap:10px;margin:16px 0}.assist-editor-actions .btn{min-height:48px;white-space:normal;text-align:left}.history-assist-link{font-size:12px;line-height:1.5}
+
+.quick-latest-actions{display:flex;flex-direction:column;gap:3px}.quick-latest-actions .btn{min-height:28px;padding:4px 8px;font-size:12px}

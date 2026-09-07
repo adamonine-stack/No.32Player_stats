@@ -117,7 +117,7 @@ export function planAssistMutation(originalGame, originalStats, players, action)
     if(action.edit && !previous)throw new Error('対象のシュートが変更されています。履歴を開き直してください。');
     if(previous && !action.edit)return {game:originalGame,stats:[],addedIds:[]};
     if(previous){
-      Object.assign(shot,{playId:previous.playId||null,assistPlayerId:previous.assistPlayerId||null,assistEventId:previous.assistEventId||null,...(previous.onCourtPlayerIds?{onCourtPlayerIds:previous.onCourtPlayerIds}:{})});
+      Object.assign(shot,{sequence:previous.sequence||shot.sequence,createdAt:previous.createdAt||shot.createdAt,playId:previous.playId||null,assistPlayerId:previous.assistPlayerId||null,assistEventId:previous.assistEventId||null,...(previous.onCourtPlayerIds?{onCourtPlayerIds:previous.onCourtPlayerIds}:{})});
       if(shot.result!=='made'){
         if(previous.assistEventId){const previousRef=directShotRef(shot.playerId,quarter,shot.id);if(previousRef)unlink(previousRef)}
         shot.assistPlayerId=null;shot.assistEventId=null;
@@ -130,9 +130,9 @@ export function planAssistMutation(originalGame, originalStats, players, action)
   } else if(action.kind==='unlink') {
     unlink(resolve(action.eventId));return {game,stats:stats.filter(s=>changed.has(s.id)),addedIds};
   } else if(action.kind==='delete') {
-    const ref=resolve(action.eventId);unlink(ref);
+    const found=history().find(item=>item.eventId===action.eventId);if(!found)return {game,stats:[],addedIds};const ref=resolve(action.eventId);unlink(ref);
     if(ref.item.sourceKind==='shot') {const {source}=sourceFor(ref.item.playerId,ref.item.quarter);replaceShots(ref.item.playerId,ref.item.quarter,source.shots.filter(s=>s.id!==ref.item.sourceId))}
-    else {const {stat,source}=sourceFor(ref.item.playerId,ref.item.quarter);source[ref.item.statKey]=Math.max(0,Number(source[ref.item.statKey]||0)-1);changed.add(stat.id);game.playEvents=game.playEvents.filter(e=>e.id!==ref.record.id)}
+    else {const {stat,source}=sourceFor(ref.item.playerId,ref.item.quarter);if(ref.item.type==='freeThrow'){source.fta=Math.max(0,Number(source.fta||0)-Number(ref.record.attempts||0));source.ftm=Math.max(0,Number(source.ftm||0)-Number(ref.record.made||0))}else{const key=ref.item.type==='foul'?'pf':ref.item.type==='foulReceived'?'fouled':ref.item.statKey;source[key]=Math.max(0,Number(source[key]||0)-1);}changed.add(stat.id);game.playEvents=game.playEvents.filter(e=>e.id!==ref.record.id)}
     return {game,stats:stats.filter(s=>changed.has(s.id)),addedIds};
   } else shotRef=resolve(action.shotEventId);
   if(!isMadeEvent(shotRef.item))throw new Error('Madeシュートを選択してください。');

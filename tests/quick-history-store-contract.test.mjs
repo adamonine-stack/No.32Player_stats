@@ -8,8 +8,8 @@ const rehydrate=fs.readFileSync(new URL('../js/ui/pending-history-rehydrate.js',
 
 test('quick stats and FT use retry-safe Firestore transactions',()=>{
   assert.match(store,/runTransaction\(db/);
-  assert.match(store,/pending\.every\(item=>ids\.has\(item\.id\)\)/);
-  assert.match(store,/if\(!eventId&&existing\)return/);
+  assert.match(store,/missing=\(pending\|\|\[\]\)\.filter/);
+  assert.match(store,/historyClock\.revision/);
   assert.match(app,/commitQuickStatMutation/);
   assert.match(app,/commitQuickFreeThrowMutation/);
 });
@@ -21,7 +21,9 @@ test('optimistic history is rendered before transaction completion and rolls bac
   assert.match(app,/rollbackOptimisticStats/);
   assert.match(app,/optimistic=planAssistMutation[\s\S]*Object\.assign\(game,optimistic\.game\)[\s\S]*submitOfflineCapable\('assist'/);
   assert.match(app,/r32-games-snapshot-applied/);
-  assert.match(rehydrate,/addEventListener\('r32-games-snapshot-applied', \(\) => rehydratePendingHistoryState\(\)\)/);
+  assert.match(rehydrate,/projectLocalHistory as rehydratePendingHistoryState/);
+  assert.match(app,/receiveHistoryDocuments\('stats'/);
+  assert.match(app,/receiveHistoryDocuments\('games'/);
 });
 
 test('history fix does not restore global stats reads or opponent listeners',()=>{

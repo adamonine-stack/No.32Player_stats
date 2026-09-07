@@ -1,0 +1,25 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import vm from 'node:vm';
+import {execFileSync} from 'node:child_process';
+import {HistoryJournal,createHistoryOverlay} from '../js/core/history-journal.js';
+import {planAssistMutation} from '../js/calculations/assist-play-calculations.js';
+import {buildGameHistory,createPlayEvent,reconcileStatEvents} from '../js/calculations/game-event-calculations.js';
+import {getGameStatsRegistrationType,quarterKey} from '../js/calculations/stats-calculations.js';
+const before=process.env.R32_BEFORE_FIX==='1';
+const read=path=>before?execFileSync('git',['show',`855ae21:${path}`],{encoding:'utf8'}):fs.readFileSync(new URL('../'+path,import.meta.url),'utf8');
+const extract=(source,name)=>{const tail=source.slice(source.indexOf(`function ${name}(`));return tail.slice(0,tail.indexOf('\nfunction '))};
+test('actual stats listener rebuild never removes a local SHOT awaiting its snapshot',async()=>{
+  const game={id:'g',statsRegistrationType:'quarter',playEvents:[]},players=[{id:'32',number:'32'}],shot={id:'s',gameId:'g',playerId:'32',quarter:1,result:'missed',shotValue:2,shotArea:'center_mid',shotType:'jump_shot',sequence:10,createdAt:10};
+  const state={games:[game],allGames:[game],stats:[]},events=new EventTarget();
+  const context=vm.createContext({state,HistoryJournal,createHistoryOverlay,structuredClone,console,CustomEvent,Date,setTimeout:()=>{},clearTimeout:()=>{},window:events,document:{addEventListener:()=>{}},addEventListener:events.addEventListener.bind(events),dispatchEvent:events.dispatchEvent.bind(events),listOfflineOperations:async()=>[],removeOfflineOperation:async()=>{},createPlayEvent,reconcileStatEvents,planAssistMutation,getGameStatsRegistrationType,quarterKey,refreshSeasonScope:()=>{},render:()=>{},refreshLatestLocalHistory:()=>{},statsSources:new Map([['bucket',[]]])});
+  const path=before?'js/ui/pending-history-rehydrate.js':'js/core/local-history.js';
+  vm.runInContext(read(path).replace(/^import .*;\r?\n/gm,'').replace(/^export \{.*\};\r?\n/gm,'').replaceAll('export async function','async function').replaceAll('export function','function'),context);
+  const payload={game,stats:[],players,action:{kind:'saveShot',shot,playId:'play',now:10}};
+  const planned=planAssistMutation(game,[],players,payload.action),overlay=createHistoryOverlay(game,[],planned.game,planned.stats);
+  events.dispatchEvent(new CustomEvent('r32-offline-operation-change',{detail:{action:'started',operation:{id:'op',type:'assist',payload,createdAt:10,historyClock:{clientId:'a',revision:1},overlay}}}));
+  assert.equal(buildGameHistory(state.games[0],state.stats,players).length,1,'optimistic SHOT initially visible');
+  vm.runInContext(extract(read('js/app.js'),'rebuildStats')+'\nrebuildStats();',context);
+  assert.equal(buildGameHistory(state.games[0],state.stats,players).length,1,'older stats snapshot must preserve the pending SHOT');
+});

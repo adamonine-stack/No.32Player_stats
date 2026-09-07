@@ -46,9 +46,9 @@ test('actual history delete handler completes with mixed-game client state',asyn
   const app=fs.readFileSync(new URL('../js/app.js',import.meta.url),'utf8');
   const extract=name=>{const start=app.search(new RegExp(`^(?:async )?function ${name}\\(`,'m'));const tail=app.slice(start),end=tail.search(/\n(?:async function |function |const |window\.)/);return end<0?tail:tail.slice(0,end)};
   const f=setup(),originalOther=structuredClone(f.stats[0]),item=buildGameHistory(f.game,f.stats,players)[0],messages=[];
-  const context=vm.createContext({state:{stats:f.stats},crypto,structuredClone,console,confirm:()=>true,toast:message=>messages.push(message),gameHistoryForm:()=>{},planAssistMutation,
+  const context=vm.createContext({state:{stats:f.stats,games:[f.game]},crypto,structuredClone,console,confirm:()=>true,toast:message=>messages.push(message),gameHistoryForm:()=>{},planAssistMutation,
     isAssistEvent:item=>item.type==='stat'&&item.statKey==='ast',isMadeEvent:item=>item.type==='shot'&&item.result==='made',participationPlayers:()=>players,
-    prepareHistoryOperation:()=>({sequence:20}),changedOptimisticEventIds:()=>[],quickSession:()=>({}),
+    createHistoryOverlay:()=>({}),projectLocalHistory:()=>{},finishHistoryEdit:()=>false,prepareHistoryOperation:()=>({sequence:20}),changedOptimisticEventIds:()=>[],quickSession:()=>({}),
     submitOfflineCapable:async(type,payload,commit)=>({queued:false,result:await commit()}),
     commitAssistMutation:async(game,stats,players,action)=>planAssistMutation(game,stats.filter(s=>s.gameId===game.id),players,action)
   });

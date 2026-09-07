@@ -1,6 +1,6 @@
 import { runTransaction } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js';
 import { db,doc,serverTimestamp } from './firebase.js?v=20260901-scoped-reads-v1';
-import { planAssistMutation } from '../calculations/assist-play-calculations.js?v=20260906-game-scope-v1';
+import { planAssistMutation } from '../calculations/assist-play-calculations.js?v=20260907-local-history-v1';
 import { buildGameHistory,historyInsertionOverrides } from '../calculations/game-event-calculations.js?v=20260902-history-order-v1';
 
 function clean(value) {
@@ -16,14 +16,17 @@ export async function commitAssistMutation(game,stats,players,action,insertion=n
     if(!gameSnap.exists())throw new Error('試合が見つかりません。');
     const snapshots=await Promise.all(ids.map(id=>transaction.get(doc(db,'stats',id))));
     const latest={...gameSnap.data(),id:game.id},latestStats=snapshots.filter(s=>s.exists()).map(s=>({...s.data(),id:s.id}));
+    const clock=request.historyClock;
+    if(clock&&Number(latest.historyClock?.[clock.clientId]||0)>=clock.revision)return {game:latest,stats:[],addedIds:[]};
     const result=planAssistMutation(latest,latestStats,players,request);
-    const gamePatch={playEvents:result.game.playEvents,updatedAt:serverTimestamp()};
+    const gamePatch={playEvents:result.game.playEvents,...(clock?{historyClock:{...(latest.historyClock||{}),[clock.clientId]:clock.revision}}:{}),updatedAt:serverTimestamp()};
     if(insertion?.returnToHistory&&result.addedIds.length) {
       const combined=[...latestStats.filter(s=>!result.stats.some(n=>n.id===s.id)),...result.stats];
       gamePatch.eventSequenceOverrides=historyInsertionOverrides(buildGameHistory(result.game,combined,players),result.addedIds,insertion.insertAfterId);
       result.game.eventSequenceOverrides=gamePatch.eventSequenceOverrides;
     }
-    for(const stat of result.stats){const {id,...data}=stat;const seasonId=data.seasonId||latest.seasonId||game.seasonId;transaction.set(doc(db,'stats',id),clean({...data,...(seasonId?{seasonId}:{}),updatedAt:serverTimestamp()}),{merge:true})}
+    const writes=[...result.stats];for(const id of request.historyStatIds||[])if(!writes.some(stat=>stat.id===id)){const existing=latestStats.find(stat=>stat.id===id);if(existing)writes.push(existing)}
+    for(const stat of writes){const {id,...data}=stat;const seasonId=data.seasonId||latest.seasonId||game.seasonId;transaction.set(doc(db,'stats',id),clean({...data,...(clock?{historyClock:{...(data.historyClock||{}),[clock.clientId]:clock.revision}}:{}),...(seasonId?{seasonId}:{}),updatedAt:serverTimestamp()}),{merge:true})}
     transaction.set(gameRef,gamePatch,{merge:true});
     return result;
   });

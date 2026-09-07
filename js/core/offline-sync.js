@@ -1,6 +1,6 @@
 import { db, doc, setDoc, serverTimestamp } from './firebase.js?v=20260901-scoped-reads-v1';
-import { commitAssistMutation } from './assist-play-store.js?v=20260906-game-scope-v1';
-import { commitQuickFreeThrowMutation, commitQuickStatMutation } from './quick-history-store.js?v=20260902-history-order-v1';
+import { commitAssistMutation } from './assist-play-store.js?v=20260907-local-history-v1';
+import { commitQuickFreeThrowMutation, commitQuickStatMutation } from './quick-history-store.js?v=20260907-local-history-v1';
 import {
   createOfflineOperation,
   enqueueOfflineOperation,
@@ -13,6 +13,10 @@ import {
 
 let syncing = false;
 let currentUser = null;
+function tabIdentity(){try{let id=sessionStorage.getItem('r32-history-client');if(!id){id=crypto.randomUUID();sessionStorage.setItem('r32-history-client',id)}return id}catch{return crypto.randomUUID()}}
+const clientId=tabIdentity();
+let revision=Date.now()*1000,lastCreatedAt=0;
+let journalWrites=Promise.resolve();
 
 function announce(detail) {
   globalThis.dispatchEvent?.(new CustomEvent('r32-sync-status', {detail}));
@@ -33,7 +37,7 @@ async function execute(operation) {
   if (operation.type === 'quickStat') return commitQuickStatMutation(payload);
   if (operation.type === 'freeThrow') return commitQuickFreeThrowMutation(payload);
   if (operation.type === 'assist') return commitAssistMutation(payload.game, payload.stats, payload.players, payload.action, payload.insertion);
-  if (operation.type === 'gamePatch') return setDoc(doc(db, 'games', payload.gameId), {...payload.data, updatedAt: serverTimestamp()}, {merge: true});
+  if (operation.type === 'gamePatch') return setDoc(doc(db, 'games', payload.gameId), {...payload.data,...(payload.historyClock?{historyClock:{[payload.historyClock.clientId]:payload.historyClock.revision}}:{}), updatedAt: serverTimestamp()}, {merge: true});
   if (operation.type === 'documentBatch') {
     for (const write of payload.writes || []) {
       await setDoc(doc(db, write.collection, write.id), {...write.data, updatedAt: serverTimestamp()}, {merge: write.merge !== false});
@@ -45,6 +49,21 @@ async function execute(operation) {
 
 export async function submitOfflineCapable(type, payload, onlineAction, options = {}) {
   const operation = createOfflineOperation(type, payload, {...options, ownerUid: currentUser?.uid || ''});
+  if(options.overlay){
+    operation.createdAt=lastCreatedAt=Math.max(Date.now(),lastCreatedAt+1);
+    operation.historyClock={clientId,revision:++revision};
+    operation.overlay=options.overlay;
+    payload.historyClock=operation.historyClock;
+    if(type==='assist'){payload.action.historyClock=operation.historyClock;payload.action.historyStatIds=operation.overlay.documents.filter(doc=>doc.key.startsWith('stats/')).map(doc=>doc.key.slice(6))}
+    announceOperation({action:'started',operation});
+    // Every local mutation is durable before a transaction may start, online too.
+    const saved=journalWrites.then(()=>enqueueOfflineOperation(operation));
+    journalWrites=saved.catch(()=>{});
+    try{await saved}catch(error){announceOperation({action:'discarded',operationId:operation.id});throw error}
+    void status('pending');
+    void synchronizeOfflineOperations();
+    return {queued:true,operation};
+  }
   announceOperation({action: 'started', operation});
   if (globalThis.navigator?.onLine !== false) {
     try {
@@ -71,29 +90,35 @@ export async function synchronizeOfflineOperations() {
     return;
   }
   syncing = true;
-  let failed = 0;
+  let failed = 0,lastBatchCreatedAt=Infinity;
   try {
     const operations = (await listOfflineOperations()).filter(operation => !operation.ownerUid || operation.ownerUid === currentUser.uid);
+    lastBatchCreatedAt=operations.at(-1)?.createdAt||Infinity;
     if (!operations.length) { await status('synced'); return; }
     await status('syncing');
     for (const operation of operations) {
       try {
+        if(operation.committed){announceOperation({action:'completed',operationId:operation.id});continue}
         await execute(operation);
         // A successfully acknowledged operation is removed immediately so
         // synchronized stat payloads never accumulate on the device.
-        await removeOfflineOperation(operation.id);
+        if(operation.overlay)await updateOfflineOperation({...operation,committed:true});
+        else await removeOfflineOperation(operation.id);
         announceOperation({action: 'completed', operationId: operation.id});
         await status('syncing');
       } catch (error) {
-        if (isRetryableNetworkError(error)) break;
+        if (isRetryableNetworkError(error)){failed++;break;}
         failed++;
         await updateOfflineOperation({...operation, attempts: Number(operation.attempts || 0) + 1, lastError: String(error?.message || error)});
+        break; // A dependent edit/delete must never overtake its failed create.
       }
     }
     const pending = await offlineOperationCount();
     await status(pending ? (failed ? 'error' : 'pending') : 'synced', {failed});
   } finally {
     syncing = false;
+    const remaining=await listOfflineOperations();
+    if(!failed && remaining.some(op=>!op.committed && op.createdAt>lastBatchCreatedAt))void synchronizeOfflineOperations();
   }
 }
 

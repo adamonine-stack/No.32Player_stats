@@ -9,6 +9,6 @@ test("Firestore persistence is optional and startup waits for its safe fallback"
   assert.match(firebase, /getFirestore\(app\)/);
   assert.match(firebase, /tryEnableFirestorePersistence\(enableIndexedDbPersistence,\s*db\)/);
   assert.doesNotMatch(firebase, /initializeFirestore|persistentLocalCache|persistentMultipleTabManager/);
-  assert.match(app, /await firestorePersistenceReady;syncOnce\(\)/);
+  assert.match(app, /await firestorePersistenceReady;[\s\S]*syncOnce\(\)/);
   assert.match(app, /core\/firebase\.js\?v=20260901-scoped-reads-v1/);
 });
