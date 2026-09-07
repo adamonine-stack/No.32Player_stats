@@ -12,10 +12,18 @@ function targetGames(){
   return categorized.filter(game=>statGameIds.has(game.id));
 }
 
+function selectedQuarterForGame(game){
+  if(state.teamMode!=='game'||!game)return null;
+  const view=state.detailStatsViews?.[game.id]||'game';
+  const match=String(view).match(/^q(\d+)$/);
+  return match?Number(match[1]):null;
+}
+
 function totalPlayingTime(games,playerId){
   let seconds=0,registered=false;
   for(const game of games){
-    const value=playerPlayingTime(game,playerId);
+    const quarter=selectedQuarterForGame(game);
+    const value=playerPlayingTime(game,playerId,quarter);
     if(value?.registered){registered=true;seconds+=Number(value.seconds)||0}
   }
   return registered?formatClock(seconds):'--:--';
