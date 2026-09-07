@@ -30,10 +30,11 @@ function setSource(game, stat, quarter, next) {
   if (getGameStatsRegistrationType(game) === 'quarter') stat.quarters = {...(stat.quarters || {}), [quarterKey(quarter)]: {...next, registered:true, quarter:Number(quarter)}};
   else Object.assign(stat, next);
 }
+function historyTotals(game,playerId,quarter){const totals={};for(const event of game.playEvents||[]){if(event.playerId!==playerId)continue;if(getGameStatsRegistrationType(game)==='quarter'&&Number(event.quarter||0)!==Number(quarter||0))continue;if(event.type==='freeThrow'){totals.fta=number(totals.fta)+number(event.attempts);totals.ftm=number(totals.ftm)+number(event.made);continue}if(!['stat','foul','foulReceived'].includes(event.type))continue;const key=event.type==='foul'?'pf':event.type==='foulReceived'?'fouled':event.statKey;if(key)totals[key]=number(totals[key])+1}return totals}
+function healedSource(game,stat,quarter){const source={...sourceFor(game,stat,quarter)};for(const [key,total] of Object.entries(historyTotals(game,stat.playerId,quarter)))source[key]=Math.max(number(source[key]),total);return source}
 function applyQuickStat(operation) {
   const payload=operation.payload||{}, game=primaryGame(payload.gameId); if(!game||!payload.player?.id)return;
-  const existingIds=new Set((game.playEvents||[]).map(item=>item.id)), missing=(payload.pending||[]).filter(item=>item?.id&&!existingIds.has(item.id)); if(!missing.length)return;
-  const stat=ensureStat(payload.gameId,payload.player.id,payload.seasonId), previous=sourceFor(game,stat,payload.quarter), next={...previous};
+  const stat=ensureStat(payload.gameId,payload.player.id,payload.seasonId), existingIds=new Set((game.playEvents||[]).map(item=>item.id)), missing=(payload.pending||[]).filter(item=>item?.id&&!existingIds.has(item.id)), previous=healedSource(game,stat,payload.quarter), next={...previous};
   for(const item of missing)next[item.statKey]=number(next[item.statKey])+number(item.delta||1);
   const reconciled=reconcileStatEvents({game,player:payload.player,quarter:getGameStatsRegistrationType(game)==='quarter'?payload.quarter:null,previous,next,pending:missing});
   game.playEvents=reconciled.playEvents; setSource(game,stat,payload.quarter,next); mirrorGame(payload.gameId,game);
@@ -41,10 +42,10 @@ function applyQuickStat(operation) {
 function applyFreeThrow(operation) {
   const payload=operation.payload||{}, game=primaryGame(payload.gameId); if(!game||!payload.player?.id)return;
   const targetId=payload.eventId||payload.operation?.operationId; if(!targetId)return;
-  const existing=(game.playEvents||[]).find(item=>item.id===targetId), same=existing&&number(existing.attempts)===number(payload.attempts)&&number(existing.made)===number(payload.made)&&String(existing.remainingSeconds??'')===String(payload.remainingSeconds??''); if(same)return;
-  const stat=ensureStat(payload.gameId,payload.player.id,payload.seasonId), previous=sourceFor(game,stat,payload.quarter), next={...previous,fta:Math.max(0,number(previous.fta)-number(existing?.attempts)+number(payload.attempts)),ftm:Math.max(0,number(previous.ftm)-number(existing?.made)+number(payload.made))};
-  const event=createPlayEvent({...existing,id:targetId,gameId:payload.gameId,quarter:getGameStatsRegistrationType(game)==='quarter'?payload.quarter:null,player:payload.player,type:'freeThrow',attempts:number(payload.attempts),made:number(payload.made),remainingSeconds:payload.remainingSeconds,sequence:existing?.sequence||payload.operation?.sequence||0,createdAt:existing?.createdAt||payload.operation?.createdAt||operation.createdAt});
-  game.playEvents=[...(game.playEvents||[]).filter(item=>item.id!==targetId),event]; setSource(game,stat,payload.quarter,next); mirrorGame(payload.gameId,game);
+  const stat=ensureStat(payload.gameId,payload.player.id,payload.seasonId),existing=(game.playEvents||[]).find(item=>item.id===targetId),previous=healedSource(game,stat,payload.quarter),same=existing&&number(existing.attempts)===number(payload.attempts)&&number(existing.made)===number(payload.made)&&String(existing.remainingSeconds??'')===String(payload.remainingSeconds??''),next={...previous};
+  if(!same){next.fta=Math.max(0,number(previous.fta)-number(existing?.attempts)+number(payload.attempts));next.ftm=Math.max(0,number(previous.ftm)-number(existing?.made)+number(payload.made))}
+  if(!same){const event=createPlayEvent({...existing,id:targetId,gameId:payload.gameId,quarter:getGameStatsRegistrationType(game)==='quarter'?payload.quarter:null,player:payload.player,type:'freeThrow',attempts:number(payload.attempts),made:number(payload.made),remainingSeconds:payload.remainingSeconds,sequence:existing?.sequence||payload.operation?.sequence||0,createdAt:existing?.createdAt||payload.operation?.createdAt||operation.createdAt});game.playEvents=[...(game.playEvents||[]).filter(item=>item.id!==targetId),event]}
+  setSource(game,stat,payload.quarter,next); mirrorGame(payload.gameId,game);
 }
 function applyAssist(operation) {
   const payload=operation.payload||{}, gameId=payload.game?.id, game=primaryGame(gameId); if(!game||!payload.action)return;
