@@ -6,7 +6,7 @@ import { createStatsBaseline,LOAD_ERROR,withStatsLoadTimeout } from './normal-st
 export async function assertNormalStatsOnline(gameId) {
   if(globalThis.navigator?.onLine===false)throw Error(LOAD_ERROR);
   const operations=await listOfflineOperations();
-  if(operations.some(op=>op.payload?.gameId===gameId||op.payload?.game?.id===gameId||op.payload?.writes?.some(w=>w.id===gameId||w.data?.gameId===gameId)))throw Error(LOAD_ERROR);
+  if(operations.some(op=>!op.committed&&(op.payload?.gameId===gameId||op.payload?.game?.id===gameId||op.payload?.writes?.some(w=>w.id===gameId||w.data?.gameId===gameId))))throw Error(LOAD_ERROR);
 }
 export async function loadNormalStats(gameId,playerId,quarter) {
   return withStatsLoadTimeout(async()=>{

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'r32-shell-20260908-stats-guard-v1';
+const CACHE_NAME = 'r32-shell-20260908-quarter-session-v1';
 const APP_SHELL = [
   './', './index.html', './manifest.json', './styles/quick-keyboard.css?v=20260906-v2', './js/ui/quick-keyboard.js?v=20260905-v1', './js/ui/quick-input-touch-fix.js?v=20260906-mouse-v2', './js/ui/quick-shot-tap-pc-fix.js?v=20260906-v1', './js/ui/game-history-fixed-nav.js?v=20260906-final-action-v1', './js/ui/game-history-edit-position.js?v=20260905-v1', './js/ui/settings-tournament-button-cleanup.js?v=20260906-v1', './js/ui/pending-history-rehydrate.js?v=20260907-local-history-v1', './js/ui/game-list-registration-status.js?v=20260906-v1', './js/calculations/game-list-status-calculations.js',
   './assets/r32-background.png', './assets/r32-bg-mobile.svg', './assets/r32-bg-pc.svg', './assets/r32-brand.png', './assets/r32-brand.svg',
@@ -10,6 +10,7 @@ self.addEventListener('activate', event => { event.waitUntil(caches.keys().then(
 self.addEventListener('fetch', event => {
   if (event.request.method !== 'GET') return;
   const requestUrl = new URL(event.request.url);
+  if (requestUrl.pathname.includes('/tests/')) return;
   if (event.request.mode === 'navigate') { event.respondWith(fetch(event.request).then(response => { const copy=response.clone(); caches.open(CACHE_NAME).then(cache=>cache.put('./index.html',copy)); return response; }).catch(()=>caches.match('./index.html'))); return; }
   if (requestUrl.origin === self.location.origin && requestUrl.pathname.includes('/js/')) { event.respondWith(fetch(event.request).then(response=>{if(response.ok)caches.open(CACHE_NAME).then(cache=>cache.put(event.request,response.clone()));return response}).catch(()=>caches.match(event.request))); return; }
   if (requestUrl.hostname === 'www.gstatic.com') { event.respondWith(fetch(event.request).then(response=>{if(response.ok)caches.open(CACHE_NAME).then(cache=>cache.put(event.request,response.clone()));return response}).catch(()=>caches.match(event.request))); return; }

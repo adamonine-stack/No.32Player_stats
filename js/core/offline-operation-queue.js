@@ -1,5 +1,6 @@
 const DB_NAME = 'r32-offline-operations';
-const DB_VERSION = 1;
+import { stampSessionOverlay } from './quarter-session-model.js';
+const DB_VERSION = 2;
 const STORE_NAME = 'operations';
 const OPEN_TIMEOUT_MS = 1500;
 
@@ -23,6 +24,7 @@ function openDatabase() {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
     request.onupgradeneeded = () => {
       const db = request.result;
+      if (!db.objectStoreNames.contains('metadata')) db.createObjectStore('metadata');
       if (!db.objectStoreNames.contains(STORE_NAME)) {
         const store = db.createObjectStore(STORE_NAME, {keyPath: 'id'});
         store.createIndex('createdAt', 'createdAt');
@@ -30,6 +32,7 @@ function openDatabase() {
     };
     request.onsuccess = () => {
       if (settled) { request.result.close(); return; }
+      request.result.onversionchange=()=>{request.result.close();databasePromise=undefined};
       finish(resolve, request.result);
     };
     request.onerror = () => {
@@ -80,7 +83,32 @@ export async function listOfflineOperations() {
 }
 
 export function sortOfflineOperations(rows = []) {
-  return [...rows].sort((a, b) => Number(a.createdAt) - Number(b.createdAt) || String(a.id).localeCompare(String(b.id)));
+  return [...rows].sort((a, b) => Number(a.createdAt) - Number(b.createdAt) || Number(a.localSequence||0)-Number(b.localSequence||0) || String(a.id).localeCompare(String(b.id)));
+}
+
+export async function enqueueSessionOperation(operation) {
+  const db=await openDatabase();
+  return new Promise((resolve,reject)=>{
+    const transaction=db.transaction([STORE_NAME,'metadata'],'readwrite');
+    const metadata=transaction.objectStore('metadata'),request=metadata.get('device');
+    request.onsuccess=()=>{
+      const previous=request.result||{deviceId:crypto.randomUUID(),localSequence:0,clientCreatedAt:0};
+      const clock={deviceId:previous.deviceId,localSequence:previous.localSequence+1,clientCreatedAt:Math.max(Date.now(),previous.clientCreatedAt)};
+      metadata.put(clock,'device');
+      Object.assign(operation,clock,{operationId:operation.id,createdAt:clock.clientCreatedAt,syncState:'draft',sessionVersion:1});
+      operation.historyClock={clientId:`${clock.deviceId}:q${operation.quarter}`,revision:clock.localSequence};
+      stampSessionOverlay(operation.overlay,{...clock,operationId:operation.id});
+      const scopeKey=`session:${operation.ownerUid}:${operation.gameId}:${operation.quarter}`;
+      const head=metadata.get(scopeKey);
+      head.onsuccess=()=>{
+        operation.predecessorId=head.result||null;
+        metadata.put(operation.operationId,scopeKey);
+        transaction.objectStore(STORE_NAME).put(operation);
+      };
+    };
+    transaction.oncomplete=()=>resolve(operation);
+    transaction.onabort=transaction.onerror=()=>reject(transaction.error||Error('端末への保存に失敗しました。'));
+  });
 }
 
 export async function removeOfflineOperation(id) {
@@ -91,8 +119,17 @@ export async function updateOfflineOperation(operation) {
   await withStore('readwrite', store => store.put(operation));
 }
 
+export async function markQuarterReady(gameId,quarter,ownerUid) {
+  const db=await openDatabase();
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction(STORE_NAME,'readwrite'),store=tx.objectStore(STORE_NAME),request=store.getAll();
+    request.onsuccess=()=>{for(const op of request.result)if(op.sessionVersion&&op.gameId===gameId&&op.quarter===Number(quarter)&&op.ownerUid===ownerUid&&op.syncState==='draft')store.put({...op,syncState:'ready'})};
+    tx.oncomplete=resolve;tx.onerror=tx.onabort=()=>reject(tx.error);
+  });
+}
+
 export async function offlineOperationCount() {
-  return Number(await withStore('readonly', store => store.count())) || 0;
+  return (await listOfflineOperations()).filter(operation=>!operation.committed).length;
 }
 
 export function isRetryableNetworkError(error) {

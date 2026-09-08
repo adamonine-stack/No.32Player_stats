@@ -27,5 +27,5 @@ assert.match(viewportCss,/\.shot-entry-viewport \.shot-type-grid \{[\s\S]*?grid-
 assert.match(css,/env\(safe-area-inset-bottom\)/);
 assert.match(css,/font-size:18px!important/);
 assert.match(css,/\.quick-head-close/);
-assert.match(app,/quick-input\.css\?v=20260907-local-history-v1/);
+assert.match(app,/quick-input\.css\?v=20260908-quarter-session-v1/);
 console.log('quick input contract: ok');

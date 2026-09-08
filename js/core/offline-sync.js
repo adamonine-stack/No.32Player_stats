@@ -1,9 +1,13 @@
 import { db, doc, setDoc, serverTimestamp } from './firebase.js?v=20260901-scoped-reads-v1';
 import { commitAssistMutation } from './assist-play-store.js?v=20260907-local-history-v1';
 import { commitQuickFreeThrowMutation, commitQuickStatMutation } from './quick-history-store.js?v=20260907-local-history-v1';
+import { commitQuarterOperation } from './quarter-session-store.js';
+import { sessionScope } from './quarter-session-model.js';
 import {
   createOfflineOperation,
   enqueueOfflineOperation,
+  enqueueSessionOperation,
+  markQuarterReady,
   isRetryableNetworkError,
   listOfflineOperations,
   offlineOperationCount,
@@ -13,9 +17,6 @@ import {
 
 let syncing = false;
 let currentUser = null;
-function tabIdentity(){try{let id=sessionStorage.getItem('r32-history-client');if(!id){id=crypto.randomUUID();sessionStorage.setItem('r32-history-client',id)}return id}catch{return crypto.randomUUID()}}
-const clientId=tabIdentity();
-let revision=Date.now()*1000,lastCreatedAt=0;
 let journalWrites=Promise.resolve();
 
 function announce(detail) {
@@ -33,6 +34,7 @@ async function status(state, extra = {}) {
 }
 
 async function execute(operation) {
+  if (operation.sessionVersion) return commitQuarterOperation(operation);
   const payload = operation.payload || {};
   if (operation.type === 'quickStat') return commitQuickStatMutation(payload);
   if (operation.type === 'freeThrow') return commitQuickFreeThrowMutation(payload);
@@ -50,18 +52,13 @@ async function execute(operation) {
 export async function submitOfflineCapable(type, payload, onlineAction, options = {}) {
   const operation = createOfflineOperation(type, payload, {...options, ownerUid: currentUser?.uid || ''});
   if(options.overlay){
-    operation.createdAt=lastCreatedAt=Math.max(Date.now(),lastCreatedAt+1);
-    operation.historyClock={clientId,revision:++revision};
+    Object.assign(operation,sessionScope(type,payload,options));
     operation.overlay=options.overlay;
-    payload.historyClock=operation.historyClock;
-    if(type==='assist'){payload.action.historyClock=operation.historyClock;payload.action.historyStatIds=operation.overlay.documents.filter(doc=>doc.key.startsWith('stats/')).map(doc=>doc.key.slice(6))}
-    announceOperation({action:'started',operation});
-    // Every local mutation is durable before a transaction may start, online too.
-    const saved=journalWrites.then(()=>enqueueOfflineOperation(operation));
+    const saved=journalWrites.then(()=>enqueueSessionOperation(operation));
     journalWrites=saved.catch(()=>{});
-    try{await saved}catch(error){announceOperation({action:'discarded',operationId:operation.id});throw error}
+    await saved;
+    announceOperation({action:'started',operation});
     void status('pending');
-    void synchronizeOfflineOperations();
     return {queued:true,operation};
   }
   announceOperation({action: 'started', operation});
@@ -84,7 +81,13 @@ export async function submitOfflineCapable(type, payload, onlineAction, options 
   return {queued: true, operation};
 }
 
-export async function synchronizeOfflineOperations() {
+let activeSync;
+export function synchronizeOfflineOperations() {
+  if(activeSync)return activeSync;
+  activeSync=runOfflineSynchronization().finally(()=>{activeSync=null});
+  return activeSync;
+}
+async function runOfflineSynchronization() {
   if (syncing || !currentUser || globalThis.navigator?.onLine === false) {
     await status(globalThis.navigator?.onLine === false ? 'offline' : 'idle');
     return;
@@ -92,7 +95,7 @@ export async function synchronizeOfflineOperations() {
   syncing = true;
   let failed = 0,lastBatchCreatedAt=Infinity;
   try {
-    const operations = (await listOfflineOperations()).filter(operation => !operation.ownerUid || operation.ownerUid === currentUser.uid);
+    const operations = (await listOfflineOperations()).filter(operation => (!operation.ownerUid || operation.ownerUid === currentUser.uid) && (!operation.sessionVersion || operation.syncState!=='draft'));
     lastBatchCreatedAt=operations.at(-1)?.createdAt||Infinity;
     if (!operations.length) { await status('synced'); return; }
     await status('syncing');
@@ -100,16 +103,14 @@ export async function synchronizeOfflineOperations() {
       try {
         if(operation.committed){announceOperation({action:'completed',operationId:operation.id});continue}
         await execute(operation);
-        // A successfully acknowledged operation is removed immediately so
-        // synchronized stat payloads never accumulate on the device.
-        if(operation.overlay)await updateOfflineOperation({...operation,committed:true});
+        // Keep the durable overlay until listeners acknowledge every affected document.
+        if(operation.overlay)await updateOfflineOperation({...operation,committed:true,syncState:'synced',lastError:''});
         else await removeOfflineOperation(operation.id);
         announceOperation({action: 'completed', operationId: operation.id});
         await status('syncing');
       } catch (error) {
-        if (isRetryableNetworkError(error)){failed++;break;}
         failed++;
-        await updateOfflineOperation({...operation, attempts: Number(operation.attempts || 0) + 1, lastError: String(error?.message || error)});
+        await updateOfflineOperation({...operation,syncState:'error', attempts: Number(operation.attempts || 0) + 1, lastError: String(error?.message || error)});
         break; // A dependent edit/delete must never overtake its failed create.
       }
     }
@@ -118,8 +119,24 @@ export async function synchronizeOfflineOperations() {
   } finally {
     syncing = false;
     const remaining=await listOfflineOperations();
-    if(!failed && remaining.some(op=>!op.committed && op.createdAt>lastBatchCreatedAt))void synchronizeOfflineOperations();
+    if(!failed && remaining.some(op=>!op.sessionVersion&&!op.committed && op.createdAt>lastBatchCreatedAt))globalThis.setTimeout?.(()=>synchronizeOfflineOperations(),0);
   }
+}
+
+export async function confirmQuarterSession(gameId,quarter) {
+  await journalWrites;
+  const operations=(await listOfflineOperations()).filter(op=>op.sessionVersion&&op.gameId===gameId&&op.quarter===Number(quarter)&&op.ownerUid===currentUser?.uid&&!op.committed);
+  await markQuarterReady(gameId,quarter,currentUser?.uid);
+  if(activeSync)await activeSync;
+  await synchronizeOfflineOperations();
+  const remaining=(await listOfflineOperations()).filter(op=>op.gameId===gameId&&op.quarter===Number(quarter)&&op.ownerUid===currentUser?.uid&&!op.committed);
+  if(remaining.length)throw Error(remaining.find(op=>op.lastError)?.lastError||'未同期入力を端末に保持しています。オンラインで再度確定してください。');
+  return {count:operations.length};
+}
+
+export async function quarterSessionStatus(gameId,quarter) {
+  const operations=(await listOfflineOperations()).filter(op=>op.gameId===gameId&&op.quarter===Number(quarter)&&op.ownerUid===currentUser?.uid&&!op.committed);
+  return {pending:operations.length,failed:operations.some(op=>op.lastError),syncing:syncing&&operations.some(op=>op.syncState!=='draft')};
 }
 
 export async function initializeOfflineSync(user) {

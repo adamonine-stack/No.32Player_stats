@@ -31,6 +31,9 @@ export function prepareHistoryOperation(game = {}, { id, now = Date.now() } = {}
 
 export function compareHistoryItems(a = {}, b = {}) {
   return numeric(a.sortValue ?? a.sequence ?? a.createdAt) - numeric(b.sortValue ?? b.sequence ?? b.createdAt)
+    || String(a.deviceId||'').localeCompare(String(b.deviceId||''))
+    || numeric(a.localSequence)-numeric(b.localSequence)
+    || String(a.operationId || a.eventId || a.id || '').localeCompare(String(b.operationId || b.eventId || b.id || ''))
     || String(a.eventId || a.id || '').localeCompare(String(b.eventId || b.id || ''));
 }
 

@@ -22,10 +22,10 @@ function diff(before, after, field='') {
   if(['twoPa','twoPm','threePa','threePm','fta','ftm','ast','or','dr','blk','pf','fouled','shotFouledCount','passCut','dribbleCut','stealOther','passMiss','dribbleMiss','catchMiss','violation','otherTo'].includes(field) && typeof after==='number' && (before==null || typeof before==='number'))return {kind:'number',value:after,delta:after-(before||0)};
   return {kind:'value',value:clone(after)};
 }
-function apply(value, patch) {
+export function applyHistoryPatch(value, patch) {
   if(!patch)return value;
   if(patch.kind==='rows')return [...(Array.isArray(value)?value:[]).filter(item=>!patch.removed.includes(item.id)&&!patch.rows.some(row=>row.id===item.id)),...clone(patch.rows)];
-  if(patch.kind==='map'){const result=map(value)?clone(value):{};for(const [key,change] of Object.entries(patch.fields))result[key]=apply(result[key],change);return result}
+  if(patch.kind==='map'){const result=map(value)?clone(value):{};for(const [key,change] of Object.entries(patch.fields))result[key]=applyHistoryPatch(result[key],change);return result}
   if(patch.kind==='number')return Math.max(0,(Number(value)||0)+patch.delta);
   return clone(patch.value);
 }
@@ -57,8 +57,8 @@ export class HistoryJournal {
   project(collection,rows){
     const keys=new Set(rows.map(row=>`${collection}/${row.id}`));
     for(const entry of this.operations.values())for(const item of entry.overlay.documents)if(item.key.startsWith(`${collection}/`))keys.add(item.key);
-    const operations=[...this.operations.values()].sort((a,b)=>a.createdAt-b.createdAt||a.id.localeCompare(b.id));
+    const operations=[...this.operations.values()].sort((a,b)=>a.createdAt-b.createdAt||(a.localSequence||0)-(b.localSequence||0)||a.id.localeCompare(b.id));
     return [...keys].map(key=>{let result=clone(this.documents.get(key)||rows.find(row=>`${collection}/${row.id}`===key));
-      for(const entry of operations){const item=entry.overlay.documents.find(doc=>doc.key===key);if(!item)continue;const clock=entry.historyClock;if(clock&&Number(this.documents.get(key)?.historyClock?.[clock.clientId]||0)>=clock.revision)continue;result=apply(result,item.patch)}return result}).filter(Boolean);
+      for(const entry of operations){const item=entry.overlay.documents.find(doc=>doc.key===key);if(!item)continue;const clock=entry.historyClock;if(clock&&Number(this.documents.get(key)?.historyClock?.[clock.clientId]||0)>=clock.revision)continue;result=applyHistoryPatch(result,item.patch)}return result}).filter(Boolean);
   }
 }

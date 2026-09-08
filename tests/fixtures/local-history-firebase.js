@@ -1,3 +1,5 @@
+// HTTP-only supervised QA has no secure-context randomUUID. Never used by the live app.
+if(!crypto.randomUUID)crypto.randomUUID=()=>Array.from(crypto.getRandomValues(new Uint8Array(16)),v=>v.toString(16).padStart(2,'0')).join('');
 import {DEFAULT_SEASON_ID} from '../../js/calculations/season-calculations.js';
 export const auth={},db={},firestorePersistenceReady=Promise.resolve();
 const players=[4,7,8,21,32].map(n=>({id:String(n),number:String(n),name:`検証選手${n}`,active:true,category:'U15'}));
@@ -9,13 +11,13 @@ export const collection=(_,name)=>({collection:name});
 export const doc=(_,collection,id)=>({collection,id});
 export const where=(field,operator,value)=>({field,operator,value});
 export const query=(ref,...filters)=>({...ref,filters});
-const snapshot=(key,data)=>({id:key.split('/')[1],exists:()=>data!==undefined,data:()=>structuredClone(data)});
-function result(ref,source=documents){if(ref.id)return snapshot(`${ref.collection}/${ref.id}`,source[`${ref.collection}/${ref.id}`]);const rows=Object.entries(source).filter(([key,value])=>key.startsWith(`${ref.collection}/`)&&(!ref.filters||ref.filters.every(f=>f.operator==='in'?f.value.includes(value[f.field]):value[f.field]===f.value))).map(([key,data])=>snapshot(key,data));return {docs:rows,empty:!rows.length,docChanges:()=>rows.map(doc=>({doc}))}}
+const snapshot=(key,data)=>({id:key.split('/')[1],metadata:{fromCache:false,hasPendingWrites:false},exists:()=>data!==undefined,data:()=>structuredClone(data)});
+function result(ref,source=documents){if(ref.id)return snapshot(`${ref.collection}/${ref.id}`,source[`${ref.collection}/${ref.id}`]);const rows=Object.entries(source).filter(([key,value])=>key.startsWith(`${ref.collection}/`)&&(!ref.filters||ref.filters.every(f=>f.operator==='in'?f.value.includes(value[f.field]):value[f.field]===f.value))).map(([key,data])=>snapshot(key,data));return {metadata:{fromCache:false,hasPendingWrites:false},docs:rows,empty:!rows.length,docChanges:()=>rows.map(doc=>({doc}))}}
 function emit(source=documents){for(const listener of [...listeners])listener.callback(result(listener.ref,source));document.querySelector('#qaStatus').textContent=`サーバーSHOT ${Object.entries(documents).filter(([k])=>k.startsWith('stats/')).flatMap(([,s])=>Object.values(s.quarters||{}).flatMap(q=>q.shots||[])).map(s=>s.result).join(',')||'0'} / 待機 ${releases.length}`}
 export function onSnapshot(ref,callback){const entry={ref,callback};listeners.add(entry);queueMicrotask(()=>{if(listeners.has(entry))callback(result(ref))});return ()=>listeners.delete(entry)}
 export const onAuthStateChanged=(_,callback)=>{queueMicrotask(()=>callback({uid:'qa-user'}));return ()=>{}};
 export const serverTimestamp=()=>({seconds:Math.floor(Date.now()/1000),nanoseconds:(Date.now()%1000)*1e6});
-export const getDoc=async ref=>result(ref),getDocs=getDoc;
+export const getDoc=async ref=>result(ref),getDocs=getDoc,getDocFromServer=getDoc,getDocsFromServer=getDocs;
 function merge(a,b){if(!a||typeof a!=='object'||Array.isArray(a))return structuredClone(b);const result={...a};for(const [key,value] of Object.entries(b))result[key]=value&&typeof value==='object'&&!Array.isArray(value)?merge(a[key],value):structuredClone(value);return result}
 export async function setDoc(ref,data,options={}){const key=`${ref.collection}/${ref.id}`;documents[key]=options.merge?merge(documents[key],data):structuredClone(data);localStorage.setItem('r32-qa-server',JSON.stringify(documents));emit()}
 export async function deleteDoc(ref){delete documents[`${ref.collection}/${ref.id}`];emit()}
