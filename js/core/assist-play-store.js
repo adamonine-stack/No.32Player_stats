@@ -1,3 +1,4 @@
+import { assertStatsBaseline } from './normal-stats-guard.js';
 import { runTransaction } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js';
 import { db,doc,serverTimestamp } from './firebase.js?v=20260901-scoped-reads-v1';
 import { planAssistMutation } from '../calculations/assist-play-calculations.js?v=20260907-local-history-v1';
@@ -10,12 +11,13 @@ function clean(value) {
 }
 export async function commitAssistMutation(game,stats,players,action,insertion=null) {
   const request={...action,now:action.now||Date.now(),playId:action.playId||crypto.randomUUID(),assistId:action.assistId||crypto.randomUUID()};
-  const ids=[...new Set([...stats.filter(s=>s.gameId===game.id).map(s=>s.id),...players.map(p=>`${game.id}_${p.id}`)])];
+  const ids=[...new Set([...stats.filter(s=>s.gameId===game.id).map(s=>s.id),...players.map(p=>`${game.id}_${p.id}`),...(request.baseline?[request.baseline.statId]:[])])];
   return runTransaction(db,async transaction=>{
     const gameRef=doc(db,'games',game.id),gameSnap=await transaction.get(gameRef);
     if(!gameSnap.exists())throw new Error('試合が見つかりません。');
     const snapshots=await Promise.all(ids.map(id=>transaction.get(doc(db,'stats',id))));
     const latest={...gameSnap.data(),id:game.id},latestStats=snapshots.filter(s=>s.exists()).map(s=>({...s.data(),id:s.id}));
+    if(request.kind==='reconcileStats')assertStatsBaseline(request.baseline,latest,latestStats,request);
     const clock=request.historyClock;
     if(clock&&Number(latest.historyClock?.[clock.clientId]||0)>=clock.revision)return {game:latest,stats:[],addedIds:[]};
     const result=planAssistMutation(latest,latestStats,players,request);
