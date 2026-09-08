@@ -1,6 +1,6 @@
 import { runTransaction } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js';
 import { db,doc,serverTimestamp } from './firebase.js?v=20260901-scoped-reads-v1';
-import { projectSessionDocument } from './quarter-session-model.js';
+import { projectSessionDocument } from './quarter-session-model.js?v=20260908-quarter-session-v2';
 import { assertStatsBaseline } from './normal-stats-guard.js';
 
 const clean=value=>Array.isArray(value)?value.map(clean):value&&Object.getPrototypeOf(value)===Object.prototype?Object.fromEntries(Object.entries(value).filter(([,v])=>v!==undefined).map(([k,v])=>[k,clean(v)])):value;

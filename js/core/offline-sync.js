@@ -1,8 +1,8 @@
 import { db, doc, setDoc, serverTimestamp } from './firebase.js?v=20260901-scoped-reads-v1';
-import { commitAssistMutation } from './assist-play-store.js?v=20260907-local-history-v1';
-import { commitQuickFreeThrowMutation, commitQuickStatMutation } from './quick-history-store.js?v=20260907-local-history-v1';
-import { commitQuarterOperation } from './quarter-session-store.js';
-import { sessionScope } from './quarter-session-model.js';
+import { commitAssistMutation } from './assist-play-store.js?v=20260908-quarter-session-v2';
+import { commitQuickFreeThrowMutation, commitQuickStatMutation } from './quick-history-store.js?v=20260908-quarter-session-v2';
+import { commitQuarterOperation } from './quarter-session-store.js?v=20260908-quarter-session-v2';
+import { sessionScope } from './quarter-session-model.js?v=20260908-quarter-session-v2';
 import {
   createOfflineOperation,
   enqueueOfflineOperation,
@@ -13,7 +13,7 @@ import {
   offlineOperationCount,
   removeOfflineOperation,
   updateOfflineOperation
-} from './offline-operation-queue.js?v=20260904-offline-v1';
+} from './offline-operation-queue.js?v=20260908-quarter-session-v2';
 
 let syncing = false;
 let currentUser = null;

@@ -1,6 +1,6 @@
 import { getDocFromServer,getDocsFromServer } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js';
 import { db,doc,collection,query,where } from './firebase.js?v=20260901-scoped-reads-v1';
-import { listOfflineOperations } from './offline-operation-queue.js?v=20260904-offline-v1';
+import { listOfflineOperations } from './offline-operation-queue.js?v=20260908-quarter-session-v2';
 import { createStatsBaseline,LOAD_ERROR,withStatsLoadTimeout } from './normal-stats-guard.js';
 
 export async function assertNormalStatsOnline(gameId) {

@@ -1,10 +1,10 @@
-import { loadNormalStats,assertNormalStatsOnline } from './core/normal-stats-store.js';
+import { loadNormalStats,assertNormalStatsOnline } from './core/normal-stats-store.js?v=20260908-quarter-session-v2';
 import { LOAD_ERROR,CONFLICT_ERROR,assertStatsBaseline } from './core/normal-stats-guard.js';
-import { createHistoryOverlay, projectLocalHistory, receiveHistoryDocuments, restoreLocalHistory } from './core/local-history.js';
-import { assistCandidates, isAssistEvent, isMadeEvent, nearbyMadeShots, planAssistMutation } from './calculations/assist-play-calculations.js?v=20260907-local-history-v1';
-import { commitAssistMutation } from './core/assist-play-store.js?v=20260908-stats-guard-v1';
-import { commitQuickStatMutation, commitQuickFreeThrowMutation } from './core/quick-history-store.js?v=20260907-local-history-v1';
-import { initializeOfflineSync, installOfflineSyncListeners, submitOfflineCapable, synchronizeOfflineOperations, confirmQuarterSession, quarterSessionStatus } from './core/offline-sync.js?v=20260907-local-history-v1';
+import { createHistoryOverlay, projectLocalHistory, receiveHistoryDocuments, restoreLocalHistory } from './core/local-history.js?v=20260908-quarter-session-v2';
+import { assistCandidates, isAssistEvent, isMadeEvent, nearbyMadeShots, planAssistMutation } from './calculations/assist-play-calculations.js?v=20260908-quarter-session-v2';
+import { commitAssistMutation } from './core/assist-play-store.js?v=20260908-quarter-session-v2';
+import { commitQuickStatMutation, commitQuickFreeThrowMutation } from './core/quick-history-store.js?v=20260908-quarter-session-v2';
+import { initializeOfflineSync, installOfflineSyncListeners, submitOfflineCapable, synchronizeOfflineOperations, confirmQuarterSession, quarterSessionStatus } from './core/offline-sync.js?v=20260908-quarter-session-v2';
 import { auth, db, firestorePersistenceReady, signInWithEmailAndPassword, signOut, onAuthStateChanged, collection, doc, getDoc, getDocs, setDoc, deleteDoc, onSnapshot, query, where, serverTimestamp } from "./core/firebase.js?v=20260901-scoped-reads-v1";
 import { createListenerRegistry } from './data/listener-registry.js?v=20260901-scoped-reads-v1';
 import { auditR32Data } from './diagnostics/data-integrity.js?v=20260901-scoped-reads-v1';
@@ -12,8 +12,8 @@ import { buildPlayerSeasonSummary, comparePlayerSeasonSummary, playerSeasonSumma
 import { state } from "./core/state.js";
 import { setGameSortDirection, setLastPlayerId, setSelectedSeasonId } from "./core/storage.js";
 import { num, pct, one, sumStats as sumStatsBase, derived, STAT_KEYS, getGameStatsRegistrationType, quarterKey, registeredQuarterNumbers, statHasRegisteredData } from "./calculations/stats-calculations.js";
-import { buildGameHistory, groupGameHistory, historyActionOrderOverrides, createPlayEvent, historyInsertionOverrides, reconcileStatEvents } from "./calculations/game-event-calculations.js?v=20260902-history-order-v1";
-import { nextHistorySequence, prepareHistoryOperation } from "./calculations/history-order.js?v=20260902-history-order-v1";
+import { buildGameHistory, groupGameHistory, historyActionOrderOverrides, createPlayEvent, historyInsertionOverrides, reconcileStatEvents } from "./calculations/game-event-calculations.js?v=20260908-quarter-session-v2";
+import { nextHistorySequence, prepareHistoryOperation } from "./calculations/history-order.js?v=20260908-quarter-session-v2";
 import { changedOptimisticEventIds, rollbackOptimisticEvents, rollbackOptimisticStats } from "./calculations/optimistic-rollback.js?v=20260902-history-safety-v1";
 import { resultMark, resultText, resultWord, resultClass, gameRecord, dateRange, finalScoreFromQuarterScores, quarterScoreKey, hasQuarterScoreData, hasShotPointData, registrationChoiceVisibility } from "./calculations/game-calculations.js";
 import { selectedTeamQuarterStatus, teamGamePeriods, teamRegisteredQuarterNumbers, teamStatsForView } from "./calculations/team-game-period-calculations.js";
@@ -40,7 +40,7 @@ import { TOURNAMENT_2026_KYOTO_U15_MEN, TEAMS_2026_KYOTO_U15_MEN, MATCHES_2026_K
 import { TOURNAMENT_2025_OSAKA_JR_WINTER_CUP_MEN, TEAMS_2025_OSAKA_JR_WINTER_CUP_MEN, OSAKA_2025_DUPLICATE_TEAM_MERGES } from "./data/2025-osaka-jr-winter-cup-men.js";
 import { findImportedTeamMatch, normalizeTeamNameForMatching, normalizeTournamentNameForMatching } from "./calculations/team-name-matching.js";
 const quickInputStyles=document.createElement('link');quickInputStyles.rel='stylesheet';quickInputStyles.href='./styles/quick-input.css?v=20260908-quarter-session-v1';document.head.appendChild(quickInputStyles);
-if('serviceWorker' in navigator && !location.pathname.includes('/tests/'))navigator.serviceWorker.register('./service-worker.js?v=20260908-quarter-session-v1').catch(error=>console.warn('Service worker registration failed',error));
+if('serviceWorker' in navigator && !location.pathname.includes('/tests/'))navigator.serviceWorker.register('./service-worker.js?v=20260908-quarter-session-v2').catch(error=>console.warn('Service worker registration failed',error));
 installOfflineSyncListeners();
 const nav=[['home','ホーム'],['players','選手'],['opponentTeams','対戦チーム'],['games','試合'],['stats','分析'],['team','チーム'],['settings','設定']];
 const navIcons={home:'home',players:'person',opponentTeams:'shield',games:'edit_note',stats:'bar_chart',team:'groups',settings:'settings'};

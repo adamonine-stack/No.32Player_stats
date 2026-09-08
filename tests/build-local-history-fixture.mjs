@@ -17,14 +17,14 @@ console.log(target);
 
 // A hosted QA entry uses import maps and a separate IndexedDB database. It cannot
 // access production Firebase or consume the user's real pending operations.
-const queue=fs.readFileSync(path.join(root,'js/core/offline-operation-queue.js'),'utf8').replace('r32-offline-operations','r32-qa-offline-operations').replace('./quarter-session-model.js','r32-session-model');
+const queue=fs.readFileSync(path.join(root,'js/core/offline-operation-queue.js'),'utf8').replace('r32-offline-operations','r32-qa-offline-operations').replace(/\.\/quarter-session-model\.js(?:\?[^']*)?/,'r32-session-model');
 const storage=fs.readFileSync(path.join(root,'js/core/storage.js'),'utf8').replaceAll('localStorage.getItem(',"localStorage.getItem('qa:'+").replaceAll('localStorage.setItem(',"localStorage.setItem('qa:'+");
 const moduleURL=source=>'data:text/javascript;base64,'+Buffer.from(source).toString('base64');
 const imports={
- 'r32-session-model':'./js/core/quarter-session-model.js',
+ 'r32-session-model':'./js/core/quarter-session-model.js?v=20260908-quarter-session-v2',
  './js/core/firebase.js?v=20260901-scoped-reads-v1':'./tests/fixtures/local-history-firebase.js',
  'https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js':'./tests/fixtures/local-history-firebase.js',
- './js/core/offline-operation-queue.js?v=20260904-offline-v1':moduleURL(queue),
+ './js/core/offline-operation-queue.js?v=20260908-quarter-session-v2':moduleURL(queue),
  './js/core/storage.js':moduleURL(storage)
 };
 fs.writeFileSync(path.join(root,'tests/local-history-qa.html'),html.replace('<head>','<head><base href="../"><script type="importmap">'+JSON.stringify({imports})+'</script>'));

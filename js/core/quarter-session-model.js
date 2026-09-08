@@ -1,4 +1,4 @@
-import { applyHistoryPatch } from './history-journal.js';
+import { applyHistoryPatch } from './history-journal.js?v=20260908-quarter-session-v2';
 
 const canonical=value=>Array.isArray(value)?value.map(canonical):value&&typeof value==='object'?Object.fromEntries(Object.keys(value).sort().filter(key=>value[key]!==undefined).map(key=>[key,canonical(value[key])])):value;
 const equal = (a,b) => JSON.stringify(canonical(a)) === JSON.stringify(canonical(b));

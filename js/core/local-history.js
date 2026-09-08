@@ -1,6 +1,6 @@
-import { HistoryJournal, createHistoryOverlay } from './history-journal.js';
+import { HistoryJournal, createHistoryOverlay } from './history-journal.js?v=20260908-quarter-session-v2';
 import { state } from './state.js';
-import { listOfflineOperations, removeOfflineOperation } from './offline-operation-queue.js?v=20260904-offline-v1';
+import { listOfflineOperations, removeOfflineOperation } from './offline-operation-queue.js?v=20260908-quarter-session-v2';
 export { createHistoryOverlay };
 const journal=new HistoryJournal();
 let ownerUid='';

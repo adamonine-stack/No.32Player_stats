@@ -22,6 +22,6 @@ IndexedDB の metadata は端末UUID・localSequence・直前の clientCreatedAt
 
 ## 検証
 
-`npm ci && npm test`。既存145件と追加22件、計167件。追加テストは20連続入力、stale listener、IndexedDB再接続、オフライン/再試行、応答喪失、二重確定、A→B/B→Aの同期順、時計逆行、同時刻、SHOT+AST/ポイント修正、FT削除、各カウンター、IN/OUT・出場時間、他Qの非ゼロ値保持、競合編集、通常入力ガード、先行操作受領を検証する。Firestore transaction は原子的なテスト用実装を使用する。
+`npm ci && npm test`。既存145件と追加23件、計168件。追加テストは20連続入力、stale listener、IndexedDB再接続、オフライン/再試行、応答喪失、二重確定、A→B/B→Aの同期順、時計逆行、同時刻、SHOT+AST/ポイント修正、FT削除、各カウンター、IN/OUT・出場時間、他Qの非ゼロ値保持、競合編集、通常入力ガード、先行操作受領・依存モジュールのキャッシュ版統一を検証する。Firestore transaction は原子的なテスト用実装を使用する。
 
 `npm run dev` は架空データ専用のブラウザ検証環境を生成する。Firestore通信だけをテスト実装へ差し替え、実際のアプリとIndexedDBで確認する。公開された `tests/local-history-qa.html` も本番DBへ書き込まない隔離ページ。QAページは本番Service Workerへ登録せず、navigation cacheにも入れない。

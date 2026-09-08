@@ -1,4 +1,4 @@
-import { compareHistoryItems } from './history-order.js?v=20260902-history-order-v1';
+import { compareHistoryItems } from './history-order.js?v=20260908-quarter-session-v2';
 const STAT_EVENT_LABELS={ast:'AST',blk:'BLK',passCut:'STL：パスカット',dribbleCut:'STL：ドリブルカット',stealOther:'STL：その他',or:'REB：OR',dr:'REB：DR',passMiss:'TO：パスミス',dribbleMiss:'TO：ドリブルミス',catchMiss:'TO：キャッチミス',violation:'TO：バイオレーション',otherTo:'TO：その他',fta:'FTA',ftm:'FTM',twoPa:'2PA',twoPm:'2PM',threePa:'3PA',threePm:'3PM',pf:'FOUL',fouled:'被FOUL'};
 const integer=value=>Number.isFinite(Number(value))?Math.max(0,Math.trunc(Number(value))):0;
 const timeValue=value=>{if(value?.seconds)return value.seconds*1000;const n=Number(value);if(Number.isFinite(n))return n;const parsed=Date.parse(value||'');return Number.isFinite(parsed)?parsed:0};

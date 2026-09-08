@@ -1,8 +1,8 @@
 import { assertStatsBaseline } from './normal-stats-guard.js';
 import { runTransaction } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js';
 import { db,doc,serverTimestamp } from './firebase.js?v=20260901-scoped-reads-v1';
-import { planAssistMutation } from '../calculations/assist-play-calculations.js?v=20260907-local-history-v1';
-import { buildGameHistory,historyInsertionOverrides } from '../calculations/game-event-calculations.js?v=20260902-history-order-v1';
+import { planAssistMutation } from '../calculations/assist-play-calculations.js?v=20260908-quarter-session-v2';
+import { buildGameHistory,historyInsertionOverrides } from '../calculations/game-event-calculations.js?v=20260908-quarter-session-v2';
 
 function clean(value) {
   if(Array.isArray(value))return value.map(clean);
