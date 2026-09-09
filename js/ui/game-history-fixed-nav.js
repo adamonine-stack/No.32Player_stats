@@ -52,7 +52,6 @@
       return;
     }
 
-    // 最終Q表示中は、履歴の最終アクションではなくモーダル全体の最下部へ移動する。
     if(currentQuarter===lastQuarter){jumpBottom(card);return}
     jumpBottom(card);
   }
@@ -74,27 +73,27 @@
         <button type="button" class="game-list-fixed-nav-btn" data-history-fixed-jump="next-quarter">
           <span aria-hidden="true">↓</span><span>次のQへ</span>
         </button>`;
-      card.appendChild(nav);
+      root.appendChild(nav);
       nav.querySelector('[data-history-fixed-jump="top"]')?.addEventListener('click',jumpTop);
       nav.querySelector('[data-history-fixed-jump="next-quarter"]')?.addEventListener('click',jumpNextQuarter);
-    }else if(nav.parentElement!==card){
-      card.appendChild(nav);
+    }else if(nav.parentElement!==root){
+      root.appendChild(nav);
     }
   }
 
   const style=document.createElement('style');
   style.textContent=`
     #modalRoot .game-history-fixed-nav{
-      position:relative;left:auto;right:auto;bottom:auto;transform:none;
-      width:100%;min-width:0;margin:24px 0 0;z-index:auto;border-radius:13px;
+      position:fixed;left:50%;right:auto;bottom:12px;transform:translateX(-50%);
+      width:min(760px,calc(100vw - 32px));min-width:0;margin:0;z-index:220;border-radius:13px;
     }
-    #modalRoot .game-history-modal{padding-bottom:24px}
+    #modalRoot .game-history-modal{padding-bottom:104px}
     @media(max-width:800px){
       #modalRoot .game-history-fixed-nav{
-        position:relative;left:auto;right:auto;bottom:auto;transform:none;
-        width:100%;min-width:0;margin:24px 0 0;border-radius:13px;
+        position:fixed;left:12px;right:12px;bottom:calc(10px + env(safe-area-inset-bottom));
+        transform:none;width:auto;min-width:0;margin:0;border-radius:13px;
       }
-      #modalRoot .game-history-modal{padding-bottom:24px}
+      #modalRoot .game-history-modal{padding-bottom:112px}
     }
   `;
   document.head.appendChild(style);
