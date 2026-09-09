@@ -17,6 +17,11 @@
     card.scrollTo({top:0,behavior:'smooth'});
   }
 
+  function jumpBottom(card){
+    if(!card)return;
+    card.scrollTo({top:card.scrollHeight,behavior:'smooth'});
+  }
+
   function scrollToUnit(card,unit,block='start'){
     if(!card||!unit)return;
     const cardRect=card.getBoundingClientRect();
@@ -32,7 +37,7 @@
     const card=scroller(),history=list();
     if(!card||!history)return;
     const units=[...history.querySelectorAll(':scope > [data-history-action-id]')];
-    if(!units.length)return;
+    if(!units.length){jumpBottom(card);return}
 
     const cardRect=card.getBoundingClientRect();
     const visible=units.find(unit=>unit.getBoundingClientRect().bottom>cardRect.top+12)||units[0];
@@ -47,12 +52,9 @@
       return;
     }
 
-    // Once the first action of the final Q has been reached, the next press
-    // moves to the final recorded action. This works in both view and edit
-    // modes because both use the same game-history list/navigation.
-    if(currentQuarter===lastQuarter){
-      scrollToUnit(card,units.at(-1),'end');
-    }
+    // 最終Q表示中は、履歴の最終アクションではなくモーダル全体の最下部へ移動する。
+    if(currentQuarter===lastQuarter){jumpBottom(card);return}
+    jumpBottom(card);
   }
 
   function sync(){
@@ -72,22 +74,27 @@
         <button type="button" class="game-list-fixed-nav-btn" data-history-fixed-jump="next-quarter">
           <span aria-hidden="true">↓</span><span>次のQへ</span>
         </button>`;
-      root.appendChild(nav);
+      card.appendChild(nav);
       nav.querySelector('[data-history-fixed-jump="top"]')?.addEventListener('click',jumpTop);
       nav.querySelector('[data-history-fixed-jump="next-quarter"]')?.addEventListener('click',jumpNextQuarter);
+    }else if(nav.parentElement!==card){
+      card.appendChild(nav);
     }
   }
 
   const style=document.createElement('style');
   style.textContent=`
-    #modalRoot .game-history-fixed-nav{z-index:220}
-    #modalRoot .game-history-modal{padding-bottom:84px}
+    #modalRoot .game-history-fixed-nav{
+      position:relative;left:auto;right:auto;bottom:auto;transform:none;
+      width:100%;min-width:0;margin:24px 0 0;z-index:auto;border-radius:13px;
+    }
+    #modalRoot .game-history-modal{padding-bottom:24px}
     @media(max-width:800px){
       #modalRoot .game-history-fixed-nav{
-        left:12px;right:12px;bottom:calc(18px + env(safe-area-inset-bottom));
-        transform:none;width:auto;min-width:0;border-radius:13px;
+        position:relative;left:auto;right:auto;bottom:auto;transform:none;
+        width:100%;min-width:0;margin:24px 0 0;border-radius:13px;
       }
-      #modalRoot .game-history-modal{padding-bottom:96px}
+      #modalRoot .game-history-modal{padding-bottom:24px}
     }
   `;
   document.head.appendChild(style);
