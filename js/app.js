@@ -375,7 +375,7 @@ function bindUpperFilters(){
   document.querySelectorAll('.team-mode-btn').forEach(button=>button.onclick=()=>{state.teamReturn=null;state.teamDetail=null;state.teamPreserveEmptyTarget=false;state.teamMode=button.dataset.teamMode;state.teamTargetId='';render()});
   document.querySelectorAll('.game-period-btn:not(:disabled)').forEach(button=>button.onclick=()=>{setDetailStatsView(button.dataset.periodGame,button.dataset.periodView);renderAndPreserveScroll()});
 }
-function render(){document.body.classList.remove('bg-dashboard','bg-list','bg-stats');document.body.classList.add(state.tab==='home'?'bg-dashboard':(['players','opponentTeams','games'].includes(state.tab)?'bg-list':'bg-stats'));navRender();const map={home,players:playersView,opponentTeams:opponentTeamsView,opponentTeamDetail:opponentTeamDetailView,games:gamesView,gameDetail:gameDetailView,stats:statsViewV2,team:teamViewV2,settings:settingsView};let html=map[state.tab]();if(state.tab==='stats')html=removeDuplicateAnalysisGameCount(html);html=withGameMatchLayout(withPlayingTimeHeading(html));const showSeasonSwitcher=state.tab!=='gameDetail';$('#view').innerHTML=(showSeasonSwitcher?seasonSwitcher():'')+html;if(showSeasonSwitcher)bindSeasonSwitcher();bind();bindUpperFilters();bindDayCalendars();const add=$('#addOpponentTeam');if(add)add.onclick=()=>openOpponentTeamForm();const search=$('#opponentTeamSearch');if(search)search.oninput=e=>{opponentTeamSearch=e.target.value;refreshOpponentTeamResults()};const prefecture=$('#opponentPrefectureFilter');if(prefecture)prefecture.onchange=e=>{opponentPrefectureFilter=e.target.value;refreshOpponentTeamResults()};const sort=$('#opponentTeamSort');if(sort)sort.onchange=e=>{opponentTeamSort=e.target.value;refreshOpponentTeamResults()}}
+function render(){cancelHandleSort();document.body.classList.remove('bg-dashboard','bg-list','bg-stats');document.body.classList.add(state.tab==='home'?'bg-dashboard':(['players','opponentTeams','games'].includes(state.tab)?'bg-list':'bg-stats'));navRender();const map={home,players:playersView,opponentTeams:opponentTeamsView,opponentTeamDetail:opponentTeamDetailView,games:gamesView,gameDetail:gameDetailView,stats:statsViewV2,team:teamViewV2,settings:settingsView};let html=map[state.tab]();if(state.tab==='stats')html=removeDuplicateAnalysisGameCount(html);html=withGameMatchLayout(withPlayingTimeHeading(html));const showSeasonSwitcher=state.tab!=='gameDetail';$('#view').innerHTML=(showSeasonSwitcher?seasonSwitcher():'')+html;if(showSeasonSwitcher)bindSeasonSwitcher();bind();bindUpperFilters();bindDayCalendars();const add=$('#addOpponentTeam');if(add)add.onclick=()=>openOpponentTeamForm();const search=$('#opponentTeamSearch');if(search)search.oninput=e=>{opponentTeamSearch=e.target.value;refreshOpponentTeamResults()};const prefecture=$('#opponentPrefectureFilter');if(prefecture)prefecture.onchange=e=>{opponentPrefectureFilter=e.target.value;refreshOpponentTeamResults()};const sort=$('#opponentTeamSort');if(sort)sort.onchange=e=>{opponentTeamSort=e.target.value;refreshOpponentTeamResults()}}
 function bind(){const lh=$('#loginHome'); if(lh)lh.onclick=loginModal; const lo=$('#logoutHome'); if(lo)lo.onclick=logout; const hps=$('#homePlayerSelect'); if(hps)hps.onclick=openHomePlayerSelect; document.querySelectorAll('.home-stats-mode-btn').forEach(b=>b.onclick=()=>{state.homeStatsMode=b.dataset.homeStatsMode;render()}); const gs=$('#toggleGameSort'); if(gs)gs.onclick=()=>{state.gameSortDirection=state.gameSortDirection==='asc'?'desc':'asc';setGameSortDirection(state.gameSortDirection);state.games=sortGamesByDateAndSameDateOrder(state.games);render()}; const ag=$('#addGame'),agm=$('#addGameMobile'),agh=$('#addGameHome'),aghp=$('#addGameHomePc'); [ag,agm,agh,aghp].filter(Boolean).forEach(b=>b.onclick=()=>gameForm()); const ap=$('#addPlayer'),apm=$('#addPlayerMobile'); [ap,apm].filter(Boolean).forEach(b=>b.onclick=()=>playerForm()); const sp=$('#statPlayer'); if(sp)sp.onchange=e=>{state.analysisReturn=null;state.lastPlayerId=e.target.value;setLastPlayerId(state.lastPlayerId);render()}; document.querySelectorAll('.stat-mode-btn').forEach(b=>b.onclick=()=>{state.analysisReturn=null;state.statsMode=b.dataset.mode;state.targetId='';render()}); document.querySelectorAll('.cat-btn').forEach(b=>b.onclick=()=>{state.analysisReturn=null;state.categoryId=b.dataset.category;state.targetId='';render()}); document.querySelectorAll('.team-mode-btn').forEach(b=>b.onclick=()=>{state.teamReturn=null;state.teamDetail=null;state.teamMode=b.dataset.teamMode;state.teamTargetId='';render()}); const tt=$('#teamTarget'); if(tt)tt.onchange=e=>{state.teamReturn=null;state.teamDetail=null;state.teamTargetId=e.target.value;setDetailStatsView(state.teamTargetId,'game');render()}; const sm=$('#statMode'); if(sm){sm.value=state.statsMode; sm.onchange=e=>{state.analysisReturn=null;state.statsMode=e.target.value;state.targetId='';render()}} const sc=$('#statCategory'); if(sc)sc.onchange=e=>{state.analysisReturn=null;state.categoryId=e.target.value;state.targetId='';render()}; const st=$('#statTarget'); if(st)st.onchange=e=>{state.analysisReturn=null;state.targetId=e.target.value;if(state.statsMode==='game')setDetailStatsView(state.targetId,'game');render()}; const my=$('#monthYear'),mm=$('#monthMonth'); if(my)my.onchange=e=>{state.analysisReturn=null;state.targetId=`${e.target.value}-${mm?.value||'01'}`;render()}; if(mm)mm.onchange=e=>{state.analysisReturn=null;state.targetId=`${my?.value||''}-${e.target.value}`;render()}; const ps=$('#periodStart'); if(ps)ps.onchange=e=>{state.analysisReturn=null;state.periodStart=e.target.value;render()}; const pe=$('#periodEnd'); if(pe)pe.onchange=e=>{state.analysisReturn=null;state.periodEnd=e.target.value;render()}; const dp=$('#detailPlayer'); if(dp)dp.onchange=e=>{state.lastPlayerId=e.target.value;setLastPlayerId(state.lastPlayerId);render()}; document.querySelectorAll('.detail-stat-view-btn').forEach(b=>b.onclick=()=>{setDetailStatsView(b.dataset.detailGame||state.selectedGameId,b.dataset.detailView);render()}); bindGameSorting();bindPlayerSorting();bindNumberSteppers()}
 
 function bindGameSorting(){
@@ -412,23 +412,41 @@ function bindSortHandle(handle,item,itemSelector,saveOrder,canMove){
   handle.addEventListener(startEvent,e=>scheduleHandleSort(handle,item,itemSelector,saveOrder,e,canMove),{passive:false});
   handle.addEventListener('dragstart',e=>{e.preventDefault();e.stopPropagation()});
 }
+let cancelSortPress=null;
+function cancelHandleSort(){cancelSortPress?.();activeSort?.cancel()}
 function scheduleHandleSort(handle,item,itemSelector,saveOrder,e,canMove){
+  if(e.button>0||e.isPrimary===false)return;
   e.preventDefault();e.stopPropagation();if(activeSort||sortPressTimer)return;
-  const startEvent=e;
-  const clear=ev=>{if(ev){ev.preventDefault();ev.stopPropagation()}clearTimeout(sortPressTimer);sortPressTimer=null;document.removeEventListener('pointerup',clear);document.removeEventListener('touchend',clear);document.removeEventListener('touchcancel',clear)};
-  sortPressTimer=setTimeout(()=>{document.removeEventListener('pointerup',clear);document.removeEventListener('touchend',clear);document.removeEventListener('touchcancel',clear);sortPressTimer=null;startHandleSort(handle,item,itemSelector,saveOrder,startEvent,canMove)},180);
-  document.addEventListener('pointerup',clear,{passive:false});
-  document.addEventListener('touchend',clear,{passive:false});
-  document.addEventListener('touchcancel',clear,{passive:false});
+  const terminalEvents=['pointerup','pointercancel','touchend','touchcancel'];
+  const clear=()=>{clearTimeout(sortPressTimer);sortPressTimer=null;cancelSortPress=null;terminalEvents.forEach(type=>document.removeEventListener(type,clear,true));window.removeEventListener('blur',clear);document.removeEventListener('visibilitychange',clear)};
+  cancelSortPress=clear;
+  sortPressTimer=setTimeout(()=>{clear();if(item.isConnected)startHandleSort(handle,item,itemSelector,saveOrder,e,canMove)},180);
+  terminalEvents.forEach(type=>document.addEventListener(type,clear,true));
+  window.addEventListener('blur',clear);document.addEventListener('visibilitychange',clear);
 }
 function startHandleSort(handle,item,itemSelector,saveOrder,e,canMove){
-  e.preventDefault();e.stopPropagation();if(activeSort)return;
-  activeSort={item,itemSelector,saveOrder};item.classList.add('dragging');
+  e.preventDefault();e.stopPropagation();if(activeSort||!item.isConnected)return;
   const touchInput=e.type.startsWith('touch');
   const moveEvent=touchInput?'touchmove':'pointermove',endEvent=touchInput?'touchend':'pointerup';
-  const move=ev=>{if(!activeSort)return;ev.preventDefault();const p=sortPoint(ev);const targets=[...document.querySelectorAll(itemSelector)].filter(el=>el!==item&&(!canMove||canMove(item,el)));if(!targets.length)return;const before=targets.find(el=>{const r=el.getBoundingClientRect();return p.clientY<r.top+r.height/2});const parent=item.parentNode;if(before){parent.insertBefore(item,before)}else{const last=targets[targets.length-1];parent.insertBefore(item,last.nextSibling)}};
-  const end=ev=>{if(ev){ev.preventDefault();ev.stopPropagation()}document.removeEventListener(moveEvent,move);document.removeEventListener(endEvent,end);if(touchInput)document.removeEventListener('touchcancel',end);item.classList.remove('dragging');const done=activeSort;activeSort=null;done.saveOrder()};
-  document.addEventListener(moveEvent,move,{passive:false});document.addEventListener(endEvent,end,{passive:false});if(touchInput)document.addEventListener('touchcancel',end,{passive:false});
+  const cancelEvent=touchInput?'touchcancel':'pointercancel';
+  const parent=item.parentNode,originalNext=item.nextSibling;
+  let finished=false;
+  const matches=ev=>touchInput||ev.pointerId===e.pointerId;
+  const finish=commit=>{
+    if(finished)return;finished=true;
+    document.removeEventListener(moveEvent,move,true);document.removeEventListener(endEvent,end,true);document.removeEventListener(cancelEvent,cancel,true);
+    window.removeEventListener('blur',abort);document.removeEventListener('visibilitychange',abort);
+    item.classList.remove('dragging');activeSort=null;
+    if(!commit){if(item.parentNode===parent&&(!originalNext||originalNext.parentNode===parent))parent.insertBefore(item,originalNext);return}
+    Promise.resolve().then(saveOrder).catch(error=>{console.error('Sort save failed',error);toast('並び順を保存できませんでした。再度お試しください')});
+  };
+  const abort=()=>finish(false);
+  const cancel=ev=>{if(matches(ev))abort()};
+  const move=ev=>{if(!matches(ev)||finished)return;if(!item.isConnected){abort();return}ev.preventDefault();const p=sortPoint(ev);const targets=[...document.querySelectorAll(itemSelector)].filter(el=>el!==item&&(!canMove||canMove(item,el)));if(!targets.length)return;const before=targets.find(el=>{const r=el.getBoundingClientRect();return p.clientY<r.top+r.height/2});const parent=item.parentNode;if(before){parent.insertBefore(item,before)}else{const last=targets[targets.length-1];parent.insertBefore(item,last.nextSibling)}};
+  const end=ev=>{if(!matches(ev))return;ev.preventDefault();ev.stopPropagation();finish(item.isConnected)};
+  activeSort={item,itemSelector,saveOrder,cancel:abort};item.classList.add('dragging');
+  document.addEventListener(moveEvent,move,{passive:false,capture:true});document.addEventListener(endEvent,end,{passive:false,capture:true});document.addEventListener(cancelEvent,cancel,true);
+  window.addEventListener('blur',abort);document.addEventListener('visibilitychange',abort);
 }
 function bindPlayerSorting(){
   if(!state.user) return;
