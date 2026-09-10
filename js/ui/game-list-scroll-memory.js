@@ -1,28 +1,7 @@
 import { state } from "../core/state.js";
 
-let savedScrollY = 0;
-let restoreRequested = false;
-let scrollScheduled = false;
-
 function isGamesTab() {
   return state.tab === "games";
-}
-
-function rememberPosition() {
-  if (!isGamesTab()) return;
-  savedScrollY = Math.max(0, window.scrollY || window.pageYOffset || 0);
-}
-
-function requestRestore() {
-  restoreRequested = true;
-}
-
-function restorePosition() {
-  if (!restoreRequested || !isGamesTab()) return;
-  restoreRequested = false;
-  requestAnimationFrame(() => requestAnimationFrame(() => {
-    window.scrollTo({ top: savedScrollY, behavior: "auto" });
-  }));
 }
 
 function jumpTo(direction) {
@@ -30,7 +9,10 @@ function jumpTo(direction) {
     ? Math.max(0, document.documentElement.scrollHeight - window.innerHeight)
     : 0;
   window.scrollTo({ top: target, behavior: "smooth" });
-  savedScrollY = target;
+}
+
+function gameRegistrationOpen() {
+  return Boolean(document.querySelector("#modalRoot #saveGame"));
 }
 
 function ensureFixedNavigation() {
@@ -54,10 +36,11 @@ function ensureFixedNavigation() {
     nav.querySelector('[data-game-list-fixed-jump="bottom"]')?.addEventListener("click", () => jumpTo("bottom"));
   }
 
-  const visible = isGamesTab() && Boolean(document.querySelector("#view .game-sort-item, #view .game-sort-control"));
+  const visible = isGamesTab()
+    && !gameRegistrationOpen()
+    && Boolean(document.querySelector("#view .game-sort-item, #view .game-sort-control"));
   nav.classList.toggle("is-visible", visible);
   document.body.classList.toggle("has-game-list-fixed-nav", visible);
-  if (visible) restorePosition();
 }
 
 const style = document.createElement("style");
@@ -117,33 +100,20 @@ body.has-game-list-fixed-nav #view{padding-bottom:76px}
 `;
 document.head.appendChild(style);
 
-document.addEventListener("click", event => {
-  const tabButton = event.target.closest("#mobileNav button[data-tab],#pcNav button[data-tab]");
-  if (!tabButton) return;
-  if (isGamesTab() && tabButton.dataset.tab !== "games") rememberPosition();
-  if (tabButton.dataset.tab === "games" && !isGamesTab()) requestRestore();
-}, true);
-
-window.addEventListener("scroll", () => {
-  if (!isGamesTab() || scrollScheduled) return;
-  scrollScheduled = true;
-  requestAnimationFrame(() => {
-    rememberPosition();
-    scrollScheduled = false;
-  });
-}, { passive: true });
-
 let refreshScheduled = false;
-const view = document.getElementById("view");
-if (view) {
-  new MutationObserver(() => {
-    if (refreshScheduled) return;
-    refreshScheduled = true;
-    requestAnimationFrame(() => {
-      refreshScheduled = false;
-      ensureFixedNavigation();
-    });
-  }).observe(view, { childList: true, subtree: true });
+function scheduleRefresh() {
+  if (refreshScheduled) return;
+  refreshScheduled = true;
+  requestAnimationFrame(() => {
+    refreshScheduled = false;
+    ensureFixedNavigation();
+  });
 }
+
+const view = document.getElementById("view");
+if (view) new MutationObserver(scheduleRefresh).observe(view, { childList: true, subtree: true });
+
+const modalRoot = document.getElementById("modalRoot");
+if (modalRoot) new MutationObserver(scheduleRefresh).observe(modalRoot, { childList: true, subtree: true });
 
 ensureFixedNavigation();
