@@ -35,6 +35,14 @@ test('quick stats, free throws, shots, assists and participation use the offline
   assert.match(app, /saveParticipationGame[\s\S]*?submitOfflineCapable\('gamePatch'/);
 });
 
+test('bulk sync promotes draft quarter sessions and is exposed on the games list', () => {
+  assert.match(sync, /export async function confirmAllPendingSessions\(\)/);
+  assert.match(sync, /markQuarterReady\(scope\.gameId, scope\.quarter, currentUser\.uid\)/);
+  assert.match(app, /id="gameBulkSyncAction"/);
+  assert.match(app, /id="bulkSyncPending"/);
+  assert.match(app, /confirmAllPendingSessions\(\)/);
+});
+
 test('service worker caches the app shell and replaces old cache versions', () => {
   assert.match(worker, /APP_SHELL/);
   // SDK requests use the shared gstatic host branch.
