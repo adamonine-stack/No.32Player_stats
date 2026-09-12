@@ -19,7 +19,7 @@ assert.match(shotRegistration, /currentMarkers\.replaceWith\(nextMarkers\)/);
 assert.doesNotMatch(shotRegistration, /button\.onclick=\(\)=>\{typeId=button\.dataset\.shotType;refresh\(\)\}/);
 assert.doesNotMatch(shotRegistration, /\$\('#shotTypeOptions'\)\.innerHTML=allowed\.length/);
 
-assert.match(index, /js\/app\.js\?v=20260912-pc-normal-shot-flow-v1/);
-assert.match(serviceWorker, /r32-shell-20260912-pc-normal-shot-flow-v1/);
+assert.match(index, /js\/app\.js\?v=20260912-pc-normal-shot-flow-v2/);
+assert.match(serviceWorker, /r32-shell-20260912-pc-normal-shot-flow-v2/);
 
 console.log('PC normal shot flow contract: ok');
