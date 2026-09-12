@@ -1,0 +1,109 @@
+/* Persistent action controls for long game/detail/history workflows. */
+
+#detailStatsActions {
+  position: sticky;
+  top: 10px;
+  z-index: 24;
+  padding: 8px;
+  margin-bottom: 10px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(7, 17, 38, .96);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .28);
+}
+
+#modalRoot .game-history-modal > .participation-head {
+  position: sticky;
+  top: 0;
+  z-index: 18;
+  margin: -4px -4px 10px;
+  padding: 8px 8px 10px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(7, 17, 38, .98);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+#modalRoot .game-history-modal > .participation-head #closeModal {
+  flex: 0 0 auto;
+  min-width: 88px;
+}
+
+/* Keep save / close controls reachable while editing history-derived stats
+   and while editing game information. */
+#modalRoot .card:has(.stats-form-grid) .stats-form-actions,
+#modalRoot .card:has(#saveGame) > .game-form-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
+  margin-left: -14px !important;
+  margin-right: -14px !important;
+  margin-bottom: -14px !important;
+  padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+  border-top: 1px solid var(--line);
+  background: rgba(7, 17, 38, .98);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+/* Shot history edit: the close button stays visible while the court and
+   shot options scroll beneath it. */
+#modalRoot > .modal.shot-entry-viewport .shot-modal-head {
+  position: sticky;
+  top: 0;
+  z-index: 22;
+  padding: 6px 4px;
+  margin: -4px -4px 6px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(7, 17, 38, .98);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+@media (max-width: 800px) {
+  #detailStatsActions {
+    top: calc(var(--r32-mobile-safe-top, env(safe-area-inset-top)) + 4px);
+    margin: 0 0 10px;
+    padding: 6px;
+    border-radius: 12px;
+  }
+
+  #modalRoot .game-history-modal > .participation-head {
+    top: 0;
+  }
+
+  #modalRoot .game-history-modal > .participation-head #closeModal {
+    min-width: 74px;
+    min-height: 40px;
+  }
+
+  #modalRoot .card:has(.stats-form-grid) .stats-form-actions,
+  #modalRoot .card:has(#saveGame) > .game-form-actions {
+    gap: 6px;
+  }
+
+  #modalRoot .card:has(.stats-form-grid) .stats-form-actions .btn,
+  #modalRoot .card:has(#saveGame) > .game-form-actions .btn {
+    min-height: 42px;
+  }
+}
+
+@media (min-width: 801px) {
+  #modalRoot .card:has(.stats-form-grid) .stats-form-actions {
+    margin-left: -18px !important;
+    margin-right: -18px !important;
+    margin-bottom: -14px !important;
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  #modalRoot .card:has(#saveGame) > .game-form-actions {
+    margin-left: -20px !important;
+    margin-right: -20px !important;
+    margin-bottom: -18px !important;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+}
