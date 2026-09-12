@@ -28,4 +28,5 @@ assert.ok(!app.includes('id="subSeconds"'));
 assert.match(participationCss, /\.participation-sub-form input,\.participation-sub-form select\{font-size:16px\}/);
 assert.match(app,/participationForm\(id,1,'',\{newGameEntry:true\}\)/);
 assert.match(app,/options\.newGameEntry&&ready\)quickStatsForm\(game\.id,1\)/);
+assert.match(app,/options\.newGameEntry&&quarter===1&&validation\.valid\)\{quickStatsForm\(game\.id,1\);return\}/);
 console.log("participation UI contract: ok");
