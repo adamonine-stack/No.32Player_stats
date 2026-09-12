@@ -1,4 +1,4 @@
-const CACHE_NAME = 'r32-shell-20260912-bulk-sync-v1';
+const CACHE_NAME = 'r32-shell-20260912-pc-normal-shot-flow-v1';
 const APP_SHELL = [
   './', './index.html', './manifest.json', './styles/quick-keyboard.css?v=20260906-v2', './js/ui/quick-keyboard.js?v=20260905-v1', './js/ui/quick-input-touch-fix.js?v=20260906-mouse-v2', './js/ui/quick-latest-history-controls.js?v=20260909-v1', './js/ui/quick-shot-tap-pc-fix.js?v=20260912-pc-flow-v2', './js/ui/game-history-fixed-nav.js?v=20260906-final-action-v1', './js/ui/game-history-edit-position.js?v=20260905-v1', './js/ui/settings-tournament-button-cleanup.js?v=20260906-v1', './js/ui/pending-history-rehydrate.js?v=20260908-quarter-session-v2', './js/ui/game-list-registration-status.js?v=20260906-v1', './js/calculations/game-list-status-calculations.js',
   './assets/r32-background.png', './assets/r32-bg-mobile.svg', './assets/r32-bg-pc.svg', './assets/r32-brand.png', './assets/r32-brand.svg',
