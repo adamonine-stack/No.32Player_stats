@@ -123,6 +123,33 @@ async function runOfflineSynchronization() {
   }
 }
 
+export async function confirmAllPendingSessions() {
+  await journalWrites;
+  if (!currentUser) {
+    const pending = await status('idle');
+    return {sessions: 0, pending};
+  }
+  const operations = await listOfflineOperations();
+  const drafts = operations.filter(operation =>
+    operation.sessionVersion &&
+    operation.ownerUid === currentUser.uid &&
+    !operation.committed &&
+    operation.syncState === 'draft'
+  );
+  const scopes = [...new Map(drafts.map(operation => {
+    const quarter = Number(operation.quarter);
+    return [`${operation.gameId}:${quarter}`, {gameId: operation.gameId, quarter}];
+  })).values()];
+  for (const scope of scopes) await markQuarterReady(scope.gameId, scope.quarter, currentUser.uid);
+  if (activeSync) await activeSync;
+  await synchronizeOfflineOperations();
+  const remaining = (await listOfflineOperations()).filter(operation =>
+    (!operation.ownerUid || operation.ownerUid === currentUser.uid) &&
+    !operation.committed
+  );
+  return {sessions: scopes.length, pending: remaining.length};
+}
+
 export async function confirmQuarterSession(gameId,quarter) {
   await journalWrites;
   const operations=(await listOfflineOperations()).filter(op=>op.sessionVersion&&op.gameId===gameId&&op.quarter===Number(quarter)&&op.ownerUid===currentUser?.uid&&!op.committed);
