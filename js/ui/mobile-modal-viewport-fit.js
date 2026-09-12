@@ -7,6 +7,7 @@
   }
 
   function configureModal() {
+    if (!window.matchMedia('(max-width: 600px)').matches) return;
     const modal = document.querySelector('#modalRoot > .modal');
     const card = modal?.querySelector(':scope > .card');
     if (!modal || !card) return;
