@@ -269,13 +269,10 @@
     const svg = event.target.closest?.('#shotCourtRoot .shot-court');
     if (!svg) return;
 
-    event.preventDefault();
-    event.stopPropagation();
-    try { document.body.setPointerCapture?.(event.pointerId); } catch (_) {}
-
     drag = {
       svg,
       pointerId: event.pointerId,
+      pointerType: event.pointerType,
       startClientX: event.clientX,
       startClientY: event.clientY,
       lastClientX: event.clientX,
@@ -287,22 +284,34 @@
       magnifier: null
     };
 
-    if (event.pointerType === 'mouse') activateDrag();
-    else drag.holdTimer = window.setTimeout(activateDrag, CONFIG.longPressMs);
+    if (event.pointerType === 'mouse') return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    try { document.body.setPointerCapture?.(event.pointerId); } catch (_) {}
+    drag.holdTimer = window.setTimeout(activateDrag, CONFIG.longPressMs);
   }, { capture: true, passive: false });
 
   document.addEventListener('pointermove', event => {
     if (!drag || drag.pointerId !== event.pointerId) return;
-    event.preventDefault();
-    event.stopPropagation();
 
     drag.lastClientX = event.clientX;
     drag.lastClientY = event.clientY;
 
     if (!drag.active && !drag.activating) {
       const distance = Math.hypot(event.clientX - drag.startClientX, event.clientY - drag.startClientY);
-      if (distance >= CONFIG.moveStartPx) activateDrag();
+      if (distance >= CONFIG.moveStartPx) {
+        if (drag.pointerType === 'mouse') {
+          try { document.body.setPointerCapture?.(event.pointerId); } catch (_) {}
+        }
+        activateDrag();
+      }
     }
+
+    if (!drag.active && !drag.activating && drag.pointerType === 'mouse') return;
+
+    event.preventDefault();
+    event.stopPropagation();
     if (drag.active) updatePreview(event.clientX, event.clientY);
   }, { capture: true, passive: false });
 
@@ -310,8 +319,13 @@
     if (!drag || drag.pointerId !== event.pointerId) return;
     const current = drag;
     drag = null;
-    clearDragVisual(current);
 
+    if (current.pointerType === 'mouse' && !current.active && !current.activating) {
+      window.clearTimeout(current.holdTimer);
+      return;
+    }
+
+    clearDragVisual(current);
     event.preventDefault();
     event.stopPropagation();
     suppressNativeClick = true;
