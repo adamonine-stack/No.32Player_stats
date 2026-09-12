@@ -844,14 +844,87 @@ function assistHistoryEditor(game,item){
   if($('#assistExisting'))$('#assistExisting').onclick=()=>chooseExisting(existingForShot(),current.eventId);
 }
 
-function quickShotRegistration(game,quarter,remainingSeconds,player){let areaId='',typeId='',shotX=null,shotY=null,wasFouled=false,result='';const draw=(preserveScroll=false)=>{const previousCard=document.querySelector('#modalRoot>.modal>.card'),previousScrollTop=preserveScroll?(previousCard?.scrollTop||0):0;modal(`${quickSelectedHeader(player)}<div class="shot-modal-head"><div><h2>シュート位置を選択</h2><p class="sub">位置 → 種類 → Made / Miss</p></div><button type="button" class="btn ghost shot-close">×</button></div><div id="shotCourtRoot">${shotCourtSvg([],shotX!=null?{shotX,shotY,result:result||'current',wasFouled}:null)}</div><div class="shot-panel"><div class="shot-summary"><span>エリア：<b>${escapeHtml(SHOT_AREAS[areaId]?.label||'未選択')}</b></span><span>種類：<b id="quickShotTypeSummary">${escapeHtml(SHOT_TYPES[typeId]||'未選択')}</b></span></div><div class="shot-type-grid">${allowedShotTypes(areaId).map(id=>`<button type="button" class="btn ghost shot-type ${id===typeId?'selected':''}" data-quick-shot-type="${id}">${shotTypeButtonLabel(id)}</button>`).join('')||'<p class="sub">コート上の位置を選択してください</p>'}</div><label class="shot-foul-check"><input type="checkbox" id="quickShotFoul" ${wasFouled?'checked':''}> シュートファウルを受けた</label><div class="shot-result-grid"><button class="btn shot-result made" data-quick-shot-result="made" ${areaId&&typeId?'':'disabled'}>Made</button><button class="btn shot-result missed" data-quick-shot-result="missed" ${areaId&&typeId?'':'disabled'}>Miss</button></div></div>`);document.querySelector('#modalRoot>.modal')?.classList.add('shot-modal','shot-entry-viewport','quick-shot-modal');document.querySelector('#modalRoot>.modal').dataset.quickKeyboard='true';$('#quickChangePlayer').onclick=()=>quickStatsForm(game.id,quarter);$('.shot-close').onclick=()=>quickActionSheet(game,quarter,player,remainingSeconds);const svg=$('#shotCourtRoot .shot-court');svg.onclick=event=>{const point=courtPoint(event,svg),nextArea=detectShotArea(point.x,point.y)||'';shotX=point.x;shotY=point.y;if(nextArea!==areaId)typeId='';areaId=nextArea;const allowed=allowedShotTypes(areaId);if(allowed.length===1)typeId=allowed[0];draw(true)};document.querySelectorAll('[data-quick-shot-type]').forEach(button=>button.onclick=()=>{typeId=button.dataset.quickShotType;document.querySelectorAll('[data-quick-shot-type]').forEach(item=>item.classList.toggle('selected',item.dataset.quickShotType===typeId));const summary=$('#quickShotTypeSummary');if(summary)summary.textContent=SHOT_TYPES[typeId]||'未選択';document.querySelectorAll('[data-quick-shot-result]').forEach(item=>item.disabled=!(areaId&&typeId))});$('#quickShotFoul').onchange=event=>{wasFouled=event.target.checked};document.querySelectorAll('[data-quick-shot-result]').forEach(button=>button.onclick=async()=>{
-  result=button.dataset.quickShotResult;
-  const operation=prepareHistoryOperation(game),shot={...createShot({gameId:game.id,playerId:player.id,quarter:getGameStatsRegistrationType(game)==='quarter'?quarter:null,shotArea:areaId,shotX,shotY,shotType:typeId,result,wasFouled,remainingSeconds,createdAt:operation.createdAt}),sequence:operation.sequence,onCourtPlayerIds:quickPlayers(game,quarter,remainingSeconds).map(p=>p.id)};
-  const save=async assistPlayerId=>{const outcome=await saveAssistPlay(game,{kind:'saveShot',shot,assistPlayerId,returnToQuick:true},quarter);quickSetSession(game,quarter,{undo:null});toast(outcome.queued?`#${player.number||'-'} シュート${assistPlayerId?'＋AST':''}を端末に保存しました（未同期）`:`#${player.number||'-'} シュート${assistPlayerId?'＋AST':''}を登録しました`);quickAfterSave(game,quarter)};
-  if(result==='made'){assistSelectionSheet(game,quarter,shot,save,()=>draw(true));return}
-  document.querySelectorAll('[data-quick-shot-result]').forEach(b=>b.disabled=true);
-  try{await save(null)}catch(error){console.error(error);toast(error.message||'保存に失敗しました');draw(true)}
-});if(preserveScroll){const restore=()=>{const nextCard=document.querySelector('#modalRoot>.modal>.card');if(nextCard)nextCard.scrollTop=previousScrollTop};restore();requestAnimationFrame(()=>{restore();requestAnimationFrame(restore)})}};draw()}
+function quickShotRegistration(game,quarter,remainingSeconds,player){
+  let areaId='',typeId='',shotX=null,shotY=null,wasFouled=false,result='';
+
+  const updateResultState=()=>{
+    document.querySelectorAll('[data-quick-shot-result]').forEach(button=>button.disabled=!(areaId&&typeId));
+  };
+
+  const selectType=id=>{
+    typeId=id||'';
+    document.querySelectorAll('[data-quick-shot-type]').forEach(button=>button.classList.toggle('selected',button.dataset.quickShotType===typeId));
+    const typeSummary=$('#quickShotTypeSummary');
+    if(typeSummary)typeSummary.textContent=SHOT_TYPES[typeId]||'未選択';
+    updateResultState();
+  };
+
+  const bindTypeButtons=()=>{
+    document.querySelectorAll('[data-quick-shot-type]').forEach(button=>button.onclick=()=>selectType(button.dataset.quickShotType));
+  };
+
+  const refreshTypeControls=()=>{
+    const areaSummary=$('#quickShotAreaSummary');
+    if(areaSummary)areaSummary.textContent=SHOT_AREAS[areaId]?.label||'未選択';
+    const typeSummary=$('#quickShotTypeSummary');
+    if(typeSummary)typeSummary.textContent=SHOT_TYPES[typeId]||'未選択';
+    const root=$('#quickShotTypeOptions');
+    if(root){
+      const allowed=allowedShotTypes(areaId);
+      root.innerHTML=allowed.map(id=>`<button type="button" class="btn ghost shot-type ${id===typeId?'selected':''}" data-quick-shot-type="${id}">${shotTypeButtonLabel(id)}</button>`).join('')||'<p class="sub">コート上の位置を選択してください</p>';
+      bindTypeButtons();
+    }
+    updateResultState();
+  };
+
+  const bindCourt=()=>{
+    const svg=$('#shotCourtRoot .shot-court');
+    if(!svg)return;
+    svg.onclick=event=>{
+      const point=courtPoint(event,svg),nextArea=detectShotArea(point.x,point.y)||'';
+      shotX=point.x;
+      shotY=point.y;
+      if(nextArea!==areaId)typeId='';
+      areaId=nextArea;
+      const allowed=allowedShotTypes(areaId);
+      if(allowed.length===1)typeId=allowed[0];
+      $('#shotCourtRoot').innerHTML=shotCourtSvg([],shotX!=null?{shotX,shotY,result:result||'current',wasFouled}:null);
+      bindCourt();
+      refreshTypeControls();
+    };
+  };
+
+  const draw=(restoreScrollTop=null)=>{
+    modal(`${quickSelectedHeader(player)}<div class="shot-modal-head"><div><h2>シュート位置を選択</h2><p class="sub">位置 → 種類 → Made / Miss</p></div><button type="button" class="btn ghost shot-close">×</button></div><div id="shotCourtRoot">${shotCourtSvg([],shotX!=null?{shotX,shotY,result:result||'current',wasFouled}:null)}</div><div class="shot-panel"><div class="shot-summary"><span>エリア：<b id="quickShotAreaSummary">${escapeHtml(SHOT_AREAS[areaId]?.label||'未選択')}</b></span><span>種類：<b id="quickShotTypeSummary">${escapeHtml(SHOT_TYPES[typeId]||'未選択')}</b></span></div><div class="shot-type-grid" id="quickShotTypeOptions">${allowedShotTypes(areaId).map(id=>`<button type="button" class="btn ghost shot-type ${id===typeId?'selected':''}" data-quick-shot-type="${id}">${shotTypeButtonLabel(id)}</button>`).join('')||'<p class="sub">コート上の位置を選択してください</p>'}</div><label class="shot-foul-check"><input type="checkbox" id="quickShotFoul" ${wasFouled?'checked':''}> シュートファウルを受けた</label><div class="shot-result-grid"><button class="btn shot-result made" data-quick-shot-result="made" ${areaId&&typeId?'':'disabled'}>Made</button><button class="btn shot-result missed" data-quick-shot-result="missed" ${areaId&&typeId?'':'disabled'}>Miss</button></div></div>`);
+    const modalRoot=document.querySelector('#modalRoot>.modal');
+    modalRoot?.classList.add('shot-modal','shot-entry-viewport','quick-shot-modal');
+    if(modalRoot)modalRoot.dataset.quickKeyboard='true';
+    $('#quickChangePlayer').onclick=()=>quickStatsForm(game.id,quarter);
+    $('.shot-close').onclick=()=>quickActionSheet(game,quarter,player,remainingSeconds);
+    bindCourt();
+    bindTypeButtons();
+    $('#quickShotFoul').onchange=event=>{wasFouled=event.target.checked};
+    document.querySelectorAll('[data-quick-shot-result]').forEach(button=>button.onclick=async()=>{
+      result=button.dataset.quickShotResult;
+      const operation=prepareHistoryOperation(game),shot={...createShot({gameId:game.id,playerId:player.id,quarter:getGameStatsRegistrationType(game)==='quarter'?quarter:null,shotArea:areaId,shotX,shotY,shotType:typeId,result,wasFouled,remainingSeconds,createdAt:operation.createdAt}),sequence:operation.sequence,onCourtPlayerIds:quickPlayers(game,quarter,remainingSeconds).map(p=>p.id)};
+      const save=async assistPlayerId=>{const outcome=await saveAssistPlay(game,{kind:'saveShot',shot,assistPlayerId,returnToQuick:true},quarter);quickSetSession(game,quarter,{undo:null});toast(outcome.queued?`#${player.number||'-'} シュート${assistPlayerId?'＋AST':''}を端末に保存しました（未同期）`:`#${player.number||'-'} シュート${assistPlayerId?'＋AST':''}を登録しました`);quickAfterSave(game,quarter)};
+      if(result==='made'){
+        const currentScroll=document.querySelector('#modalRoot>.modal>.card')?.scrollTop||0;
+        assistSelectionSheet(game,quarter,shot,save,()=>draw(currentScroll));
+        return;
+      }
+      document.querySelectorAll('[data-quick-shot-result]').forEach(item=>item.disabled=true);
+      try{await save(null)}catch(error){console.error(error);toast(error.message||'保存に失敗しました');updateResultState()}
+    });
+    if(restoreScrollTop!=null){
+      const restore=()=>{const card=document.querySelector('#modalRoot>.modal>.card');if(card)card.scrollTop=restoreScrollTop};
+      restore();
+      requestAnimationFrame(()=>{restore();requestAnimationFrame(restore)});
+    }
+  };
+
+  draw();
+}
 
 function quickStatsForm(gameId,forcedQuarter=null){if(!requireLogin())return;const game=state.games.find(item=>item.id===gameId);if(!game)return;const qCount=Math.max(1,num(game.quarters||4)),view=detailStatsView(game),quarter=Math.min(qCount,Math.max(1,num(forcedQuarter||(view.startsWith('q')?view.replace('q',''):1)))),required=participationRequired(game)&&getGameStatsRegistrationType(game)==='quarter',participation=quarterParticipation(game,quarter),valid=participation.starters?.length===5&&validateQuarterParticipation({...participation,durationSeconds:quarterDurationSeconds(game)}).valid;if(required&&!valid){participationForm(gameId,quarter);toast(`${quarter}Qの開始5人を設定してください`);return}const session=quickSession(game,quarter),duration=quarterDurationSeconds(game),players=quickPlayers(game,quarter,session.remainingSeconds);modal(`<div class="quick-head"><div><small>${escapeHtml(game.tournament||'R32')}</small><h2>選手を選択</h2><p>Q${quarter} vs ${escapeHtml(game.opponent||'')}</p></div><div class="quick-head-actions"><button type="button" class="btn ghost" id="normalStatsMode">通常入力</button><button type="button" class="btn ghost quick-head-close" data-quick-close>×</button></div></div><label class="quick-clock-control">残り時間<input id="quickClock" type="text" inputmode="numeric" value="${quickClockValue(session.remainingSeconds)}"><small>例 6:32 → 632</small></label><div class="quick-player-grid">${players.map(player=>`<button class="quick-player" data-quick-player="${player.id}"><b>#${escapeHtml(player.number||'-')}</b><span>${escapeHtml(player.name||'')}</span></button>`).join('')}</div>${latestHistoryHtml(game)}${quarterSyncHtml(game,quarter)}<div class="quick-footer"><button class="btn ghost" id="quickUndo" ${session.undo?'':'disabled'}>1つ戻す</button><button class="btn ghost" id="quickHistory">履歴</button></div>`);quickModalClass();const clock=$('#quickClock'),remaining=()=>{const parsed=quickParseClock(clock.value,duration);return parsed.valid?parsed.remainingSeconds:null};clock.oninput=()=>{clock.value=clock.value.replace(/\D/g,'').slice(0,4);const value=remaining();if(value!=null)quickSetSession(game,quarter,{remainingSeconds:value})};$('#normalStatsMode').onclick=()=>statsEntryForm(gameId,quarter,'normal');document.querySelectorAll('[data-quick-close]').forEach(button=>button.onclick=closeModal);$('#quickHistory').onclick=()=>gameHistoryForm(gameId);bindLatestHistory(game,quarter);bindQuarterSync(game);document.querySelectorAll('[data-quick-player]').forEach(button=>button.onclick=()=>{const value=remaining();if(value==null){toast('残り時間を確認してください');return}quickSetSession(game,quarter,{remainingSeconds:value});quickActionSheet(game,quarter,players.find(item=>item.id===button.dataset.quickPlayer),value)});$('#quickUndo').onclick=async()=>{const current=quickSession(game,quarter);if(!current.undo)return;await current.undo.run();quickSetSession(game,quarter,{undo:null});toast(`${current.undo.label} を取り消しました`);quickStatsForm(gameId,quarter)}}
 
