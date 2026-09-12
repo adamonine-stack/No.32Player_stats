@@ -9,6 +9,7 @@ test('player picker renders latest three canonical history actions newest first'
   assert.match(app,/groupGameHistory\(items\)\.filter\(item=>item\.precise\)\.slice\(-3\)\.reverse\(\)/);
   assert.match(app,/\$\{latestHistoryHtml\(game\)\}/);
   assert.match(app,/履歴をすべて見る/);
+  assert.match(app,/id="quickHistoryAll"[^>]*onclick="openGameHistory\(this\.dataset\.gameHistoryId\)"/);
   assert.match(css,/\.quick-latest-history/);
 });
 
