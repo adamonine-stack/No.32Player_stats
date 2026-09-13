@@ -39,7 +39,7 @@ import { TOURNAMENT_2026_SHIGA_U15_MEN, TEAMS_2026_SHIGA_U15_MEN, MATCHES_2026_S
 import { TOURNAMENT_2026_KYOTO_U15_MEN, TEAMS_2026_KYOTO_U15_MEN, MATCHES_2026_KYOTO_U15_MEN } from "./data/2026-kyoto-u15-men.js";
 import { TOURNAMENT_2026_KINKI_U15_MEN, TEAMS_2026_KINKI_U15_MEN, MATCHES_2026_KINKI_U15_MEN } from "./data/2026-kinki-u15-men.js";
 import { TOURNAMENT_2025_OSAKA_JR_WINTER_CUP_MEN, TEAMS_2025_OSAKA_JR_WINTER_CUP_MEN, OSAKA_2025_DUPLICATE_TEAM_MERGES } from "./data/2025-osaka-jr-winter-cup-men.js";
-import { findImportedTeamMatch, normalizeTeamNameForMatching, normalizeTournamentNameForMatching } from "./calculations/team-name-matching.js";
+import { findImportedTeamMatch, findExistingTournamentTeam, normalizeTeamNameForMatching, normalizeTournamentNameForMatching } from "./calculations/team-name-matching.js";
 const quickInputStyles=document.createElement('link');quickInputStyles.rel='stylesheet';quickInputStyles.href='./styles/quick-input.css?v=20260908-quarter-session-v1';document.head.appendChild(quickInputStyles);
 if('serviceWorker' in navigator && !location.pathname.includes('/tests/'))navigator.serviceWorker.register('./service-worker.js?v=20260908-quarter-session-v2').catch(error=>console.warn('Service worker registration failed',error));
 installOfflineSyncListeners();
@@ -1118,7 +1118,7 @@ const OFFICIAL_2026_PREFECTURE_RESULTS=[
   [TOURNAMENT_2026_KYOTO_U15_MEN,TEAMS_2026_KYOTO_U15_MEN]
 ];
 function opponentIdentityNames(team={}){return [team.teamName,team.normalizedTeamName,...(Array.isArray(team.aliases)?team.aliases:[])].map(normalizeImportedTeamName).filter(Boolean)}
-function uniqueExistingTeam(imported,teams){const key=normalizeImportedTeamName(imported.teamName),matches=teams.filter(team=>(!imported.prefecture||team.prefecture===imported.prefecture)&&opponentIdentityNames(team).includes(key));return matches.length===1?matches[0]:null}
+function uniqueExistingTeam(imported,teams){const prefectureTournament=OFFICIAL_2026_PREFECTURE_RESULTS.find(([tournament])=>tournament.prefecture===imported.prefecture)?.[0],match=findExistingTournamentTeam(imported,teams,prefectureTournament?.id||'');return match.team}
 function corrected2026PrefecturePlacements(team){let placements=opponentPlacements(team),changed=false;for(const [tournament,results] of OFFICIAL_2026_PREFECTURE_RESULTS){const imported=results.find(item=>tournament.prefecture===team.prefecture&&opponentIdentityNames(team).includes(normalizeImportedTeamName(item.teamName)));if(!imported)continue;const index=placements.findIndex(item=>item.tournamentId===tournament.id);if(index<0)continue;const rank=placementLabelToRank(imported.placementLabel),next={...placements[index],tournamentName:tournament.name,tournamentType:tournament.type,tournamentLevel:'prefecture',season:'2026-27',year:2026,placement:imported.placementLabel,placementLabel:imported.placementLabel,numericPlacement:imported.placement??null,placementRank:rank,seasonRank:rank,rankValue:rank,rankMethod:'official-final-placement',updatedAt:new Date().toISOString()};placements=placements.map((item,itemIndex)=>itemIndex===index?next:item);changed=true}return {placements,changed}}
 async function recalculateTeamRankAndPower(teams,season='2026-27'){
   const strengths=calculatePrefectureStrengthBonuses(teams,{season});let updated=0;

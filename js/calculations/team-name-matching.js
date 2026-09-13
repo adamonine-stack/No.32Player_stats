@@ -49,4 +49,21 @@ export function findImportedTeamMatch(importedName,category,teams=[]){
   return {result:'NEW_TEAM',team:null,candidates:[]};
 }
 
+export function findExistingTournamentTeam(imported,teams=[],preferredTournamentId=''){
+  const normalizedName=normalizeTeamNameForMatching(imported?.teamName);
+  const candidates=uniqueCandidates(teams.filter(team=>{
+    if(imported?.prefecture&&team.prefecture!==imported.prefecture)return false;
+    return candidateNames(team).some(name=>normalizeTeamNameForMatching(name)===normalizedName);
+  }));
+  if(candidates.length===1)return {result:'EXACT_MATCH',team:candidates[0],candidates};
+  if(candidates.length>1&&preferredTournamentId){
+    const preferred=candidates.filter(team=>{
+      const placements=Array.isArray(team.tournamentPlacements)?team.tournamentPlacements:[];
+      return team.sourceTournamentId===preferredTournamentId||placements.some(item=>item?.tournamentId===preferredTournamentId);
+    });
+    if(preferred.length===1)return {result:'PREFERRED_TOURNAMENT_MATCH',team:preferred[0],candidates};
+  }
+  return {result:candidates.length?'AMBIGUOUS':'NOT_FOUND',team:null,candidates};
+}
+
 export function normalizeTournamentNameForMatching(name){return normalizeTeamNameForMatching(name)}
