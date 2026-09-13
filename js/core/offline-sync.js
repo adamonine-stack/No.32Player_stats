@@ -123,6 +123,26 @@ async function runOfflineSynchronization() {
   }
 }
 
+
+export async function discardPendingOperationsForGame(gameId) {
+  await journalWrites;
+  if (!gameId) return {discarded: 0};
+  if (activeSync) {
+    try { await activeSync; } catch {}
+  }
+  const operations = (await listOfflineOperations()).filter(operation =>
+    operation.gameId === gameId ||
+    operation.payload?.gameId === gameId ||
+    operation.payload?.game?.id === gameId
+  );
+  for (const operation of operations) {
+    await removeOfflineOperation(operation.id);
+    announceOperation({action: 'discarded', operationId: operation.id});
+  }
+  await status(globalThis.navigator?.onLine === false ? 'offline' : 'idle');
+  return {discarded: operations.length};
+}
+
 export async function confirmAllPendingSessions() {
   await journalWrites;
   if (!currentUser) {
