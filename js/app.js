@@ -86,7 +86,35 @@ function updateGameBulkSyncAction(){const host=$('#gameBulkSyncAction');if(!host
 async function bulkSyncPending(){const button=$('#bulkSyncPending');if(button)button.disabled=true;try{const result=await confirmAllPendingSessions();if(result.pending)toast(`一括同期後も未同期が ${result.pending}件残っています`);else toast('未同期データをすべて同期しました')}catch(error){console.error(error);toast(error.message||'一括同期に失敗しました')}finally{updateGameBulkSyncAction()}}
 function renderSyncStatus(detail={}){latestSyncStatus={...latestSyncStatus,...detail,pending:Number(detail.pending)||0};const pending=latestSyncStatus.pending,stateName=latestSyncStatus.state||'idle',offline=latestSyncStatus.online===false||stateName==='offline',label=offline?`オフライン${pending?`・未同期 ${pending}件`:''}`:stateName==='syncing'?`同期中・残り ${pending}件`:stateName==='error'?`同期エラー・未同期 ${pending}件`:pending?`未同期 ${pending}件`:'クラウド接続済み';for(const id of ['cloudStatus','syncStatus']){const element=$('#'+id);if(!element)continue;element.textContent=label;element.dataset.syncState=offline?'offline':stateName;element.title=pending?'タップして同期を再試行':'同期済み';}updateGameBulkSyncAction()}
 window.addEventListener('r32-sync-status',event=>renderSyncStatus(event.detail));
-onAuthStateChanged(auth,async u=>{state.user=u; $('#pcLoginBtn').textContent=u?'ログアウト':'管理者としてログイン'; await firestorePersistenceReady;await restoreLocalHistory(u).catch(error=>console.warn('Local history restore failed',error));syncOnce();await initializeOfflineSync(u);render()});let did=false;function syncOnce(){if(!did){did=true;sync()}}
+const GLANZ_20260329_REPAIR_MARKER='repair20260329GlanzQuarterV1';
+async function repairGlanz20260329QuarterRegistration(){
+  if(!state.user)return {status:'not-authenticated'};
+  const gameSnapshot=await getDocs(query(collection(db,'games'),where('date','==','2026-03-29')));
+  const matches=gameSnapshot.docs.filter(item=>{const data=item.data()||{},name=String(data.opponentTeamName||data.opponent||'').trim().toLowerCase();return name==='glanz'});
+  if(matches.length!==1){console.warn('Glanz 2026-03-29 repair skipped: expected exactly one game, found',matches.length);return {status:matches.length?'ambiguous':'not-found',count:matches.length}}
+  const gameDoc=matches[0],game={id:gameDoc.id,...gameDoc.data()};
+  if(game?.[GLANZ_20260329_REPAIR_MARKER]?.completed===true)return {status:'already-repaired',gameId:game.id};
+  if(game.statsRegistrationType==='quarter'){console.warn('Glanz 2026-03-29 repair skipped: game is already quarter mode without repair marker');return {status:'already-quarter',gameId:game.id}}
+  const statSnapshot=await getDocs(query(collection(db,'stats'),where('gameId','==',game.id)));
+  const reserved=new Set(['gameId','playerId','seasonId','registrationType','quarters','createdAt','updatedAt','appliedOperationIds','appliedOperations','operationIds','lastOperationId','syncMeta']);
+  for(const statDoc of statSnapshot.docs){
+    const current=statDoc.data()||{},source={};
+    for(const [key,value] of Object.entries(current))if(!reserved.has(key))source[key]=value;
+    const quarters=current.quarters&&typeof current.quarters==='object'&&!Array.isArray(current.quarters)?current.quarters:{};
+    const existingQ1=quarters.q1&&typeof quarters.q1==='object'&&!Array.isArray(quarters.q1)?quarters.q1:{};
+    await setDoc(doc(db,'stats',statDoc.id),{registrationType:'quarter',quarters:{...quarters,q1:{...existingQ1,...source,registered:true,quarter:1}},updatedAt:serverTimestamp()},{merge:true});
+  }
+  const previousEvents=Array.isArray(game.playEvents)?game.playEvents:[];
+  const playEvents=previousEvents.filter(item=>Number.isFinite(Number(item?.sequence))&&Number(item.sequence)>0).map(item=>({...item,quarter:1}));
+  const keptEventIds=new Set(playEvents.map(item=>item?.id).filter(Boolean));
+  const gamePatch={statsRegistrationType:'quarter',playEvents,[GLANZ_20260329_REPAIR_MARKER]:{completed:true,migratedStatDocuments:statSnapshot.size,removedUnsequencedEvents:previousEvents.length-playEvents.length,completedAt:serverTimestamp()},updatedAt:serverTimestamp()};
+  if(game.eventSequenceOverrides&&typeof game.eventSequenceOverrides==='object')gamePatch.eventSequenceOverrides=Object.fromEntries(Object.entries(game.eventSequenceOverrides).filter(([id])=>keptEventIds.has(id)));
+  if(game.historyInsertionOverrides&&typeof game.historyInsertionOverrides==='object')gamePatch.historyInsertionOverrides=Object.fromEntries(Object.entries(game.historyInsertionOverrides).filter(([id])=>keptEventIds.has(id)));
+  await setDoc(doc(db,'games',game.id),gamePatch,{merge:true});
+  return {status:'repaired',gameId:game.id,migratedStatDocuments:statSnapshot.size,removedUnsequencedEvents:previousEvents.length-playEvents.length};
+}
+
+onAuthStateChanged(auth,async u=>{state.user=u; $('#pcLoginBtn').textContent=u?'ログアウト':'管理者としてログイン'; await firestorePersistenceReady;await restoreLocalHistory(u).catch(error=>console.warn('Local history restore failed',error));syncOnce();await initializeOfflineSync(u);if(u)repairGlanz20260329QuarterRegistration().then(result=>{if(result?.status==='repaired')toast('2026/3/29 Glanz戦を1Q登録へ修復しました')}).catch(error=>console.error('Glanz 2026-03-29 repair failed',error));render()});let did=false;function syncOnce(){if(!did){did=true;sync()}}
 for(const id of ['cloudStatus','syncStatus'])$('#'+id)?.addEventListener('click',()=>synchronizeOfflineOperations());
 $('#pcLoginBtn').onclick=()=>state.user?logout():loginModal();
 function loginModal(){modal(`<h2>ログイン</h2><div class="grid"><label>メール<input id="loginEmail" autocomplete="username" type="email"></label><label>パスワード<input id="loginPass" autocomplete="current-password" type="password"></label><button class="btn" id="doLogin">ログイン</button><button class="btn ghost" id="closeModal">閉じる</button></div>`);$('#doLogin').onclick=async()=>{try{await signInWithEmailAndPassword(auth,$('#loginEmail').value,$('#loginPass').value);closeModal();toast('ログインしました')}catch(e){toast('ログイン失敗')}};$('#closeModal').onclick=closeModal}
