@@ -4,7 +4,7 @@ import { createHistoryOverlay, projectLocalHistory, receiveHistoryDocuments, res
 import { assistCandidates, isAssistEvent, isMadeEvent, nearbyMadeShots, planAssistMutation } from './calculations/assist-play-calculations.js?v=20260908-quarter-session-v2';
 import { commitAssistMutation } from './core/assist-play-store.js?v=20260908-quarter-session-v2';
 import { commitQuickStatMutation, commitQuickFreeThrowMutation } from './core/quick-history-store.js?v=20260908-quarter-session-v2';
-import { initializeOfflineSync, installOfflineSyncListeners, submitOfflineCapable, synchronizeOfflineOperations, confirmQuarterSession, confirmAllPendingSessions, quarterSessionStatus } from './core/offline-sync.js?v=20260912-bulk-sync-v1';
+import { initializeOfflineSync, installOfflineSyncListeners, submitOfflineCapable, synchronizeOfflineOperations, confirmQuarterSession, confirmAllPendingSessions, quarterSessionStatus, discardPendingOperationsForGame } from './core/offline-sync.js?v=20260913-game-delete-v1';
 import { auth, db, firestorePersistenceReady, signInWithEmailAndPassword, signOut, onAuthStateChanged, collection, doc, getDoc, getDocs, setDoc, deleteDoc, onSnapshot, query, where, serverTimestamp } from "./core/firebase.js?v=20260901-scoped-reads-v1";
 import { createListenerRegistry } from './data/listener-registry.js?v=20260901-scoped-reads-v1';
 import { auditR32Data } from './diagnostics/data-integrity.js?v=20260901-scoped-reads-v1';
@@ -550,7 +550,7 @@ function gameHistoryForm(gameId){
 }
 
 window.openGameHistory=gameHistoryForm;
-window.gameActions=(id)=>{const g=state.games.find(x=>x.id===id);modal(`<h2>vs ${g.opponent||''}</h2><p class="sub">${g.date||''} ${g.tournament||''} ${resultMark(g)} ${scoreLine(g).replace(" - ","-")}</p><div class="grid"><button class="btn" id="statsReg">スタッツ登録</button><button class="btn ghost" id="gameHistory">履歴</button><button class="btn ghost" id="participationReg">出場・交代情報</button><button class="btn ghost" id="editGame">試合修正</button><button class="btn danger" id="delGame">試合削除</button><button class="btn ghost" id="closeModal">閉じる</button></div>`);$('#statsReg').onclick=()=>statsForm(id);$('#gameHistory').onclick=()=>gameHistoryForm(id);$('#participationReg').onclick=()=>participationForm(id);$('#editGame').onclick=()=>{closeModal();gameForm(g)};$('#delGame').onclick=async()=>{if(!requireLogin())return;if(confirm('この試合と関連スタッツを削除しますか？')){const oldDate=g?.date||'';await deleteDoc(doc(db,'games',id));for(const s of state.stats.filter(x=>x.gameId===id)) await deleteDoc(doc(db,'stats',s.id));await saveSameDateOrdersForDate(oldDate,{excludeId:id});closeModal();toast('削除しました')}};$('#closeModal').onclick=closeModal}
+window.gameActions=(id)=>{const g=state.games.find(x=>x.id===id);modal(`<h2>vs ${g.opponent||''}</h2><p class="sub">${g.date||''} ${g.tournament||''} ${resultMark(g)} ${scoreLine(g).replace(" - ","-")}</p><div class="grid"><button class="btn" id="statsReg">スタッツ登録</button><button class="btn ghost" id="gameHistory">履歴</button><button class="btn ghost" id="participationReg">出場・交代情報</button><button class="btn ghost" id="editGame">試合修正</button><button class="btn danger" id="delGame">試合削除</button><button class="btn ghost" id="closeModal">閉じる</button></div>`);$('#statsReg').onclick=()=>statsForm(id);$('#gameHistory').onclick=()=>gameHistoryForm(id);$('#participationReg').onclick=()=>participationForm(id);$('#editGame').onclick=()=>{closeModal();gameForm(g)};$('#delGame').onclick=async()=>{if(!requireLogin())return;if(!confirm('この試合と関連スタッツを削除しますか？'))return;const button=$('#delGame');button.disabled=true;try{await deleteGameAndRelatedData(g);closeModal();state.selectedGameId='';toast('削除しました');render()}catch(error){console.error(error);toast(error.message||'試合の削除に失敗しました');button.disabled=false}};$('#closeModal').onclick=closeModal}
 function scoreInput(id,value){
   const v=value===undefined||value===null?'':num(value);
   return `<div class="num-wrap"><input type="number" min="0" id="${id}" value="${v}"><div class="num-steps"><button type="button" data-step-for="${id}" data-delta="1">▲</button><button type="button" data-step-for="${id}" data-delta="-1">▼</button></div></div>`;
@@ -635,6 +635,24 @@ async function convertGlanz20260329ToQuarterOne(gameId){
 }
 
 
+
+async function deleteGameAndRelatedData(game){
+  if(!game?.id)throw new Error('削除対象の試合が見つかりません');
+  const gameId=game.id,oldDate=game.date||'';
+  await discardPendingOperationsForGame(gameId);
+  const relatedStats=await getDocs(query(collection(db,'stats'),where('gameId','==',gameId)));
+  for(const stat of relatedStats.docs)await deleteDoc(stat.ref);
+  await deleteDoc(doc(db,'games',gameId));
+  await saveSameDateOrdersForDate(oldDate,{excludeId:gameId});
+  serverGames=serverGames.filter(item=>item.id!==gameId);
+  state.allGames=state.allGames.filter(item=>item.id!==gameId);
+  state.games=state.games.filter(item=>item.id!==gameId);
+  state.stats=state.stats.filter(item=>item.gameId!==gameId);
+  for(const [key,rows] of statsSources)statsSources.set(key,rows.filter(item=>item.gameId!==gameId));
+  refreshSeasonScope();
+  return {deletedStats:relatedStats.size};
+}
+
 function gameForm(g={}){
   if(!requireLogin())return;
   const currentType=!g.id||hasQuarterScoreData(g)?'quarter':getGameStatsRegistrationType(g);
@@ -689,7 +707,7 @@ function gameForm(g={}){
   };
   $('#closeModal').onclick=closeModal;
   const del=$('#deleteGameFromEdit');
-  if(del)del.onclick=async()=>{if(!requireLogin())return;if(confirm('この試合と関連スタッツを削除しますか？')){const oldDate=g.date||'';await deleteDoc(doc(db,'games',g.id));for(const s of state.stats.filter(x=>x.gameId===g.id)) await deleteDoc(doc(db,'stats',s.id));await saveSameDateOrdersForDate(oldDate,{excludeId:g.id});closeModal();state.tab='games';state.selectedGameId='';toast('削除しました');render()}};
+  if(del)del.onclick=async()=>{if(!requireLogin())return;if(!confirm('この試合と関連スタッツを削除しますか？'))return;del.disabled=true;try{await deleteGameAndRelatedData(g);closeModal();state.tab='games';state.selectedGameId='';toast('削除しました');render()}catch(error){console.error(error);toast(error.message||'試合の削除に失敗しました');del.disabled=false}};
 }
 
 function shotSourceFor(stat={},game={},quarter=null){return getGameStatsRegistrationType(game)==='quarter'?(stat.quarters?.[quarterKey(quarter)]||{}):stat}
