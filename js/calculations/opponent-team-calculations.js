@@ -49,7 +49,6 @@ export function placementLabelToRank(label){
   if(/ベスト16/u.test(text))return "C";
   if(/ベスト32/u.test(text))return "D";
   if(/ベスト64|県大会出場|都道府県大会出場/u.test(text))return "E";
-  // 「初戦敗退」「1回戦敗退」だけでは、シードや予選構造により最終順位を特定できない。
   return null;
 }
 
@@ -122,17 +121,17 @@ export function historicalAchievementPoints(item={}){
 export function calculateHistoricalTeamBonus(placements=[],options={}){
   const currentSeason=options.currentSeason||options.season||currentSeasonLabel(),seasons=previousSeasonLabels(currentSeason,HISTORICAL_TEAM_POWER_WEIGHTS.length);
   const details=seasons.map((season,index)=>{
-    let achievementPoints=0,bestLevel=null,bestStage=null;
-    for(const item of placements){
-      if(placementSeason(item)!==season)continue;
-      const points=historicalAchievementPoints(item);
-      if(points>achievementPoints){achievementPoints=points;bestLevel=normalizeTournamentLevel(item);bestStage=placementStage(item.placementLabel||item.placement)}
-    }
+    const records=placements.filter(item=>placementSeason(item)===season).map(item=>({
+      level:normalizeTournamentLevel(item),
+      stage:placementStage(item.placementLabel||item.placement),
+      points:historicalAchievementPoints(item)
+    }));
+    const achievementPoints=records.length?Math.round((records.reduce((sum,item)=>sum+item.points,0)/records.length)*10)/10:0;
     const weight=HISTORICAL_TEAM_POWER_WEIGHTS[index],weightedPoints=Math.round(achievementPoints*weight*10)/10;
-    return {season,weight,achievementPoints,weightedPoints,bestLevel,bestStage};
+    return {season,weight,achievementPoints,weightedPoints,recordCount:records.length,records};
   });
   const rawBonus=Math.round(details.reduce((sum,item)=>sum+item.weightedPoints,0)*10)/10,bonus=Math.min(HISTORICAL_TEAM_POWER_MAX,Math.max(0,rawBonus));
-  return {bonus,rawBonus,maxBonus:HISTORICAL_TEAM_POWER_MAX,details};
+  return {bonus,rawBonus,maxBonus:HISTORICAL_TEAM_POWER_MAX,details,calculationMethod:"season-average-weighted-60-30-10"};
 }
 
 export function calculateTeamPower(placements=[],options={}){
