@@ -4,6 +4,13 @@ const SCORE={E:1,D:2,C:3,B:4,"B+":4,A:5,"A+":6,S:7};
 export const TEAM_POWER_BASE={E:100,D:200,C:300,B:400,A:500,"A+":600,S:700};
 const BLOCK_POWER_BONUS={champion:120,runnerUp:100,best4:80,best8:60,best16:40,participation:20};
 const NATIONAL_POWER_BONUS={champion:250,runnerUp:220,best4:180,best8:140,best16:100,best32:70,participation:40};
+const HISTORICAL_ACHIEVEMENT_POINTS={
+  prefecture:{champion:10,runnerUp:8,best4:6,best8:4,best16:2,best32:0,participation:0},
+  block:{champion:14,runnerUp:12,best4:10,best8:8,best16:6,best32:6,participation:6},
+  national:{champion:20,runnerUp:18,best4:16,best8:14,best16:12,best32:10,participation:10}
+};
+export const HISTORICAL_TEAM_POWER_WEIGHTS=[0.6,0.3,0.1];
+export const HISTORICAL_TEAM_POWER_MAX=15;
 
 export function rankToScore(rank){return SCORE[rank]||0}
 export function scoreToRank(score){
@@ -18,6 +25,7 @@ export function scoreToRank(score){
 export function seasonFromYear(year){const start=Number(year);return Number.isFinite(start)&&start>0?`${start}-${String((start+1)%100).padStart(2,"0")}`:""}
 export function currentSeasonLabel(date=new Date()){const value=date instanceof Date?date:new Date(date),year=value.getFullYear(),start=value.getMonth()>=3?year:year-1;return seasonFromYear(start)}
 export function previousSeasonLabel(season){const start=Number(String(season||"").slice(0,4));return Number.isFinite(start)?seasonFromYear(start-1):""}
+export function previousSeasonLabels(season,count=3){const start=Number(String(season||"").slice(0,4));if(!Number.isFinite(start)||count<=0)return [];return Array.from({length:count},(_,index)=>seasonFromYear(start-index-1))}
 export function placementSeason(item={}){return item.season||seasonFromYear(item.year)}
 
 export function normalizeTournamentLevel(item={}){
@@ -106,10 +114,31 @@ export function upperTournamentBonus(item={}){
   return 0;
 }
 
+export function historicalAchievementPoints(item={}){
+  const level=normalizeTournamentLevel(item),stage=placementStage(item.placementLabel||item.placement),table=HISTORICAL_ACHIEVEMENT_POINTS[level];
+  return table?.[stage]??table?.participation??0;
+}
+
+export function calculateHistoricalTeamBonus(placements=[],options={}){
+  const currentSeason=options.currentSeason||options.season||currentSeasonLabel(),seasons=previousSeasonLabels(currentSeason,HISTORICAL_TEAM_POWER_WEIGHTS.length);
+  const details=seasons.map((season,index)=>{
+    let achievementPoints=0,bestLevel=null,bestStage=null;
+    for(const item of placements){
+      if(placementSeason(item)!==season)continue;
+      const points=historicalAchievementPoints(item);
+      if(points>achievementPoints){achievementPoints=points;bestLevel=normalizeTournamentLevel(item);bestStage=placementStage(item.placementLabel||item.placement)}
+    }
+    const weight=HISTORICAL_TEAM_POWER_WEIGHTS[index],weightedPoints=Math.round(achievementPoints*weight*10)/10;
+    return {season,weight,achievementPoints,weightedPoints,bestLevel,bestStage};
+  });
+  const rawBonus=Math.round(details.reduce((sum,item)=>sum+item.weightedPoints,0)*10)/10,bonus=Math.min(HISTORICAL_TEAM_POWER_MAX,Math.max(0,rawBonus));
+  return {bonus,rawBonus,maxBonus:HISTORICAL_TEAM_POWER_MAX,details};
+}
+
 export function calculateTeamPower(placements=[],options={}){
   const season=options.currentSeason||options.season||currentSeasonLabel(),seasonItems=placements.filter(item=>placementSeason(item)===season);
-  const seasonRank=calculateSeasonRanks(seasonItems)[season],rank=options.rank||seasonRank?.rank||null;
-  if(!rank)return {rank:null,basePower:null,prefectureStrengthBonus:0,prefectureStrengthIndex:null,blockBonus:0,nationalBonus:0,power:null};
+  const seasonRank=calculateSeasonRanks(seasonItems)[season],rank=options.rank||seasonRank?.rank||null,history=calculateHistoricalTeamBonus(placements,{currentSeason:season});
+  if(!rank)return {rank:null,basePower:null,prefectureStrengthBonus:0,prefectureStrengthIndex:null,blockBonus:0,nationalBonus:0,historicalAchievementBonus:history.bonus,historicalAchievementRawBonus:history.rawBonus,historicalAchievementDetails:history.details,power:null};
   const basePower=TEAM_POWER_BASE[rank],prefectureStrengthBonus=Math.max(0,Number(options.prefectureStrengthBonus)||0);
   let blockBonus=0,nationalBonus=0;
   for(const item of seasonItems){
@@ -117,7 +146,8 @@ export function calculateTeamPower(placements=[],options={}){
     if(level==="block")blockBonus=Math.max(blockBonus,bonus);
     if(level==="national")nationalBonus=Math.max(nationalBonus,bonus);
   }
-  return {rank,basePower,prefectureStrengthBonus,prefectureStrengthIndex:100+prefectureStrengthBonus,blockBonus,nationalBonus,power:basePower+prefectureStrengthBonus+blockBonus+nationalBonus};
+  const power=Math.round((basePower+prefectureStrengthBonus+blockBonus+nationalBonus+history.bonus)*10)/10;
+  return {rank,basePower,prefectureStrengthBonus,prefectureStrengthIndex:100+prefectureStrengthBonus,blockBonus,nationalBonus,historicalAchievementBonus:history.bonus,historicalAchievementRawBonus:history.rawBonus,historicalAchievementDetails:history.details,power};
 }
 
 export function calculatePrefectureStrengthBonuses(teams=[],options={}){
