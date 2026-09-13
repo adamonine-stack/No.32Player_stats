@@ -601,6 +601,39 @@ function updateGameOpponentInfo(team,g={},legacy=''){
   $('#gOpponentRankRow').classList.toggle('hidden',!showRank);
 }
 
+function normalizeGlanzRepairName(value=''){return String(value||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').trim().toLowerCase().replace(/\s+/g,'')}
+function isGlanz20260329RepairTarget(g={}){const date=String(g.date||g.gameDate||'').slice(0,10),names=[g.opponentTeamName,g.opponent,g.opponentName,g.teamName].map(normalizeGlanzRepairName);return date==='2026-03-29'&&names.some(name=>name==='glanz'||name.includes('glanz'))}
+async function convertGlanz20260329ToQuarterOne(gameId){
+  if(!requireLogin())return;
+  const gameRef=doc(db,'games',gameId),gameSnap=await getDoc(gameRef);if(!gameSnap.exists())throw new Error('対象試合が見つかりません');
+  const game={id:gameSnap.id,...gameSnap.data()};if(!isGlanz20260329RepairTarget(game))throw new Error('対象試合が一致しません');
+  const statSnapshot=await getDocs(query(collection(db,'stats'),where('gameId','==',gameId)));
+  const reserved=new Set(['gameId','playerId','seasonId','registrationType','quarters','createdAt','updatedAt','appliedOperationIds','appliedOperations','operationIds','lastOperationId','syncMeta']);
+  for(const statDoc of statSnapshot.docs){
+    const current=statDoc.data()||{},source={};
+    for(const [key,value] of Object.entries(current))if(!reserved.has(key))source[key]=value;
+    const quarters=current.quarters&&typeof current.quarters==='object'&&!Array.isArray(current.quarters)?current.quarters:{};
+    const existingQ1=quarters.q1&&typeof quarters.q1==='object'&&!Array.isArray(quarters.q1)?quarters.q1:{};
+    await setDoc(doc(db,'stats',statDoc.id),{registrationType:'quarter',quarters:{...quarters,q1:{...existingQ1,...source,registered:true,quarter:1}},updatedAt:serverTimestamp()},{merge:true});
+  }
+  const previousEvents=Array.isArray(game.playEvents)?game.playEvents:[];
+  const playEvents=previousEvents.filter(item=>Number.isFinite(Number(item?.sequence))&&Number(item.sequence)>0).map(item=>({...item,quarter:1}));
+  const keptIds=new Set(playEvents.map(item=>item?.id).filter(Boolean));
+  const q1Score={team:num(game.finalScore?.team??game.ownScore),opponent:num(game.finalScore?.opponent??game.oppScore)};
+  const patch={statsRegistrationType:'quarter',quarterScores:{...(game.quarterScores||{}),[quarterScoreKey(1)]:q1Score},playEvents,updatedAt:serverTimestamp()};
+  if(game.eventSequenceOverrides&&typeof game.eventSequenceOverrides==='object')patch.eventSequenceOverrides=Object.fromEntries(Object.entries(game.eventSequenceOverrides).filter(([id])=>keptIds.has(id)));
+  if(game.historyInsertionOverrides&&typeof game.historyInsertionOverrides==='object')patch.historyInsertionOverrides=Object.fromEntries(Object.entries(game.historyInsertionOverrides).filter(([id])=>keptIds.has(id)));
+  await setDoc(gameRef,patch,{merge:true});
+  const verifyGameSnap=await getDoc(gameRef),verifyStats=await getDocs(query(collection(db,'stats'),where('gameId','==',gameId))),verifyGame=verifyGameSnap.data()||{};
+  const q1Count=verifyStats.docs.filter(item=>{const q1=item.data()?.quarters?.q1;return q1&&typeof q1==='object'&&q1.registered!==false}).length;
+  const unsequenced=(verifyGame.playEvents||[]).filter(item=>!Number.isFinite(Number(item?.sequence))||Number(item.sequence)<=0).length;
+  if(verifyGame.statsRegistrationType!=='quarter'||q1Count!==verifyStats.size||unsequenced!==0)throw new Error('変換後の検証に失敗しました');
+  const localGame=state.allGames.find(item=>item.id===gameId);if(localGame)Object.assign(localGame,{...patch,quarterScores:verifyGame.quarterScores,playEvents:verifyGame.playEvents});
+  for(const snap of verifyStats.docs){const local=state.stats.find(item=>item.id===snap.id);if(local)Object.assign(local,snap.data())}
+  refreshSeasonScope();setDetailStatsView(gameId,'q1');
+  return {removedUnsequenced:previousEvents.length-playEvents.length,statDocuments:verifyStats.size};
+}
+
 function gameForm(g={}){
   if(!requireLogin())return;
   const currentType=!g.id||hasQuarterScoreData(g)?'quarter':getGameStatsRegistrationType(g);
@@ -616,6 +649,11 @@ function gameForm(g={}){
     const participationEntry=document.createElement('div');participationEntry.className='card game-participation-entry';participationEntry.innerHTML='<div><b>出場・交代情報</b><p class="sub">Q開始メンバー、交代履歴、出場時間を登録・修正します。</p></div><button type="button" class="btn ghost" id="openParticipationFromGameForm">出場・交代情報</button>';
     $('#modalRoot .game-form-grid')?.before(participationEntry);
     $('#openParticipationFromGameForm').onclick=()=>participationForm(g.id);
+    if(isGlanz20260329RepairTarget(g)&&getGameStatsRegistrationType(g)!=='quarter'){
+      const repairEntry=document.createElement('div');repairEntry.className='card';repairEntry.innerHTML='<div><b>2026/3/29 GLÄNZ戦 データ変換</b><p class="sub">現在の試合単位スタッツを1Qへ移し、順序情報のない履歴を削除します。Q数は維持します。</p></div><button type="button" class="btn" id="convertGlanzToQ1">現在の内容を1Qへ変換</button>';
+      participationEntry.after(repairEntry);
+      $('#convertGlanzToQ1').onclick=async()=>{const button=$('#convertGlanzToQ1');if(!confirm('現在の登録内容を1Qへ変換しますか？'))return;button.disabled=true;try{const result=await convertGlanz20260329ToQuarterOne(g.id);closeModal();toast(`1Qへ変換しました（順序なし履歴 ${result.removedUnsequenced}件削除）`);state.selectedGameId=g.id;state.tab='gameDetail';render()}catch(error){console.error(error);toast(error.message||'1Qへの変換に失敗しました');button.disabled=false}};
+    }
   }
   let selectedType=currentType;
   if(registrationChoices.score&&!quarterScoresRegistered){
