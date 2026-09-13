@@ -634,6 +634,28 @@ async function convertGlanz20260329ToQuarterOne(gameId){
   return {removedUnsequenced:previousEvents.length-playEvents.length,statDocuments:verifyStats.size};
 }
 
+async function deleteGlanz20260329UnsequencedHistory(gameId){
+  if(!requireLogin())return;
+  const gameRef=doc(db,'games',gameId),gameSnap=await getDoc(gameRef);
+  if(!gameSnap.exists())throw new Error('対象試合が見つかりません');
+  const game={id:gameSnap.id,...gameSnap.data()};
+  if(!isGlanz20260329RepairTarget(game))throw new Error('対象試合が一致しません');
+  const previousEvents=Array.isArray(game.playEvents)?game.playEvents:[];
+  const playEvents=previousEvents.filter(item=>Number.isFinite(Number(item?.sequence))&&Number(item.sequence)>0);
+  const removedIds=new Set(previousEvents.filter(item=>!Number.isFinite(Number(item?.sequence))||Number(item.sequence)<=0).map(item=>item?.id).filter(Boolean));
+  const patch={playEvents,updatedAt:serverTimestamp()};
+  if(game.eventSequenceOverrides&&typeof game.eventSequenceOverrides==='object')patch.eventSequenceOverrides=Object.fromEntries(Object.entries(game.eventSequenceOverrides).filter(([id])=>!removedIds.has(id)));
+  if(game.historyInsertionOverrides&&typeof game.historyInsertionOverrides==='object')patch.historyInsertionOverrides=Object.fromEntries(Object.entries(game.historyInsertionOverrides).filter(([id])=>!removedIds.has(id)));
+  await setDoc(gameRef,patch,{merge:true});
+  const verifySnap=await getDoc(gameRef),verifyGame=verifySnap.data()||{};
+  const remaining=(verifyGame.playEvents||[]).filter(item=>!Number.isFinite(Number(item?.sequence))||Number(item.sequence)<=0).length;
+  if(remaining!==0)throw new Error('順序情報なし履歴の削除確認に失敗しました');
+  const localGame=state.allGames.find(item=>item.id===gameId);
+  if(localGame)Object.assign(localGame,{playEvents:verifyGame.playEvents,eventSequenceOverrides:verifyGame.eventSequenceOverrides,historyInsertionOverrides:verifyGame.historyInsertionOverrides});
+  refreshSeasonScope();
+  return {removed:previousEvents.length-playEvents.length,remaining};
+}
+
 function gameForm(g={}){
   if(!requireLogin())return;
   const currentType=!g.id||hasQuarterScoreData(g)?'quarter':getGameStatsRegistrationType(g);
@@ -653,6 +675,12 @@ function gameForm(g={}){
       const repairEntry=document.createElement('div');repairEntry.className='card';repairEntry.innerHTML='<div><b>2026/3/29 GLÄNZ戦 データ変換</b><p class="sub">現在の試合単位スタッツを1Qへ移し、順序情報のない履歴を削除します。Q数は維持します。</p></div><button type="button" class="btn" id="convertGlanzToQ1">現在の内容を1Qへ変換</button>';
       participationEntry.after(repairEntry);
       $('#convertGlanzToQ1').onclick=async()=>{const button=$('#convertGlanzToQ1');if(!confirm('現在の登録内容を1Qへ変換しますか？'))return;button.disabled=true;try{const result=await convertGlanz20260329ToQuarterOne(g.id);closeModal();toast(`1Qへ変換しました（順序なし履歴 ${result.removedUnsequenced}件削除）`);state.selectedGameId=g.id;state.tab='gameDetail';render()}catch(error){console.error(error);toast(error.message||'1Qへの変換に失敗しました');button.disabled=false}};
+    }
+
+    if(isGlanz20260329RepairTarget(g)){
+      const cleanupEntry=document.createElement('div');cleanupEntry.className='card';cleanupEntry.innerHTML='<div><b>GLÄNZ戦 履歴クリーンアップ</b><p class="sub">sequence（順序情報）がない履歴だけを削除します。スタッツ・シュート・順序情報がある履歴は変更しません。</p></div><button type="button" class="btn danger" id="deleteGlanzUnsequencedHistory">順序情報なし履歴を削除</button>';
+      participationEntry.after(cleanupEntry);
+      $('#deleteGlanzUnsequencedHistory').onclick=async()=>{const button=$('#deleteGlanzUnsequencedHistory');if(!confirm('2026/3/29 GLÄNZ戦の順序情報がない履歴だけを削除しますか？'))return;button.disabled=true;try{const result=await deleteGlanz20260329UnsequencedHistory(g.id);toast(`順序情報なし履歴を ${result.removed}件削除しました`);closeModal();state.selectedGameId=g.id;state.tab='gameDetail';render()}catch(error){console.error(error);toast(error.message||'履歴削除に失敗しました');button.disabled=false}};
     }
   }
   let selectedType=currentType;
