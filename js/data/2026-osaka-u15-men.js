@@ -6,7 +6,7 @@ const TOP=[['KAGO CLUB','優勝',1],['REDFORCES','準優勝',2],['SUN HEARTS','3
 const BEST8=['RGS','ANGRY OWLS','AIR','RED FROGS'];
 const BEST16=['ENERGY','大阪GOLDEN EGG','HOOPERS','CLUB SPIRITS','FRONTIER SPIRITS','B☆MAX','EAST.O.ACADEMY','Secret Base'];
 const ALL=['KAGO CLUB','ENERGY','ディノニクスU15','sHow time','RGS','大阪GOLDEN EGG','ANGRY OWLS','HOOPERS','HOSOGO GIBSONS','NEXTEST','CLUB SPIRITS','SUN HEARTS','REDFORCES','FRONTIER SPIRITS','BLACK UNICORN','B☆MAX','BC Alma','AIR','RED FROGS','EAST.O.ACADEMY','Switch! U15','Secret Base','IBBC','T-SMILE'];
-export const TEAMS_2026_OSAKA_U15_MEN=ALL.map(teamName=>{const top=TOP.find(([name])=>name===teamName),placementLabel=top?.[1]||(BEST8.includes(teamName)?'ベスト8':BEST16.includes(teamName)?'ベスト16':'初戦敗退');return {teamName,normalizedTeamName:normalizeImportedTeamName(teamName),placementLabel,placement:top?.[2]||null}});
+export const TEAMS_2026_OSAKA_U15_MEN=ALL.map(teamName=>{const top=TOP.find(([name])=>name===teamName),placementLabel=top?.[1]||(BEST8.includes(teamName)?'ベスト8':BEST16.includes(teamName)?'ベスト16':'ベスト32');return {teamName,normalizedTeamName:normalizeImportedTeamName(teamName),placementLabel,placement:top?.[2]||null}});
 
 const match=(date,court,gameNumber,round,teamA,teamAScore,teamB,teamBScore,winner,extra={})=>({date,court,gameNumber,round,teamA,teamAScore,teamB,teamBScore,winner,loser:winner===teamA?teamB:teamA,resultConfirmed:true,scoreConfirmed:true,sourceType:'officialTournamentPdf',...extra});
 export const MATCHES_2026_OSAKA_U15_MEN=[

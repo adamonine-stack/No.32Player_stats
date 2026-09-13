@@ -6,7 +6,7 @@ const RESULTS=[
   ['サンシャインズ','優勝',1],['PIRATES','準優勝',2],['Unity MONKEYS','ベスト4',null],['FELKYS','ベスト4',null],
   ['WIZARDS U15','ベスト8',null],['YAMATO RIPPLE','ベスト8',null],['ARAN ARDENT ACADEMY','ベスト8',null],['バンビシャス奈良U15-2nd','ベスト8',null],
   ['三郷TreaSsure U15','ベスト16（初戦敗退）',null],['BANZAI jr.','ベスト16（初戦敗退）',null],['GJ ballers','ベスト16（初戦敗退）',null],['川西クラブ','ベスト16（初戦敗退）',null],['NARA FUTURE','ベスト16（初戦敗退）',null],['キャプテンハーロックU15','ベスト16（初戦敗退）',null],['Esperanza HEGURI','ベスト16（初戦敗退）',null],
-  ['Rafioants','1回戦敗退',null],['JETARCS','1回戦敗退',null],['葛城 WILD BEES','1回戦敗退',null]
+  ['Rafioants','ベスト32',null],['JETARCS','ベスト32',null],['葛城 WILD BEES','ベスト32',null]
 ];
 export const TEAMS_2026_NARA_U15_MEN=RESULTS.map(([teamName,placementLabel,placement])=>({teamName,normalizedTeamName:normalizeImportedTeamName(teamName),placementLabel,placement}));
 

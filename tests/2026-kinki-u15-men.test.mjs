@@ -1,0 +1,11 @@
+import assert from 'node:assert/strict';
+import { TOURNAMENT_2026_KINKI_U15_MEN, TEAMS_2026_KINKI_U15_MEN, MATCHES_2026_KINKI_U15_MEN } from '../js/data/2026-kinki-u15-men.js';
+import { upperTournamentBonus } from '../js/calculations/opponent-team-calculations.js';
+assert.equal(TOURNAMENT_2026_KINKI_U15_MEN.tournamentLevel,'block');
+assert.equal(TEAMS_2026_KINKI_U15_MEN.length,9);
+assert.equal(MATCHES_2026_KINKI_U15_MEN.length,8);
+assert.deepEqual(TEAMS_2026_KINKI_U15_MEN.slice(0,4).map(team=>[team.teamName,team.placementLabel]),[['KAGO CLUB','優勝'],['T-SMILE','準優勝'],['サンシャインズ','ベスト4'],['B.UNITE','ベスト4']]);
+assert.equal(upperTournamentBonus({...TEAMS_2026_KINKI_U15_MEN[0],tournamentLevel:'block'}),120);
+assert.equal(upperTournamentBonus({...TEAMS_2026_KINKI_U15_MEN[8],tournamentLevel:'block'}),20);
+assert.ok(MATCHES_2026_KINKI_U15_MEN.every(game=>TEAMS_2026_KINKI_U15_MEN.some(team=>team.teamName===game.winner)&&TEAMS_2026_KINKI_U15_MEN.some(team=>team.teamName===game.loser)));
+console.log('2026 Kinki U15 men official results: ok');

@@ -5,8 +5,8 @@ export const TOURNAMENT_2026_KYOTO_U15_MEN={id:'2026-kyoto-u15-club-championship
 const RESULTS=[
   ['KYOTO DREAMERS','優勝',1,'S'],['B.UNITE','準優勝',2,'A+'],
   ['京都neo advance','ベスト4',null,'A'],['FUBC','ベスト4',null,'A'],
-  ['京都フェニックス','ベスト8',null,'B+'],['YAMASHIRO UNITED','ベスト8',null,'B+'],['黄紫アストラル','ベスト8',null,'B+'],['Risicare','ベスト8',null,'B+'],
-  ['京都LYCAONS','初戦敗退',null,'D'],['Les Ailes','初戦敗退',null,'D'],['TITANS','初戦敗退',null,'D'],['YAMASHIRO EAGLES','初戦敗退',null,'D'],['BLAST','初戦敗退',null,'D'],['チーム舞鶴','初戦敗退',null,'D'],['@z','初戦敗退',null,'D'],['GRiT U15','初戦敗退',null,'D']
+  ['京都フェニックス','ベスト8',null,'B'],['YAMASHIRO UNITED','ベスト8',null,'B'],['黄紫アストラル','ベスト8',null,'B'],['Risicare','ベスト8',null,'B'],
+  ['京都LYCAONS','ベスト16',null,'C'],['Les Ailes','ベスト16',null,'C'],['TITANS','ベスト16',null,'C'],['YAMASHIRO EAGLES','ベスト16',null,'C'],['BLAST','ベスト16',null,'C'],['チーム舞鶴','ベスト16',null,'C'],['@z','ベスト16',null,'C'],['GRiT U15','ベスト16',null,'C']
 ];
 export const TEAMS_2026_KYOTO_U15_MEN=RESULTS.map(([teamName,placementLabel,placement,rank])=>({teamName,normalizedTeamName:normalizeImportedTeamName(teamName),placementLabel,placement,rank}));
 

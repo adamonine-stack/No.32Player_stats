@@ -19,13 +19,13 @@ export const TOURNAMENT_2026_WAKAYAMA_U15_MEN={
 
 const RESULTS=[
   ['adorare','優勝',3,'S',1],
-  ['ROOKIES','準優勝',2,'A',2],
-  ['RED KINGS','ベスト4',1,'C',null],
-  ['Jr御坊','ベスト4',1,'C',null],
-  ['ブランリオン','ベスト8（初戦敗退）',0,'D',null],
-  ['GLÄNZ','ベスト8（初戦敗退）',0,'D',null],
-  ['GLÄNZ ZWEI','ベスト8（初戦敗退）',0,'D',null],
-  ['adorare second','ベスト8（初戦敗退）',0,'D',null]
+  ['ROOKIES','準優勝',2,'A+',2],
+  ['RED KINGS','ベスト4',1,'A',null],
+  ['Jr御坊','ベスト4',1,'A',null],
+  ['ブランリオン','ベスト8',0,'B',null],
+  ['GLÄNZ','ベスト8',0,'B',null],
+  ['GLÄNZ ZWEI','ベスト8',0,'B',null],
+  ['adorare second','ベスト8',0,'B',null]
 ];
 
 export const TEAMS_2026_WAKAYAMA_U15_MEN=RESULTS.map(([teamName,placementLabel,wins,rank,placement])=>({
