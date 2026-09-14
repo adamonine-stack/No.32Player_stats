@@ -333,7 +333,7 @@ async function import2026WakayamaMen(){
     await setDoc(ref,{...item,id,tournamentId:tournament.id,tournamentName:tournament.name,teamAId:teamA?.id||null,teamBId:teamB?.id||null,winnerTeamId:winner?.id||null,loserTeamId:loser?.id||null,updatedAt:serverTimestamp(),createdAt:snapshot.exists()?snapshot.data().createdAt||serverTimestamp():serverTimestamp()},{merge:true});
   }
   modal(`<h2>和歌山県大会登録完了</h2><div class="grid"><p>大会名：${tournament.name}</p><p>登録対象チーム数：${TEAMS_2026_WAKAYAMA_U15_MEN.length}</p><p>新規登録チーム数：${created}</p><p>既存更新チーム数：${updated}</p><p>大会実績新規登録数：${resultsCreated}</p><p>大会実績更新数：${resultsUpdated}</p><p>試合結果新規登録数：${matchesCreated}</p><p>試合結果更新数：${matchesUpdated}</p><p>重複統合数：${duplicatesRemoved}</p></div><div class="section-title">大会結果</div><p>${TEAMS_2026_WAKAYAMA_U15_MEN.map(team=>`${escapeHtml(team.teamName)}：${escapeHtml(team.placementLabel)}・${team.wins}勝（${team.rank}）`).join('<br>')}</p><button class="btn" id="closeModal">閉じる</button>`);
-  bindGameFormCloseAction($('#closeModal'));
+  $('#closeModal').onclick=closeModal;
 }
 function openOpponentTeamForm(team={}){if(!requireLogin())return;opponentDraft={...team,tournamentPlacements:opponentPlacements(team).map(item=>({...item})),playerNumbers:sortPlayerNumbers(team.playerNumbers)};renderOpponentTeamForm()}
 function placementRows(){return opponentDraft.tournamentPlacements.map((item,index)=>`<div class="opponent-placement" data-placement="${index}"><label>世代<select data-field="seasonId">${[...state.seasons].sort((a,b)=>b.sortOrder-a.sortOrder).map(season=>`<option value="${season.id}" ${season.id===(item.seasonId||seasonIdForLabel(placementSeason(item)))?'selected':''}>${escapeHtml(season.name)}</option>`).join('')}</select></label><label>大会名<input data-field="tournamentName" value="${escapeHtml(item.tournamentName||'')}"></label><label>大会順位<input data-field="placement" value="${escapeHtml(item.placement||'')}"></label><label>ランク<select data-field="placementRank">${[...OPPONENT_RANKS].reverse().map(rank=>`<option ${rank===item.placementRank?'selected':''}>${rank}</option>`).join('')}</select></label><button type="button" class="btn small ghost" data-placement-move="${index}">↑↓</button><button type="button" class="btn small danger" data-placement-delete="${index}">削除</button></div>`).join('')||'<p class="sub">大会順位未登録</p>'}
@@ -709,7 +709,7 @@ function gameForm(g={}){
     if(shouldPromote){await saveSameDateOrdersForDate(oldDate,{excludeId:id});await saveSameDateOrdersForDate(newDate,{promotedGame:{id,...data}})}
     if(!g.id){const created={id,...data};if(!state.allGames.some(item=>item.id===id))state.allGames.push(created);refreshSeasonScope();toast('保存しました');participationForm(id,1,'',{newGameEntry:true})}else{closeModal();toast('保存しました')}
   };
-  $('#closeModal').onclick=closeModal;
+  bindGameFormCloseAction($('#closeModal'));
   const del=$('#deleteGameFromEdit');
   if(del)del.onclick=async()=>{if(!requireLogin())return;if(!confirm('この試合と関連スタッツを削除しますか？'))return;del.disabled=true;try{await deleteGameAndRelatedData(g);closeModal();state.tab='games';state.selectedGameId='';toast('削除しました');render()}catch(error){console.error(error);toast(error.message||'試合の削除に失敗しました');del.disabled=false}};
 }
