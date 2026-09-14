@@ -33,8 +33,7 @@
 
 /* Keep save / close controls reachable while editing history-derived stats
    and while editing game information. */
-#modalRoot .card:has(.stats-form-grid) .stats-form-actions,
-#modalRoot .card:has(#saveGame) > .game-form-actions {
+#modalRoot .card:has(.stats-form-grid) .stats-form-actions {
   position: sticky;
   bottom: 0;
   z-index: 20;
@@ -46,6 +45,29 @@
   background: rgba(7, 17, 38, .98);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
+}
+
+#modalRoot > .modal.game-form-modal > .game-form-actions {
+  position: fixed;
+  left: 50%;
+  bottom: max(18px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  width: min(calc(100vw - 36px), 560px);
+  z-index: 80;
+  margin: 0 !important;
+  padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: rgba(7, 17, 38, .99);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, .35);
+  pointer-events: auto;
+  touch-action: manipulation;
+}
+
+#modalRoot > .modal.game-form-modal > .card {
+  padding-bottom: 118px !important;
 }
 
 /* Shot history edit: the close button stays visible while the court and
@@ -80,13 +102,25 @@
   }
 
   #modalRoot .card:has(.stats-form-grid) .stats-form-actions,
-  #modalRoot .card:has(#saveGame) > .game-form-actions {
+  #modalRoot > .modal.game-form-modal > .game-form-actions {
     gap: 6px;
   }
 
   #modalRoot .card:has(.stats-form-grid) .stats-form-actions .btn,
-  #modalRoot .card:has(#saveGame) > .game-form-actions .btn {
+  #modalRoot > .modal.game-form-modal > .game-form-actions .btn {
     min-height: 42px;
+    pointer-events: auto;
+    touch-action: manipulation;
+  }
+
+  #modalRoot > .modal.game-form-modal > .game-form-actions {
+    bottom: max(8px, env(safe-area-inset-bottom));
+    width: calc(100vw - 16px);
+    max-width: 560px;
+  }
+
+  #modalRoot > .modal.game-form-modal > .card {
+    padding-bottom: 112px !important;
   }
 }
 
@@ -99,11 +133,7 @@
     padding-right: 18px;
   }
 
-  #modalRoot .card:has(#saveGame) > .game-form-actions {
-    margin-left: -20px !important;
-    margin-right: -20px !important;
-    margin-bottom: -18px !important;
-    padding-left: 20px;
-    padding-right: 20px;
+  #modalRoot > .modal.game-form-modal > .game-form-actions {
+    width: min(calc(100vw - 36px), 560px);
   }
 }
