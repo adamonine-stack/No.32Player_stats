@@ -99,11 +99,12 @@ function modal(html){lockModalBackground();document.body.classList.remove('bg-lo
 function blurModalEditor(){const active=document.activeElement;if(active&&active!==document.body&&active.closest?.('#modalRoot')&&typeof active.blur==='function')active.blur()}
 function gameFormCloseButtonFromEvent(event,root){
   const direct=event.target?.closest?.('[data-game-form-close="1"]');if(direct&&root.contains(direct))return direct;
-  const touch=event.changedTouches?.[0],button=root.querySelector('[data-game-form-close="1"]');if(!touch||!button)return null;
-  const rect=button.getBoundingClientRect();return touch.clientX>=rect.left&&touch.clientX<=rect.right&&touch.clientY>=rect.top&&touch.clientY<=rect.bottom?button:null
+  const point=event.changedTouches?.[0]||event.touches?.[0]||event;
+  const button=root.querySelector('[data-game-form-close="1"]');if(!button||!Number.isFinite(point?.clientX)||!Number.isFinite(point?.clientY))return null;
+  const rect=button.getBoundingClientRect();return point.clientX>=rect.left&&point.clientX<=rect.right&&point.clientY>=rect.top&&point.clientY<=rect.bottom?button:null
 }
 function handleGameFormCloseEvent(event){const root=$('#modalRoot'),button=root&&gameFormCloseButtonFromEvent(event,root);if(!button)return;if(event.cancelable)event.preventDefault();event.stopPropagation();blurModalEditor();closeModal()}
-function installGameFormCloseDelegation(){const root=$('#modalRoot');if(!root||root.dataset.gameFormCloseDelegated==='1')return;root.dataset.gameFormCloseDelegated='1';root.addEventListener('touchend',handleGameFormCloseEvent,{capture:true,passive:false});root.addEventListener('pointerup',event=>{if(event.pointerType==='mouse')return;handleGameFormCloseEvent(event)},true);root.addEventListener('click',handleGameFormCloseEvent,true)}
+function installGameFormCloseDelegation(){if(document.documentElement.dataset.gameFormCloseDelegated==='1')return;document.documentElement.dataset.gameFormCloseDelegated='1';document.addEventListener('touchend',handleGameFormCloseEvent,{capture:true,passive:false});document.addEventListener('pointerup',handleGameFormCloseEvent,true);document.addEventListener('click',handleGameFormCloseEvent,true)}
 installGameFormCloseDelegation();
 function bindGameFormCloseAction(button){if(!button)return;button.type='button';button.dataset.gameFormClose='1';button.onclick=null}
 function renderKeepingModalScroll(render){const currentCard=document.querySelector('#modalRoot .modal .card'),scrollTop=currentCard?.scrollTop||0,scrollLeft=currentCard?.scrollLeft||0;render();const restore=()=>{const nextCard=document.querySelector('#modalRoot .modal .card');if(!nextCard)return;nextCard.scrollTop=scrollTop;nextCard.scrollLeft=scrollLeft};restore();requestAnimationFrame(restore)}
