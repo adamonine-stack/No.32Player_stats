@@ -24,7 +24,7 @@ export const TOURNAMENT_2025_KYOTO_JHS_SOUTAI_MEN=tournament({
   name:'2025年度 第78回京都府中学校総合体育大会 バスケットボール男子',
   shortName:'2025 京都府中学校総体 男子',
   season:'2025-26',
-  source:'https://www.kyoto-be.ne.jp/chutairen-kyoto/cms/wp-content/uploads/2026/03/%EF%BC%94-%E3%83%90%E3%82%B9%E3%82%B1%E3%83%83%E3%83%88%E3%83%9C%E3%83%BC%E3%83%AB.pdf',
+  source:'https://www.kyoto-be.ne.jp/chutairen-kyoto/cms/wp-content/uploads/2025/07/%E2%91%A3%E3%83%90%E3%82%B9%E3%82%B1%E3%83%83%E3%83%88%E3%83%9C%E3%83%BC%E3%83%AB.pdf',
   sourceType:'officialKyotoChutairenResult'
 });
 export const TEAMS_2025_KYOTO_JHS_SOUTAI_MEN=[
@@ -36,30 +36,6 @@ export const TEAMS_2025_KYOTO_JHS_SOUTAI_MEN=[
   team('綾部中学校','ベスト8','B',['綾部市立綾部中学校','綾部']),
   team('久世中学校','ベスト8','B',['京都市立久世中学校','久世']),
   team('宇治中学校','ベスト8','B',UJI_ALIASES)
-];
-
-export const TOURNAMENT_2025_KYOTO_JR_WINTER_TERM1_MEN=tournament({
-  id:'2025-kyoto-jr-winter-term1-men',
-  year:2025,
-  name:'2025年度 Jr.ウインターカップ京都府予選会 男子 Term1',
-  shortName:'2025 Jr.ウインター京都予選 Term1通過',
-  season:'2025-26',
-  type:'都道府県大会予選',
-  source:'https://cdn.goope.jp/75813/251005113412-68e1d92469bb1.pdf',
-  sourceType:'officialKyotoBasketballQualifier',
-  teamPowerEligible:false,
-  parentTournamentId:'2025-kyoto-jr-winter-men',
-  competitionStage:'qualifier-term1'
-});
-export const TEAMS_2025_KYOTO_JR_WINTER_TERM1_MEN=[
-  team('FUBC','Term2進出','E',[], 'クラブチーム',{teamPowerEligible:false}),
-  team('亀岡中学校','Term2進出','E',KAMEOKA_ALIASES,'中学校',{teamPowerEligible:false}),
-  team('B.UNITE','Term2進出','E',[], 'クラブチーム',{teamPowerEligible:false}),
-  team('京都LYCAONS','Term2進出','E',['KYOTO LYCAONS'], 'クラブチーム',{teamPowerEligible:false}),
-  team('LOOP','Term2進出','E',[], 'クラブチーム',{teamPowerEligible:false}),
-  team('Apache','Term2進出','E',[], 'クラブチーム',{teamPowerEligible:false}),
-  team('YAMASHIRO EAGLES','Term2進出','E',[], 'クラブチーム',{teamPowerEligible:false}),
-  team('Risicare','Term2進出','E',['リジカーレ'], 'クラブチーム',{teamPowerEligible:false})
 ];
 
 export const TOURNAMENT_2025_KYOTO_JR_WINTER_MEN=tournament({
