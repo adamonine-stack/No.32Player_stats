@@ -11,8 +11,8 @@ assert.match(app, /label:\`\$\{rank\}位 \/ \$\{values\.length\}チーム\`/);
 assert.match(app, /power===null.*label:'対象外'/);
 assert.match(app, /Team Power順位：\$\{escapeHtml\(opponentTeamPowerStanding\(team\)\.label\)\}/);
 assert.match(app, /<span>Team Power順位<\/span><b>\$\{escapeHtml\(opponentTeamPowerStanding\(team\)\.label\)\}<\/b>/);
-assert.match(index, /app\.js\?v=20260915-opponent-power-ranking-v1/);
-assert.match(app, /service-worker\.js\?v=20260915-opponent-power-ranking-v1/);
-assert.match(sw, /r32-shell-20260915-opponent-power-ranking-v1/);
+assert.match(index, /app\.js\?v=20260915-team-power-1000-v1/);
+assert.match(app, /service-worker\.js\?v=20260915-team-power-1000-v1/);
+assert.match(sw, /r32-shell-20260915-team-power-1000-v1/);
 
 console.log('opponent team power ranking contract: ok');
