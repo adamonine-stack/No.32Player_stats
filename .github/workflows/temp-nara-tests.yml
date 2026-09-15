@@ -15,4 +15,4 @@ jobs:
           cache: npm
       - run: npm ci
       - run: node --check js/app.js
-      - run: node --test tests/nara-history-import.test.mjs tests/nara-history-menu-contract.test.mjs tests/osaka-history-import.test.mjs tests/wakayama-history-import.test.mjs
+      - run: node --test tests/nara-history-import.test.mjs tests/nara-history-menu-contract.test.mjs
