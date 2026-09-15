@@ -32,7 +32,7 @@ export const TEAMS_2025_KYOTO_JHS_SOUTAI_MEN=[
   team('亀岡中学校','準優勝','A+',KAMEOKA_ALIASES),
   team('木幡中学校','ベスト4','A',KIHATA_ALIASES),
   team('京都御池中学校','ベスト4','A',OIKE_ALIASES),
-  team('大宮中学校','ベスト8','B',['京都府立大宮中学校','大宮']),
+  team('大宮中学校','ベスト8','B',['京丹後市立大宮中学校','大宮']),
   team('綾部中学校','ベスト8','B',['綾部市立綾部中学校','綾部']),
   team('久世中学校','ベスト8','B',['京都市立久世中学校','久世']),
   team('宇治中学校','ベスト8','B',UJI_ALIASES)
@@ -122,10 +122,10 @@ export const TOURNAMENT_2026_KYOTO_JHS_SOUTAI_MEN=tournament({
 export const TEAMS_2026_KYOTO_JHS_SOUTAI_MEN=[
   team('京都精華学園中学校','優勝','S',KYOTO_SEIKA_ALIASES),
   team('亀岡中学校','準優勝','A+',KAMEOKA_ALIASES),
-  team('城南中学校','ベスト4','A',['京都府立城南中学校','城南']),
+  team('城南中学校','ベスト4','A',['舞鶴市立城南中学校','城南']),
   team('木幡中学校','ベスト4','A',KIHATA_ALIASES),
   team('詳徳中学校','ベスト8','B',['亀岡市立詳徳中学校','詳徳']),
-  team('加茂川中学校','ベスト8','B',['京都市立加茂川中学校','加茂川']),
+  team('加茂川中学校','ベスト8','B',['京都市立加茂川中学校','加茂川','賀茂川中学校','賀茂川']),
   team('京都御池中学校','ベスト8','B',OIKE_ALIASES),
   team('修学院中学校','ベスト8','B',SHUGAKUIN_ALIASES)
 ];
