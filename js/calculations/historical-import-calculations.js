@@ -23,14 +23,18 @@ export function findSimilarHistoricalTeamCandidates(imported={},tournament={},te
     return {team:existing,score};
   }).filter(item=>item.score>=threshold).sort((a,b)=>b.score-a.score||String(a.team.teamName||'').localeCompare(String(b.team.teamName||''),'ja'));
 }
+function seasonKey(item={}){if(item.season)return String(item.season);const year=Number(item.year);return Number.isFinite(year)&&year>0?`${year}-${String((year+1)%100).padStart(2,'0')}`:''}
+function tournamentNameKey(value=''){return normalizeTeamNameForMatching(value).replace(/(?:大阪府|男子|令和7年度|令和7年|2025年度|2025年)/gu,'').replace(/大会/gu,'')}
+function compatibleValue(a,b,normalizer=value=>String(value||'')){const left=normalizer(a),right=normalizer(b);return !left||!right||left===right}
 export function sameHistoricalTournament(a={},b={}){
   if(a.id&&b.id&&a.id===b.id)return true;
-  const sameName=normalizeTeamNameForMatching(a.name||a.tournamentName)===normalizeTeamNameForMatching(b.name||b.tournamentName);
-  const sameSeason=String(a.season||'')===String(b.season||'');
-  const samePrefecture=String(a.prefecture||'')===String(b.prefecture||'');
-  const sameGender=String(a.gender||'')===String(b.gender||'');
-  const sameCategory=categoryKey(a.category||'')===categoryKey(b.category||'');
-  return Boolean(sameName&&sameSeason&&samePrefecture&&sameGender&&sameCategory);
+  const sameName=tournamentNameKey(a.name||a.tournamentName)===tournamentNameKey(b.name||b.tournamentName);
+  const sameSeason=compatibleValue(seasonKey(a),seasonKey(b));
+  const samePrefecture=compatibleValue(a.prefecture,b.prefecture);
+  const sameGender=compatibleValue(a.gender,b.gender);
+  const sameCategory=compatibleValue(a.category,b.category,categoryKey);
+  const sourceA=a.source?.document||a.sourceDocument||'',sourceB=b.source?.document||b.sourceDocument||'',sameSource=sourceA&&sourceB&&tournamentNameKey(sourceA)===tournamentNameKey(sourceB);
+  return Boolean((sameName||sameSource)&&sameSeason&&samePrefecture&&sameGender&&sameCategory);
 }
 export function findDuplicateHistoricalTournament(tournament={},existing=[]){return existing.find(item=>sameHistoricalTournament(tournament,item))||null}
 export function findExistingHistoricalPlacement(placements=[],tournament={}){return placements.find(item=>item?.tournamentId===tournament.id||sameHistoricalTournament({...tournament,name:tournament.name},{...item,name:item.tournamentName||item.name}))||null}
