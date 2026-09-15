@@ -91,6 +91,23 @@ assert.equal(participationPower.historicalRecordCount,1);
 assert.equal(participationPower.hasHistoricalResults,true);
 assert.equal(participationPower.power,6);
 
+const blueDolphinsLike=calculateTeamPower([{
+  season:'2025-26',
+  tournamentName:'大阪府Jr.ウィンターカップ2025',
+  tournamentLevel:'prefecture',
+  placementLabel:'初戦敗退',
+  placementRank:'D',
+  rankValue:'D',
+  resultConfirmed:true
+}],{season:'2026-27'});
+assert.equal(blueDolphinsLike.previousRank,'D');
+assert.equal(blueDolphinsLike.rank,'D');
+assert.equal(blueDolphinsLike.prefecturePower,200);
+assert.equal(blueDolphinsLike.prefecturePowerSource,'previous');
+assert.equal(blueDolphinsLike.isPrefecturePowerProvisional,true);
+assert.equal(blueDolphinsLike.historicalAchievementBonus,6);
+assert.equal(blueDolphinsLike.power,206);
+
 const previousFallback=calculateTeamPower([p('2025-26','優勝')],{season:'2026-27'});
 assert.equal(previousFallback.prefecturePower,700);
 assert.equal(previousFallback.prefecturePowerSource,'previous');
