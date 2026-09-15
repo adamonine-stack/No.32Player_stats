@@ -1479,10 +1479,14 @@ async function prepareNationalHistoricalImport(tournament,importedTeams){
   modal(`<h2>類似チーム名を確認</h2><p>${escapeHtml(tournament.shortName||tournament.name)}</p><p class="sub">全国大会では出場チームの所属都道府県で照合しています。各候補について既存チームへ統合するか、別チームとして登録するか選択してください。</p><div class="grid">${reviews.map(review=>`<label><b>${escapeHtml(review.imported.teamName)}（${escapeHtml(review.imported.prefecture||'')}）</b><select id="nationalHistoryDecision${review.index}"><option value="">選択してください</option>${review.candidates.map(candidate=>`<option value="${escapeHtml(candidate.team.id)}">統合：${escapeHtml(nationalHistoryCandidateLabel(candidate))}</option>`).join('')}<option value="__NEW__">別チームとして新規登録</option></select></label>`).join('')}</div><div class="row"><button class="btn" id="confirmNationalHistoryImport">選択内容で登録</button><button class="btn ghost" id="closeModal">中止</button></div>`);
   $('#closeModal').onclick=closeModal;
   $('#confirmNationalHistoryImport').onclick=async()=>{
+    const chosenIds=new Set([...decisions.values()]);
     for(const review of reviews){
       const value=$(`#nationalHistoryDecision${review.index}`)?.value||'';
       if(!value){toast('すべての類似チームを選択してください');return}
-      if(value!=='__NEW__')decisions.set(review.index,value);
+      if(value!=='__NEW__'){
+        if(chosenIds.has(value)){toast('同じ既存チームを複数の出場チームへ統合できません');return}
+        chosenIds.add(value);decisions.set(review.index,value);
+      }
     }
     modal(`<h2>${escapeHtml(tournament.shortName||tournament.name)} 登録中</h2><p>全国大会実績を書き込んでいます…</p>`);
     try{await registerNationalHistoricalTournament(tournament,importedTeams,decisions,allTeams)}
