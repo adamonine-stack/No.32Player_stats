@@ -143,9 +143,10 @@ export function calculateTeamPower(placements=[],options={}){
     if(level==="national")nationalBonus=Math.max(nationalBonus,bonus);
   }
   const upperTournamentPower=Math.min(200,Math.max(blockBonus,nationalBonus));
+  const historicalRecordCount=history.details.reduce((sum,item)=>sum+Number(item.recordCount||0),0),hasHistoricalResults=historicalRecordCount>0;
   const total=Math.round((basePower+history.bonus+upperTournamentPower)*10)/10;
-  const power=total>0?Math.min(TEAM_POWER_MAX,total):null;
-  return {rank,currentRank,previousRank,prefecturePowerSource,prefecturePowerSeason,isPrefecturePowerProvisional:prefecturePowerSource==="previous",basePower,prefecturePower:basePower,prefectureStrengthBonus:0,prefectureStrengthIndex:null,blockBonus,nationalBonus,upperTournamentPower,historicalAchievementBonus:history.bonus,historicalAchievementRawBonus:history.rawBonus,historicalAchievementDetails:history.details,power,maxPower:TEAM_POWER_MAX,calculationMethod:"current-prefecture-or-previous-fallback-700-plus-history-100-plus-upper-200"};
+  const power=hasHistoricalResults?Math.min(TEAM_POWER_MAX,Math.max(0,total)):0;
+  return {rank,currentRank,previousRank,prefecturePowerSource,prefecturePowerSeason,isPrefecturePowerProvisional:prefecturePowerSource==="previous",basePower,prefecturePower:basePower,prefectureStrengthBonus:0,prefectureStrengthIndex:null,blockBonus,nationalBonus,upperTournamentPower,historicalAchievementBonus:history.bonus,historicalAchievementRawBonus:history.rawBonus,historicalAchievementDetails:history.details,historicalRecordCount,hasHistoricalResults,power,maxPower:TEAM_POWER_MAX,calculationMethod:"current-prefecture-or-previous-fallback-700-plus-history-100-plus-upper-200-zero-without-history"};
 }
 
 export function calculatePrefectureStrengthBonuses(teams=[],options={}){
