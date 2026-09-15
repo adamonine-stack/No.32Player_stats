@@ -55,9 +55,9 @@ export function prefectureRankForPlacement(item={}){
   if(normalizeTournamentLevel(item)!=="prefecture")return null;
   const byPlacement=placementLabelToRank(item.placementLabel||item.placement);
   if(byPlacement)return byPlacement;
-  const label=normalizedPlacementText(item.placementLabel||item.placement);
-  if(/初戦敗退|1回戦敗退/u.test(label))return null;
-  return normalizeLegacyRank(item.prefectureRank||item.seasonRank||item.placementRank||item.rankValue);
+  const explicitRank=normalizeLegacyRank(item.prefectureRank||item.seasonRank||item.placementRank||item.rankValue);
+  if(explicitRank)return explicitRank;
+  return null;
 }
 
 export function calculateSeasonRanks(placements=[]){
