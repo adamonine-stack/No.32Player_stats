@@ -78,15 +78,43 @@ assert.equal(maximum.historicalAchievementBonus,100);
 assert.equal(maximum.upperTournamentPower,200);
 assert.equal(maximum.power,1000);
 
-const historyAndUpperOnly=calculateTeamPower([
+const previousFallback=calculateTeamPower([
+  p('2025-26','優勝')
+],{season:'2026-27'});
+assert.equal(previousFallback.rank,'S');
+assert.equal(previousFallback.currentRank,null);
+assert.equal(previousFallback.previousRank,'S');
+assert.equal(previousFallback.prefecturePower,700);
+assert.equal(previousFallback.prefecturePowerSource,'previous');
+assert.equal(previousFallback.prefecturePowerSeason,'2025-26');
+assert.equal(previousFallback.isPrefecturePowerProvisional,true);
+assert.equal(previousFallback.historicalAchievementBonus,60);
+assert.equal(previousFallback.upperTournamentPower,0);
+assert.equal(previousFallback.power,760);
+assert.equal(previousFallback.calculationMethod,'current-prefecture-or-previous-fallback-700-plus-history-100-plus-upper-200');
+
+const currentOverridesPrevious=calculateTeamPower([
+  p('2026-27','ベスト16'),
+  p('2025-26','優勝')
+],{season:'2026-27'});
+assert.equal(currentOverridesPrevious.rank,'C');
+assert.equal(currentOverridesPrevious.currentRank,'C');
+assert.equal(currentOverridesPrevious.previousRank,'S');
+assert.equal(currentOverridesPrevious.prefecturePower,300);
+assert.equal(currentOverridesPrevious.prefecturePowerSource,'current');
+assert.equal(currentOverridesPrevious.isPrefecturePowerProvisional,false);
+assert.equal(currentOverridesPrevious.historicalAchievementBonus,60);
+assert.equal(currentOverridesPrevious.power,360);
+
+const previousFallbackWithUpper=calculateTeamPower([
   {season:'2026-27',tournamentLevel:'national',placementLabel:'出場'},
   p('2025-26','優勝')
 ],{season:'2026-27'});
-assert.equal(historyAndUpperOnly.rank,null);
-assert.equal(historyAndUpperOnly.prefecturePower,0);
-assert.equal(historyAndUpperOnly.historicalAchievementBonus,60);
-assert.equal(historyAndUpperOnly.upperTournamentPower,100);
-assert.equal(historyAndUpperOnly.power,160);
+assert.equal(previousFallbackWithUpper.rank,'S');
+assert.equal(previousFallbackWithUpper.prefecturePower,700);
+assert.equal(previousFallbackWithUpper.historicalAchievementBonus,60);
+assert.equal(previousFallbackWithUpper.upperTournamentPower,100);
+assert.equal(previousFallbackWithUpper.power,860);
 
 const strengths=calculatePrefectureStrengthBonuses([
   {prefecture:'兵庫県',tournamentPlacements:[{season:'2026-27',tournamentLevel:'block',placementLabel:'ベスト8'}]}
