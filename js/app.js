@@ -35,6 +35,7 @@ import { TOURNAMENT_2026_NARA_U15_MEN, TEAMS_2026_NARA_U15_MEN, MATCHES_2026_NAR
 import { TOURNAMENT_2025_HYOGO_JR_WINTER_MEN, TEAMS_2025_HYOGO_JR_WINTER_MEN, HYOGO_OPPONENT_TEAM_MERGES, HYOGO_IMPORT_CANONICAL_NAMES } from "./data/2025-hyogo-jr-winter-men.js?v=20260819-u14-merge-v1";
 import { TOURNAMENT_2025_CBG_HYOGO_MEN, TEAMS_2025_CBG_HYOGO_MEN, MATCHES_2025_CBG_HYOGO_MEN, CBG_CANONICAL_NAMES, normalizeCbgTeamIdentity } from "./data/2025-cbg-hyogo-men.js?v=20260819-v2";
 import { TOURNAMENT_2026_WAKAYAMA_U15_MEN, TEAMS_2026_WAKAYAMA_U15_MEN, MATCHES_2026_WAKAYAMA_U15_MEN } from "./data/2026-wakayama-u15-men.js";
+import { TOURNAMENT_2025_WAKAYAMA_JHS_CHAMPIONSHIP_MEN, TEAMS_2025_WAKAYAMA_JHS_CHAMPIONSHIP_MEN, TOURNAMENT_2025_WAKAYAMA_JHS_SOUTAI_MEN, TEAMS_2025_WAKAYAMA_JHS_SOUTAI_MEN, TOURNAMENT_2025_WAKAYAMA_JHS_ROOKIES_MEN, TEAMS_2025_WAKAYAMA_JHS_ROOKIES_MEN, TOURNAMENT_2025_WAKAYAMA_JR_WINTER_MEN, TEAMS_2025_WAKAYAMA_JR_WINTER_MEN, TOURNAMENT_2026_WAKAYAMA_JHS_CHAMPIONSHIP_MEN, TEAMS_2026_WAKAYAMA_JHS_CHAMPIONSHIP_MEN, TOURNAMENT_2026_WAKAYAMA_JHS_SOUTAI_MEN, TEAMS_2026_WAKAYAMA_JHS_SOUTAI_MEN } from "./data/2025-2026-wakayama-history-men.js?v=20260915-wakayama-history-v2";
 import { TOURNAMENT_2026_SHIGA_U15_MEN, TEAMS_2026_SHIGA_U15_MEN, MATCHES_2026_SHIGA_U15_MEN } from "./data/2026-shiga-u15-men.js";
 import { TOURNAMENT_2026_KYOTO_U15_MEN, TEAMS_2026_KYOTO_U15_MEN, MATCHES_2026_KYOTO_U15_MEN } from "./data/2026-kyoto-u15-men.js";
 import { TOURNAMENT_2026_KINKI_U15_MEN, TEAMS_2026_KINKI_U15_MEN, MATCHES_2026_KINKI_U15_MEN } from "./data/2026-kinki-u15-men.js";
@@ -405,7 +406,7 @@ async function consolidate2025OsakaOpponentTeams(){
 function settingsView(){
   const rows=[...state.seasons].sort((a,b)=>b.sortOrder-a.sortOrder).map(item=>`<div class="season-admin-row"><b>${escapeHtml(item.name)}</b><span>${item.status}${item.id===state.activeSeasonId?' / 現在':''}</span>${state.user&&item.id!==state.activeSeasonId?`<button class="btn small ghost" onclick="setActiveSeason('${item.id}')">現在の世代に設定</button>`:''}</div>`).join('');
   const generationActions=state.user?'<div class="row"><button class="btn" onclick="openSeasonForm()">新しい世代を作成</button><button class="btn ghost" onclick="backupSeasonData()">migration前バックアップ</button><button class="btn ghost" onclick="migrateSeasonData()">Season migration</button></div>':'';
-  const adminActions=state.user?'<button class="btn" onclick="import2026HyogoJhsSoutaiMen()">2026 兵庫県中学校総体を登録</button><button class="btn" onclick="recalculateAllSeasonRanks()">全チームのランク・Power再計算</button>':'';
+  const adminActions=state.user?'<button class="btn" onclick="import2026HyogoJhsSoutaiMen()">2026 兵庫県中学校総体を登録</button><button class="btn" onclick="openWakayamaHistoryImportMenu()">和歌山県 2025・2026大会を登録</button><button class="btn" onclick="recalculateAllSeasonRanks()">全チームのランク・Power再計算</button>':'';
   return `<div class="card"><h2>設定</h2><section class="season-admin"><div class="section-title">チーム世代</div>${rows}${generationActions}</section><p class="sub">表示世代の切替と「現在の世代に設定」は別の操作です。</p><div class="row"><button class="btn ghost" onclick="location.reload()">再読み込み</button>${adminActions}</div></div>`;
 }
 function bindUpperFilters(){
@@ -1286,6 +1287,31 @@ window.import2025OsakaJuniorChampionshipMen=()=>prepare2025OsakaHistoricalImport
 window.import2025HyogoJhsSoutaiMen=()=>prepare2025OsakaHistoricalImport(TOURNAMENT_2025_HYOGO_JHS_SOUTAI_MEN,TEAMS_2025_HYOGO_JHS_SOUTAI_MEN);
 window.import2025HyogoJhsRookiesMen=()=>prepare2025OsakaHistoricalImport(TOURNAMENT_2025_HYOGO_JHS_ROOKIES_MEN,TEAMS_2025_HYOGO_JHS_ROOKIES_MEN);
 window.import2026HyogoJhsSoutaiMen=()=>prepare2025OsakaHistoricalImport(TOURNAMENT_2026_HYOGO_JHS_SOUTAI_MEN,TEAMS_2026_HYOGO_JHS_SOUTAI_MEN);
+const WAKAYAMA_HISTORY_IMPORTS=[
+  {tournament:TOURNAMENT_2025_WAKAYAMA_JHS_CHAMPIONSHIP_MEN,teams:TEAMS_2025_WAKAYAMA_JHS_CHAMPIONSHIP_MEN},
+  {tournament:TOURNAMENT_2025_WAKAYAMA_JHS_SOUTAI_MEN,teams:TEAMS_2025_WAKAYAMA_JHS_SOUTAI_MEN},
+  {tournament:TOURNAMENT_2025_WAKAYAMA_JHS_ROOKIES_MEN,teams:TEAMS_2025_WAKAYAMA_JHS_ROOKIES_MEN},
+  {tournament:TOURNAMENT_2025_WAKAYAMA_JR_WINTER_MEN,teams:TEAMS_2025_WAKAYAMA_JR_WINTER_MEN},
+  {tournament:{...TOURNAMENT_2026_WAKAYAMA_U15_MEN,season:'2026-27',generation:'2026-27',tournamentLevel:'prefecture'},teams:TEAMS_2026_WAKAYAMA_U15_MEN.map(team=>({...team,aliases:[],teamType:'クラブチーム',ageGroup:'U15'}))},
+  {tournament:TOURNAMENT_2026_WAKAYAMA_JHS_CHAMPIONSHIP_MEN,teams:TEAMS_2026_WAKAYAMA_JHS_CHAMPIONSHIP_MEN},
+  {tournament:TOURNAMENT_2026_WAKAYAMA_JHS_SOUTAI_MEN,teams:TEAMS_2026_WAKAYAMA_JHS_SOUTAI_MEN}
+];
+window.openWakayamaHistoryImportMenu=async()=>{
+  if(!requireLogin())return;
+  const snapshot=await getDocs(collection(db,'tournaments')),registered=snapshot.docs.map(item=>({id:item.id,...item.data()}));
+  const missing=WAKAYAMA_HISTORY_IMPORTS.filter(entry=>!findDuplicateHistoricalTournament(entry.tournament,registered));
+  if(!missing.length){
+    modal('<h2>和歌山県大会</h2><p>確認対象の2025・2026年度男子U15大会はすべて登録済みです。</p><button class="btn" id="closeModal">閉じる</button>');
+    $('#closeModal').onclick=closeModal;return;
+  }
+  modal(`<h2>和歌山県大会を登録</h2><p class="sub">未登録大会だけを表示しています。類似チーム名がある場合は、次の画面で統合するか別チームとして登録するか選択できます。</p><div class="grid">${missing.map((entry,index)=>`<button class="btn" data-wakayama-import="${index}">${escapeHtml(entry.tournament.shortName||entry.tournament.name)}</button>`).join('')}</div><button class="btn ghost" id="closeModal">閉じる</button>`);
+  document.querySelectorAll('[data-wakayama-import]').forEach(button=>button.onclick=async()=>{
+    const entry=missing[Number(button.dataset.wakayamaImport)];
+    closeModal();
+    await prepare2025OsakaHistoricalImport(entry.tournament,entry.teams);
+  });
+  $('#closeModal').onclick=closeModal;
+};
 
 window.import2026ShigaMen=import2026ShigaMen;
 window.import2026KyotoMen=import2026KyotoMen;
