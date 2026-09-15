@@ -19,6 +19,11 @@
     'button[onclick="dryRun2025OsakaJrWinterCupMen()"]',
     'button[onclick="import2025OsakaJrWinterCupMen()"]',
     'button[onclick="consolidate2025OsakaOpponentTeams()"]',
+    'button[onclick="apply2026RankingAndKinkiMen()"]',
+    'button[onclick="import2025OsakaClubCupMen()"]',
+    'button[onclick="import2025OsakaJuniorChampionshipMen()"]',
+    'button[onclick="import2025HyogoJhsSoutaiMen()"]',
+    'button[onclick="import2025HyogoJhsRookiesMen()"]',
     'button[onclick="import2026ShigaMen()"]',
     'button[onclick="import2026KyotoMen()"]',
     'button[onclick="import2025HyogoJrWinterMen()"]',
@@ -51,6 +56,22 @@
     if(reload&&!reload.dataset.r32FreshReload){
       reload.dataset.r32FreshReload='1';
       reload.onclick=event=>{event.preventDefault();r32ForceFreshReload()};
+    }
+
+    const settingsHeading=[...root.querySelectorAll('h2')].find(node=>node.textContent.trim()==='設定');
+    const registered=typeof window.r32TournamentRegistered==='function'&&window.r32TournamentRegistered('2026-hyogo-jhs-soutai-men');
+    const current=root.querySelector('button[onclick="import2026HyogoJhsSoutaiMen()"],button[data-r32-injected="2026-hyogo-jhs-soutai"]');
+    if(registered&&current)current.remove();
+    if(settingsHeading&&!registered&&!current&&typeof window.import2026HyogoJhsSoutaiMen==='function'){
+      const button=document.createElement('button');
+      button.className='btn';
+      button.type='button';
+      button.textContent='2026 兵庫県中学校総体を登録';
+      button.dataset.r32Injected='2026-hyogo-jhs-soutai';
+      button.onclick=()=>window.import2026HyogoJhsSoutaiMen();
+      const host=[...root.querySelectorAll('.row')].find(row=>[...row.querySelectorAll('button')].some(button=>button.textContent.includes('全チームのランク')&&button.textContent.includes('Power再計算')))
+        || settingsHeading.parentElement?.querySelector('.row');
+      host?.appendChild(button);
     }
   }
 
