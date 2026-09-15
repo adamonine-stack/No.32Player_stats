@@ -34,7 +34,7 @@ assert.equal(isValidTournamentAchievement(p('2025-26','優勝')),true);
 assert.equal(isValidTournamentAchievement({season:'2025-26'}),false);
 assert.equal(isValidTournamentAchievement({season:'2025-26',tournamentName:'旧大会',placementLabel:''}),false);
 assert.equal(isValidTournamentAchievement({season:'2025-26',tournamentName:'旧大会',placementLabel:'出場'}),true);
-assert.equal(isValidHistoricalAchievement({season:'2025-26',tournamentName:'旧大会',placementLabel:'出場'}),false);
+assert.equal(isValidHistoricalAchievement({season:'2025-26',tournamentName:'旧大会',placementLabel:'出場'}),true);
 assert.equal(isValidHistoricalAchievement(p('2025-26','県大会出場')),true);
 
 const highest=calculateSeasonRanks([p('2026-27','ベスト8'),p('2026-27','準優勝')])['2026-27'];
@@ -71,8 +71,7 @@ assert.equal(history.bonus,72.3);
 const phantomHistory=[
   {season:'2025-26',tournamentName:'',placementLabel:''},
   {season:'2025-26',sourceType:'registeredGames'},
-  {year:2025,tournamentName:'旧データ',placementLabel:''},
-  {season:'2025-26',tournamentName:'非表示の旧大会',placementLabel:'出場'}
+  {year:2025,tournamentName:'旧データ',placementLabel:''}
 ];
 const phantomBonus=calculateHistoricalTeamBonus(phantomHistory,{currentSeason:'2026-27'});
 assert.equal(phantomBonus.details[0].recordCount,0);
@@ -82,6 +81,15 @@ const phantomPower=calculateTeamPower(phantomHistory,{season:'2026-27'});
 assert.equal(phantomPower.historicalRecordCount,0);
 assert.equal(phantomPower.hasHistoricalResults,false);
 assert.equal(phantomPower.power,0);
+
+const participationOnly=[{season:'2025-26',tournamentName:'正式参加大会',placementLabel:'出場',tournamentLevel:'prefecture'}];
+const participationBonus=calculateHistoricalTeamBonus(participationOnly,{currentSeason:'2026-27'});
+assert.equal(participationBonus.details[0].recordCount,1);
+assert.equal(participationBonus.bonus,6);
+const participationPower=calculateTeamPower(participationOnly,{season:'2026-27'});
+assert.equal(participationPower.historicalRecordCount,1);
+assert.equal(participationPower.hasHistoricalResults,true);
+assert.equal(participationPower.power,6);
 
 const previousFallback=calculateTeamPower([p('2025-26','優勝')],{season:'2026-27'});
 assert.equal(previousFallback.prefecturePower,700);
