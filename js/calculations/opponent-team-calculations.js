@@ -101,7 +101,18 @@ function placementStage(label=""){
   return "participation";
 }
 
+export function isValidTournamentAchievement(item={}){
+  if(!item||typeof item!=="object"||item.resultConfirmed===false)return false;
+  const label=normalizedPlacementText(item.placementLabel??item.placement??""),
+        hasTournamentIdentity=Boolean(String(item.tournamentName||item.name||item.tournamentId||"").trim()),
+        hasSeason=Boolean(placementSeason(item));
+  if(!hasTournamentIdentity||!hasSeason||!label)return false;
+  if(placementLabelToRank(label))return true;
+  return /出場|参加|初戦敗退|1回戦敗退|2回戦敗退|予選敗退|リーグ敗退/u.test(label);
+}
+
 export function upperTournamentBonus(item={}){
+  if(!isValidTournamentAchievement(item))return 0;
   const explicit=Number(item.teamPowerBonus??item.upperTournamentBonus);
   if(Number.isFinite(explicit)&&explicit>=0)return explicit;
   const level=normalizeTournamentLevel(item),stage=placementStage(item.placementLabel||item.placement);
@@ -111,6 +122,7 @@ export function upperTournamentBonus(item={}){
 }
 
 export function historicalAchievementPoints(item={}){
+  if(!isValidTournamentAchievement(item))return 0;
   const stage=placementStage(item.placementLabel||item.placement);
   return HISTORICAL_ACHIEVEMENT_POINTS[stage]??HISTORICAL_ACHIEVEMENT_POINTS.participation;
 }
@@ -118,7 +130,7 @@ export function historicalAchievementPoints(item={}){
 export function calculateHistoricalTeamBonus(placements=[],options={}){
   const currentSeason=options.currentSeason||options.season||currentSeasonLabel(),seasons=previousSeasonLabels(currentSeason,HISTORICAL_TEAM_POWER_WEIGHTS.length);
   const details=seasons.map((season,index)=>{
-    const records=placements.filter(item=>placementSeason(item)===season).map(item=>({
+    const records=placements.filter(item=>placementSeason(item)===season&&isValidTournamentAchievement(item)).map(item=>({
       level:normalizeTournamentLevel(item),
       stage:placementStage(item.placementLabel||item.placement),
       points:historicalAchievementPoints(item)
