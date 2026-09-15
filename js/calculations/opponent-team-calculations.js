@@ -132,8 +132,9 @@ export function calculateHistoricalTeamBonus(placements=[],options={}){
 }
 
 export function calculateTeamPower(placements=[],options={}){
-  const season=options.currentSeason||options.season||currentSeasonLabel(),seasonItems=placements.filter(item=>placementSeason(item)===season);
-  const seasonRank=calculateSeasonRanks(seasonItems)[season],rank=seasonRank?.rank||null,history=calculateHistoricalTeamBonus(placements,{currentSeason:season});
+  const season=options.currentSeason||options.season||currentSeasonLabel(),previousSeason=previousSeasonLabel(season),seasonItems=placements.filter(item=>placementSeason(item)===season);
+  const seasonRanks=calculateSeasonRanks(placements),currentRank=seasonRanks[season]?.rank||null,previousRank=seasonRanks[previousSeason]?.rank||null,rank=currentRank||previousRank||null;
+  const prefecturePowerSource=currentRank?"current":previousRank?"previous":null,prefecturePowerSeason=currentRank?season:previousRank?previousSeason:null,history=calculateHistoricalTeamBonus(placements,{currentSeason:season});
   const basePower=rank?(TEAM_POWER_BASE[rank]||0):0;
   let blockBonus=0,nationalBonus=0;
   for(const item of seasonItems){
@@ -144,7 +145,7 @@ export function calculateTeamPower(placements=[],options={}){
   const upperTournamentPower=Math.min(200,Math.max(blockBonus,nationalBonus));
   const total=Math.round((basePower+history.bonus+upperTournamentPower)*10)/10;
   const power=total>0?Math.min(TEAM_POWER_MAX,total):null;
-  return {rank,basePower,prefecturePower:basePower,prefectureStrengthBonus:0,prefectureStrengthIndex:null,blockBonus,nationalBonus,upperTournamentPower,historicalAchievementBonus:history.bonus,historicalAchievementRawBonus:history.rawBonus,historicalAchievementDetails:history.details,power,maxPower:TEAM_POWER_MAX,calculationMethod:"current-prefecture-700-plus-history-100-plus-upper-200"};
+  return {rank,currentRank,previousRank,prefecturePowerSource,prefecturePowerSeason,isPrefecturePowerProvisional:prefecturePowerSource==="previous",basePower,prefecturePower:basePower,prefectureStrengthBonus:0,prefectureStrengthIndex:null,blockBonus,nationalBonus,upperTournamentPower,historicalAchievementBonus:history.bonus,historicalAchievementRawBonus:history.rawBonus,historicalAchievementDetails:history.details,power,maxPower:TEAM_POWER_MAX,calculationMethod:"current-prefecture-or-previous-fallback-700-plus-history-100-plus-upper-200"};
 }
 
 export function calculatePrefectureStrengthBonuses(teams=[],options={}){
