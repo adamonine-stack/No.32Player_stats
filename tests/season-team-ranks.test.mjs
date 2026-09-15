@@ -48,7 +48,20 @@ const noHistoryCurrent=calculateTeamPower([
 assert.equal(noHistoryCurrent.prefecturePower,700);
 assert.equal(noHistoryCurrent.upperTournamentPower,100);
 assert.equal(noHistoryCurrent.hasHistoricalResults,false);
-assert.equal(noHistoryCurrent.power,0);
+assert.equal(noHistoryCurrent.hasTournamentResults,true);
+assert.equal(noHistoryCurrent.validTournamentRecordCount,2);
+assert.equal(noHistoryCurrent.power,800);
+
+const adorareLike=calculateTeamPower([
+  p('2026-27','優勝',{tournamentName:'2026年度第1回和歌山県U15クラブバスケットボール選手権大会'}),
+  {season:'2026-27',tournamentLevel:'block',tournamentName:'2026年度 近畿U15クラブバスケットボール選手権大会（男子）',placementLabel:'ベスト8',resultConfirmed:true}
+],{season:'2026-27'});
+assert.equal(adorareLike.prefecturePower,700);
+assert.equal(adorareLike.upperTournamentPower,70);
+assert.equal(adorareLike.historicalAchievementBonus,0);
+assert.equal(adorareLike.hasHistoricalResults,false);
+assert.equal(adorareLike.hasTournamentResults,true);
+assert.equal(adorareLike.power,770);
 
 const historical=[
   p('2025-26','優勝'),
