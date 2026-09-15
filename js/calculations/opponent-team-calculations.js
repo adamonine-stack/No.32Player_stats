@@ -52,6 +52,7 @@ export function placementLabelToRank(label){
 function normalizeLegacyRank(rank){return rank==="B+"?"B":OPPONENT_RANKS.includes(rank)?rank:null}
 
 export function prefectureRankForPlacement(item={}){
+  if(item.teamPowerEligible===false)return null;
   if(normalizeTournamentLevel(item)!=="prefecture")return null;
   const byPlacement=placementLabelToRank(item.placementLabel||item.placement);
   if(byPlacement)return byPlacement;
@@ -112,11 +113,11 @@ export function isValidTournamentAchievement(item={}){
 }
 
 export function isValidHistoricalAchievement(item={}){
-  return isValidTournamentAchievement(item);
+  return item?.teamPowerEligible!==false&&isValidTournamentAchievement(item);
 }
 
 export function upperTournamentBonus(item={}){
-  if(!isValidTournamentAchievement(item))return 0;
+  if(item?.teamPowerEligible===false||!isValidTournamentAchievement(item))return 0;
   const explicit=Number(item.teamPowerBonus??item.upperTournamentBonus);
   if(Number.isFinite(explicit)&&explicit>=0)return explicit;
   const level=normalizeTournamentLevel(item),stage=placementStage(item.placementLabel||item.placement);
@@ -149,7 +150,7 @@ export function calculateHistoricalTeamBonus(placements=[],options={}){
 
 export function calculateTeamPower(placements=[],options={}){
   const season=options.currentSeason||options.season||currentSeasonLabel(),previousSeason=previousSeasonLabel(season),seasonItems=placements.filter(item=>placementSeason(item)===season);
-  const validPlacements=placements.filter(isValidTournamentAchievement),seasonRanks=calculateSeasonRanks(validPlacements),currentRank=seasonRanks[season]?.rank||null,previousRank=seasonRanks[previousSeason]?.rank||null,rank=currentRank||previousRank||null;
+  const validPlacements=placements.filter(item=>item?.teamPowerEligible!==false&&isValidTournamentAchievement(item)),seasonRanks=calculateSeasonRanks(validPlacements),currentRank=seasonRanks[season]?.rank||null,previousRank=seasonRanks[previousSeason]?.rank||null,rank=currentRank||previousRank||null;
   const prefecturePowerSource=currentRank?"current":previousRank?"previous":null,prefecturePowerSeason=currentRank?season:previousRank?previousSeason:null,history=calculateHistoricalTeamBonus(placements,{currentSeason:season});
   const basePower=rank?(TEAM_POWER_BASE[rank]||0):0;
   let blockBonus=0,nationalBonus=0;
