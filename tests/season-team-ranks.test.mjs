@@ -34,9 +34,11 @@ assert.equal(currentPower.blockBonus,100);
 assert.equal(currentPower.nationalBonus,0);
 assert.equal(currentPower.upperTournamentPower,100);
 assert.equal(currentPower.historicalAchievementBonus,0);
-assert.equal(currentPower.power,500);
+assert.equal(currentPower.hasHistoricalResults,false);
+assert.equal(currentPower.historicalRecordCount,0);
+assert.equal(currentPower.power,0);
 assert.equal(currentPower.maxPower,1000);
-assert.equal(currentPower.calculationMethod,'current-prefecture-700-plus-history-100-plus-upper-200');
+assert.equal(currentPower.calculationMethod,'current-prefecture-or-previous-fallback-700-plus-history-100-plus-upper-200-zero-without-history');
 
 const historical=[
   p('2025-26','優勝'),
@@ -78,6 +80,14 @@ assert.equal(maximum.historicalAchievementBonus,100);
 assert.equal(maximum.upperTournamentPower,200);
 assert.equal(maximum.power,1000);
 
+const noHistoryCurrentChampion=calculateTeamPower([
+  p('2026-27','優勝')
+],{season:'2026-27'});
+assert.equal(noHistoryCurrentChampion.prefecturePower,700);
+assert.equal(noHistoryCurrentChampion.historicalAchievementBonus,0);
+assert.equal(noHistoryCurrentChampion.hasHistoricalResults,false);
+assert.equal(noHistoryCurrentChampion.power,0);
+
 const previousFallback=calculateTeamPower([
   p('2025-26','優勝')
 ],{season:'2026-27'});
@@ -91,7 +101,9 @@ assert.equal(previousFallback.isPrefecturePowerProvisional,true);
 assert.equal(previousFallback.historicalAchievementBonus,60);
 assert.equal(previousFallback.upperTournamentPower,0);
 assert.equal(previousFallback.power,760);
-assert.equal(previousFallback.calculationMethod,'current-prefecture-or-previous-fallback-700-plus-history-100-plus-upper-200');
+assert.equal(previousFallback.hasHistoricalResults,true);
+assert.equal(previousFallback.historicalRecordCount,1);
+assert.equal(previousFallback.calculationMethod,'current-prefecture-or-previous-fallback-700-plus-history-100-plus-upper-200-zero-without-history');
 
 const currentOverridesPrevious=calculateTeamPower([
   p('2026-27','ベスト16'),
