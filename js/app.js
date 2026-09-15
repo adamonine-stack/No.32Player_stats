@@ -40,7 +40,7 @@ import { TOURNAMENT_2026_KYOTO_U15_MEN, TEAMS_2026_KYOTO_U15_MEN, MATCHES_2026_K
 import { TOURNAMENT_2026_KINKI_U15_MEN, TEAMS_2026_KINKI_U15_MEN, MATCHES_2026_KINKI_U15_MEN } from "./data/2026-kinki-u15-men.js";
 import { TOURNAMENT_2025_OSAKA_JR_WINTER_CUP_MEN, TEAMS_2025_OSAKA_JR_WINTER_CUP_MEN, OSAKA_2025_DUPLICATE_TEAM_MERGES } from "./data/2025-osaka-jr-winter-cup-men.js";
 import { TOURNAMENT_2025_OSAKA_CLUB_CUP_MEN, TEAMS_2025_OSAKA_CLUB_CUP_MEN, TOURNAMENT_2025_OSAKA_JUNIOR_CHAMPIONSHIP_MEN, TEAMS_2025_OSAKA_JUNIOR_CHAMPIONSHIP_MEN } from "./data/2025-osaka-history-men.js?v=20260915-osaka-history-v1";
-import { findDuplicateHistoricalTournament, findExistingHistoricalPlacement, findSimilarHistoricalTeamCandidates } from "./calculations/historical-import-calculations.js?v=20260915-osaka-history-v2";
+import { findDuplicateHistoricalResultSet, findDuplicateHistoricalTournament, findExistingHistoricalPlacement, findSimilarHistoricalTeamCandidates } from "./calculations/historical-import-calculations.js?v=20260915-osaka-history-v3";
 import { findImportedTeamMatch, findExistingTournamentTeam, normalizeTeamNameForMatching, normalizeTournamentNameForMatching } from "./calculations/team-name-matching.js";
 const quickInputStyles=document.createElement('link');quickInputStyles.rel='stylesheet';quickInputStyles.href='./styles/quick-input.css?v=20260908-quarter-session-v1';document.head.appendChild(quickInputStyles);
 if('serviceWorker' in navigator && !location.pathname.includes('/tests/'))navigator.serviceWorker.register('./service-worker.js?v=20260915-opponent-scroll-buttons-v1').catch(error=>console.warn('Service worker registration failed',error));
@@ -1255,10 +1255,10 @@ async function register2025OsakaHistoricalTournament(tournament,importedTeams,de
 async function prepare2025OsakaHistoricalImport(tournament,importedTeams){
   if(!requireLogin())return;
   const [teamSnapshot,tournamentSnapshot]=await Promise.all([getDocs(collection(db,'opponentTeams')),getDocs(collection(db,'tournaments'))]),allTeams=teamSnapshot.docs.map(item=>({id:item.id,...item.data()})),existingTournaments=tournamentSnapshot.docs.map(item=>({id:item.id,...item.data()}));
-  const duplicateTournament=findDuplicateHistoricalTournament(tournament,existingTournaments),placementDuplicate=allTeams.find(team=>findExistingHistoricalPlacement(opponentPlacements(team),tournament));
-  if(duplicateTournament||placementDuplicate){
-    const evidence=duplicateTournament?.name||placementDuplicate?.tournamentPlacements?.find(item=>findExistingHistoricalPlacement([item],tournament))?.tournamentName||tournament.name;
-    modal(`<h2>登録済み大会です</h2><p>${escapeHtml(evidence||tournament.name)}</p><p class="sub">同じ大会結果の重複を避けるため、今回は何も書き込みません。</p><button class="btn" id="closeModal">閉じる</button>`);$('#closeModal').onclick=closeModal;return;
+  const duplicateTournament=findDuplicateHistoricalTournament(tournament,existingTournaments),placementDuplicate=allTeams.find(team=>findExistingHistoricalPlacement(opponentPlacements(team),tournament)),resultSetDuplicate=findDuplicateHistoricalResultSet(importedTeams,tournament,allTeams);
+  if(duplicateTournament||placementDuplicate||resultSetDuplicate){
+    const evidence=duplicateTournament?.name||placementDuplicate?.tournamentPlacements?.find(item=>findExistingHistoricalPlacement([item],tournament))?.tournamentName||resultSetDuplicate?.tournamentName||resultSetDuplicate?.tournamentId||tournament.name;
+    modal(`<h2>登録済み大会の可能性があります</h2><p>${escapeHtml(evidence||tournament.name)}</p><p class="sub">大会名または上位結果構成が既存データと一致しました。同じ大会結果の重複を避けるため、今回は何も書き込みません。</p><button class="btn" id="closeModal">閉じる</button>`);$('#closeModal').onclick=closeModal;return;
   }
   const decisions=new Map(),reviews=[];
   importedTeams.forEach((imported,index)=>{
