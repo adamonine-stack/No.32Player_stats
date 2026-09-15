@@ -174,9 +174,7 @@ const CBG2025_PARTICIPANTS=[
 ];
 const CBG2025_RESULTS=new Map([
   ['Jamaney Youth','優勝'],['BIG EIGHT','準優勝'],['HANABUSA','3位'],['ピュア・チャンプス','4位'],
-  ['CONFIANZA東京U15','5位'],['KAGO CLUB','6位'],['S&S PHOENIX','7位'],['津ジュニアゴールデンアウルズ','8位'],
-  ['MIYAKONOJO・GRITS','ベスト16'],['BCつくばEvolution','ベスト16'],['THE SOUTH U15','ベスト16'],['KAGO CLUB FUKUOKA','ベスト16'],
-  ['MASUDA BANDITS','ベスト16'],['ULTIMATES','ベスト16'],['GXAロケッツ','ベスト16'],['SunBraves OKAYAMA','ベスト16']
+  ['CONFIANZA東京U15','5位'],['KAGO CLUB','6位'],['S&S PHOENIX','7位'],['津ジュニアゴールデンアウルズ','8位']
 ]);
 export const TEAMS_2025_U15_CBG_MEN=CBG2025_PARTICIPANTS.map(([teamName,prefecture])=>makeTeam(
   teamName,prefecture,CBG2025_RESULTS.get(teamName)||'出場',
