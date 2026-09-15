@@ -15,7 +15,7 @@ const SCHOOL_SPECIAL={
   '亀川':{teamName:'海南市立亀川中学校',aliases:['亀川','亀川中学校']},
   '那智':{teamName:'那智勝浦町立那智中学校',aliases:['那智','那智中学校']},
   '紀伊':{teamName:'和歌山市立紀伊中学校',aliases:['紀伊','紀伊中学校']},
-  '紀美野':{teamName:'紀美野町立野上中学校',aliases:['紀美野','紀美野中学校','野上中学校']},
+  '紀美野':{teamName:'紀美野町立紀美野中学校',aliases:['紀美野','紀美野中学校']},
   '南部':{teamName:'みなべ町立南部中学校',aliases:['南部','南部中学校']},
   '高積':{teamName:'和歌山市立高積中学校',aliases:['高積','高積中学校']},
   '岩出第二':{teamName:'岩出市立岩出第二中学校',aliases:['岩出第二','岩出第二中学校']},
@@ -139,6 +139,30 @@ export const TEAMS_2025_WAKAYAMA_JR_WINTER_MEN=[
   'ASLEAD有田','ブランリオン','ONELYS wakayama U15','GLÄNZ ZWEI',"Gr’s"
 ].map(name=>{const [placementLabel,rank]=JR_WINTER_2025[name]||['ベスト16','C'];return row(name,placementLabel,rank,{kind:'club'})});
 
+
+
+export const TOURNAMENT_2025_WAKAYAMA_JHS_ROOKIES_MEN=tournament({
+  id:'2025-wakayama-jhs-rookies-men',
+  year:2025,season:'2025-26',generation:'2025-26',
+  name:'第41回和歌山県中学校バスケットボール新人大会 男子',
+  shortName:'2025 和歌山県中学校新人大会 男子',
+  type:'県大会 / 中学校新人',
+  participantCount:12,
+  source:{organization:'和歌山県バスケットボール協会',document:'第41回和歌山県中学校バスケットボール新人大会 大会結果',publishedDate:'2025-11-09',pageUrl:'https://wakayama.pba-japanbasketball.jp/u15/game/4489/',pdfUrl:'https://wakayama.pba-japanbasketball.jp/wp-content/uploads/2025/11/R7kenshinjin_kekka1109.pdf',verified:true}
+});
+const ROOKIES_2025={
+  '有和':['優勝','S'],
+  '近大和歌山':['準優勝','A+'],
+  '楠見':['ベスト4','A'],
+  'CHOICE GB':['ベスト4','A']
+};
+export const TEAMS_2025_WAKAYAMA_JHS_ROOKIES_MEN=[
+  '有和','城南','海南第三','高野口','楠見','緑丘','高雄','岩出','近大和歌山','荒川','ASLEAD有田','CHOICE GB'
+].map(name=>{
+  const [placementLabel,rank]=ROOKIES_2025[name]||['県大会出場','E'];
+  return row(name,placementLabel,rank,{kind:['ASLEAD有田','CHOICE GB'].includes(name)?'club':'school',ageGroup:'U14'});
+});
+
 export const TOURNAMENT_2026_WAKAYAMA_JHS_CHAMPIONSHIP_MEN=tournament({
   id:'2026-wakayama-jhs-championship-men',
   year:2026,season:'2026-27',generation:'2026-27',
@@ -165,7 +189,7 @@ export const TOURNAMENT_2026_WAKAYAMA_JHS_SOUTAI_MEN=tournament({
   source:{organization:'和歌山県バスケットボール協会',document:'第78回和歌山県中学校総合体育大会 大会結果',publishedDate:'2026-07-28',pageUrl:'https://wakayama.pba-japanbasketball.jp/u15/game/5015/',verified:true}
 });
 const SOUTAI_2026={
-  '有和':['優勝','S'],'楠見':['準優勝','A+'],'明洋':['ベスト4','A'],'上富田':['ベスト4','A'],
+  '有和':['優勝','S'],'上富田':['準優勝','A+'],'明洋':['ベスト4','A'],'楠見':['ベスト4','A'],
   '城南':['ベスト8','B'],'近大和歌山':['ベスト8','B'],'海南第三':['ベスト8','B'],'緑丘':['ベスト8','B']
 };
 export const TEAMS_2026_WAKAYAMA_JHS_SOUTAI_MEN=[
