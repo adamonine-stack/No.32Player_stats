@@ -5,6 +5,7 @@ import {
   TOURNAMENT_2025_WAKAYAMA_JHS_SOUTAI_MEN,TEAMS_2025_WAKAYAMA_JHS_SOUTAI_MEN,
   TOURNAMENT_2025_WAKAYAMA_JHS_ROOKIES_MEN,TEAMS_2025_WAKAYAMA_JHS_ROOKIES_MEN,
   TOURNAMENT_2025_WAKAYAMA_JR_WINTER_MEN,TEAMS_2025_WAKAYAMA_JR_WINTER_MEN,
+  TOURNAMENT_2025_WAKAYAMA_JUNIOR_CLUB_MEN,TEAMS_2025_WAKAYAMA_JUNIOR_CLUB_MEN,
   TOURNAMENT_2026_WAKAYAMA_JHS_CHAMPIONSHIP_MEN,TEAMS_2026_WAKAYAMA_JHS_CHAMPIONSHIP_MEN,
   TOURNAMENT_2026_WAKAYAMA_JHS_SOUTAI_MEN,TEAMS_2026_WAKAYAMA_JHS_SOUTAI_MEN
 } from '../js/data/2025-2026-wakayama-history-men.js';
@@ -31,6 +32,13 @@ test('Wakayama 2025 verified boys results are represented',()=>{
   assert.equal(placement(TEAMS_2025_WAKAYAMA_JR_WINTER_MEN,'G-LiGAR'),'優勝');
   assert.equal(placement(TEAMS_2025_WAKAYAMA_JR_WINTER_MEN,'adorare'),'準優勝');
   assert.deepEqual(['GLÄNZ','CHOICE'].map(name=>placement(TEAMS_2025_WAKAYAMA_JR_WINTER_MEN,name)),['ベスト4','ベスト4']);
+});
+
+test('Wakayama 2025 junior club top four is represented',()=>{
+  assert.equal(TEAMS_2025_WAKAYAMA_JUNIOR_CLUB_MEN.length,4);
+  assert.equal(placement(TEAMS_2025_WAKAYAMA_JUNIOR_CLUB_MEN,'BLACK PANTHERS'),'優勝');
+  assert.equal(placement(TEAMS_2025_WAKAYAMA_JUNIOR_CLUB_MEN,'adorare'),'準優勝');
+  assert.deepEqual(['CLEVER CATS','Re-birth'].map(name=>placement(TEAMS_2025_WAKAYAMA_JUNIOR_CLUB_MEN,name)),['ベスト4','ベスト4']);
 });
 
 test('Wakayama 2026 verified boys results are represented',()=>{
