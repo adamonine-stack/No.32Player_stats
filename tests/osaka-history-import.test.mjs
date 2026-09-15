@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {TOURNAMENT_2025_OSAKA_CLUB_CUP_MEN,TEAMS_2025_OSAKA_CLUB_CUP_MEN,TOURNAMENT_2025_OSAKA_JUNIOR_CHAMPIONSHIP_MEN,TEAMS_2025_OSAKA_JUNIOR_CHAMPIONSHIP_MEN} from '../js/data/2025-osaka-history-men.js';
-import {findDuplicateHistoricalTournament,findExistingHistoricalPlacement,findSimilarHistoricalTeamCandidates} from '../js/calculations/historical-import-calculations.js';
+import {findDuplicateHistoricalResultSet,findDuplicateHistoricalTournament,findExistingHistoricalPlacement,findSimilarHistoricalTeamCandidates} from '../js/calculations/historical-import-calculations.js';
 
 test('official Osaka 2025 tournament datasets have expected counts and top results',()=>{
   assert.equal(TEAMS_2025_OSAKA_CLUB_CUP_MEN.length,31);
@@ -24,6 +24,14 @@ test('same tournament is recognized even when id or legacy naming differs',()=>{
   assert.equal(findDuplicateHistoricalTournament(TOURNAMENT_2025_OSAKA_CLUB_CUP_MEN,[legacy])?.id,'legacy-name');
   const placement={tournamentId:'legacy-id',tournamentName:'第6回 大阪府クラブカップ大会',year:2025,prefecture:'大阪府'};
   assert.equal(findExistingHistoricalPlacement([placement],TOURNAMENT_2025_OSAKA_CLUB_CUP_MEN),placement);
+});
+
+test('duplicate result set is detected even under a different tournament name',()=>{
+  const placements=[
+    ['REDFORCES','S'],['EAST.O.ACADEMY U-15 TEAM','A+'],['KAGO CLUB','A'],['NEXTEST','A']
+  ].map(([teamName,rank],index)=>({id:String(index),teamName,prefecture:'大阪府',category:'U15',tournamentPlacements:[{tournamentId:'legacy-club-cup',tournamentName:'令和7年度クラブ大会',year:2025,prefecture:'大阪府',category:'U15',gender:'男子',placementRank:rank}]}));
+  const duplicate=findDuplicateHistoricalResultSet(TEAMS_2025_OSAKA_CLUB_CUP_MEN,TOURNAMENT_2025_OSAKA_CLUB_CUP_MEN,placements);
+  assert.equal(duplicate?.tournamentId,'legacy-club-cup');
 });
 
 test('similar names return candidates instead of silently merging',()=>{
