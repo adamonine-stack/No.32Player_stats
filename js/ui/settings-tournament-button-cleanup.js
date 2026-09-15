@@ -27,9 +27,30 @@
     'button[onclick="consolidateHyogoOpponentTeams()"]'
   ];
 
+  async function r32ForceFreshReload(){
+    try{
+      if('caches' in window){
+        const keys=await caches.keys();
+        await Promise.all(keys.filter(key=>key.startsWith('r32-shell-')).map(key=>caches.delete(key)));
+      }
+      if('serviceWorker' in navigator){
+        const registrations=await navigator.serviceWorker.getRegistrations();
+        await Promise.all(registrations.map(registration=>registration.update().catch(()=>{})));
+      }
+    }catch(error){console.warn('R32 fresh reload cleanup failed',error)}
+    const url=new URL(location.href);
+    url.searchParams.set('r32v','20260915-hyogo-2026-history-v2');
+    location.replace(url.toString());
+  }
+
   function cleanup(){
     for(const selector of obsoleteSelectors){
       root.querySelectorAll(selector).forEach(button=>button.remove());
+    }
+    const reload=[...root.querySelectorAll('button')].find(button=>button.textContent.trim()==='再読み込み');
+    if(reload&&!reload.dataset.r32FreshReload){
+      reload.dataset.r32FreshReload='1';
+      reload.onclick=event=>{event.preventDefault();r32ForceFreshReload()};
     }
   }
 
