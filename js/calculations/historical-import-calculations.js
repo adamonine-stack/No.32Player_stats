@@ -37,4 +37,46 @@ export function sameHistoricalTournament(a={},b={}){
   return Boolean((sameName||sameSource)&&sameSeason&&samePrefecture&&sameGender&&sameCategory);
 }
 export function findDuplicateHistoricalTournament(tournament={},existing=[]){return existing.find(item=>sameHistoricalTournament(tournament,item))||null}
+
+function placementRankKey(item={}){
+  const explicit=String(item.rank||item.placementRank||item.rankValue||item.seasonRank||'').toUpperCase();
+  if(['S','A+','A'].includes(explicit))return explicit;
+  const text=String(item.placementLabel||item.placement||'').normalize('NFKC').replace(/\s+/gu,'');
+  if(text==='優勝'||/(^|[^準])優勝/u.test(text))return 'S';
+  if(/準優勝|2位|第2位/u.test(text))return 'A+';
+  if(/ベスト4|3位|第3位|4位|第4位|準決勝敗退/u.test(text))return 'A';
+  return '';
+}
+function sameImportedTeam(imported={},team={},category='U15'){
+  let score=0;
+  for(const a of importedNames(imported))for(const b of candidateNames(team))score=Math.max(score,teamNameSimilarity(a,b,category));
+  return score>=.95;
+}
+export function findDuplicateHistoricalResultSet(importedTeams=[],tournament={},teams=[]){
+  const expected=importedTeams.filter(item=>['S','A+','A'].includes(placementRankKey(item)));
+  if(expected.length<4)return null;
+  const groups=new Map();
+  for(const team of teams)for(const placement of Array.isArray(team.tournamentPlacements)?team.tournamentPlacements:[]){
+    if(placement?.tournamentId===tournament.id)continue;
+    if(!compatibleValue(seasonKey(placement),seasonKey(tournament)))continue;
+    if(!compatibleValue(placement.prefecture,tournament.prefecture))continue;
+    if(!compatibleValue(placement.category,tournament.category,categoryKey))continue;
+    if(!compatibleValue(placement.gender,tournament.gender))continue;
+    const identity=String(placement.tournamentId||'').trim()||tournamentNameKey(placement.tournamentName||placement.name||'');
+    if(!identity)continue;
+    const key=[identity,seasonKey(placement),String(placement.prefecture||''),categoryKey(placement.category||''),String(placement.gender||'')].join('|');
+    const group=groups.get(key)||{key,tournamentId:placement.tournamentId||'',tournamentName:placement.tournamentName||placement.name||'',entries:[]};
+    group.entries.push({team,placement});groups.set(key,group);
+  }
+  for(const group of groups.values()){
+    let matched=0,champion=false,runnerUp=false;
+    for(const imported of expected){
+      const rank=placementRankKey(imported);
+      const found=group.entries.find(entry=>placementRankKey(entry.placement)===rank&&sameImportedTeam(imported,entry.team,tournament.category||'U15'));
+      if(found){matched++;if(rank==='S')champion=true;if(rank==='A+')runnerUp=true}
+    }
+    if(champion&&runnerUp&&matched===expected.length)return {...group,matched,expected:expected.length};
+  }
+  return null;
+}
 export function findExistingHistoricalPlacement(placements=[],tournament={}){return placements.find(item=>item?.tournamentId===tournament.id||sameHistoricalTournament({...tournament,name:tournament.name},{...item,name:item.tournamentName||item.name}))||null}
