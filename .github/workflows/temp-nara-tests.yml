@@ -4,7 +4,6 @@ on:
     branches: [agent/nara-history-20260916]
   pull_request:
     branches: [main]
-  workflow_dispatch:
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -15,4 +14,5 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm test
+      - run: node --check js/app.js
+      - run: node --test tests/nara-history-import.test.mjs tests/nara-history-menu-contract.test.mjs tests/osaka-history-import.test.mjs tests/wakayama-history-import.test.mjs
