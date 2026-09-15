@@ -5,7 +5,7 @@ const app = await readFile(new URL('../js/app.js', import.meta.url), 'utf8');
 const index = await readFile(new URL('../index.html', import.meta.url), 'utf8');
 const sw = await readFile(new URL('../service-worker.js', import.meta.url), 'utf8');
 
-assert.match(app, /TEAM_POWER_HISTORY_REFRESH_VERSION='2026-09-15-history-average-v2'/);
+assert.match(app, /TEAM_POWER_HISTORY_REFRESH_VERSION='2026-09-15-team-power-1000-v1'/);
 assert.match(app, /async function recalculatePersistedTeamRankAndPower\(season='2026-27',prefectures=\[\]\)/);
 assert.match(app, /async function ensureHistoricalTeamPowerRefresh\(\)/);
 assert.match(app, /teamPowerHistoryRefreshVersion:TEAM_POWER_HISTORY_REFRESH_VERSION/);
