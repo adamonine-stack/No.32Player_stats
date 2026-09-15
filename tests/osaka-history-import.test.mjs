@@ -17,10 +17,12 @@ test('official Osaka 2025 tournament datasets have expected counts and top resul
   assert.equal(new Set(TEAMS_2025_OSAKA_JUNIOR_CHAMPIONSHIP_MEN.map(x=>x.teamName)).size,48);
 });
 
-test('same tournament is recognized even when id differs',()=>{
+test('same tournament is recognized even when id or legacy naming differs',()=>{
   const duplicate={...TOURNAMENT_2025_OSAKA_CLUB_CUP_MEN,id:'legacy-id'};
   assert.equal(findDuplicateHistoricalTournament(TOURNAMENT_2025_OSAKA_CLUB_CUP_MEN,[duplicate])?.id,'legacy-id');
-  const placement={tournamentId:'legacy-id',tournamentName:duplicate.name,season:'2025-26',prefecture:'大阪府',gender:'男子',category:'U15'};
+  const legacy={id:'legacy-name',name:'2025年度 第6回大阪府クラブカップ 男子',year:2025,prefecture:'大阪府'};
+  assert.equal(findDuplicateHistoricalTournament(TOURNAMENT_2025_OSAKA_CLUB_CUP_MEN,[legacy])?.id,'legacy-name');
+  const placement={tournamentId:'legacy-id',tournamentName:'第6回 大阪府クラブカップ大会',year:2025,prefecture:'大阪府'};
   assert.equal(findExistingHistoricalPlacement([placement],TOURNAMENT_2025_OSAKA_CLUB_CUP_MEN),placement);
 });
 
