@@ -39,6 +39,7 @@ import { TOURNAMENT_2026_WAKAYAMA_U15_MEN, TEAMS_2026_WAKAYAMA_U15_MEN, MATCHES_
 import { TOURNAMENT_2025_WAKAYAMA_JHS_CHAMPIONSHIP_MEN, TEAMS_2025_WAKAYAMA_JHS_CHAMPIONSHIP_MEN, TOURNAMENT_2025_WAKAYAMA_JHS_SOUTAI_MEN, TEAMS_2025_WAKAYAMA_JHS_SOUTAI_MEN, TOURNAMENT_2025_WAKAYAMA_JHS_ROOKIES_MEN, TEAMS_2025_WAKAYAMA_JHS_ROOKIES_MEN, TOURNAMENT_2025_WAKAYAMA_JR_WINTER_MEN, TEAMS_2025_WAKAYAMA_JR_WINTER_MEN, TOURNAMENT_2025_WAKAYAMA_JUNIOR_CLUB_MEN, TEAMS_2025_WAKAYAMA_JUNIOR_CLUB_MEN, TOURNAMENT_2026_WAKAYAMA_JHS_CHAMPIONSHIP_MEN, TEAMS_2026_WAKAYAMA_JHS_CHAMPIONSHIP_MEN, TOURNAMENT_2026_WAKAYAMA_JHS_SOUTAI_MEN, TEAMS_2026_WAKAYAMA_JHS_SOUTAI_MEN } from "./data/2025-2026-wakayama-history-men.js?v=20260915-wakayama-history-v3";
 import { TOURNAMENT_2026_SHIGA_U15_MEN, TEAMS_2026_SHIGA_U15_MEN, MATCHES_2026_SHIGA_U15_MEN } from "./data/2026-shiga-u15-men.js";
 import { TOURNAMENT_2026_KYOTO_U15_MEN, TEAMS_2026_KYOTO_U15_MEN, MATCHES_2026_KYOTO_U15_MEN } from "./data/2026-kyoto-u15-men.js";
+import { TOURNAMENT_2025_KYOTO_JHS_SOUTAI_MEN, TEAMS_2025_KYOTO_JHS_SOUTAI_MEN, TOURNAMENT_2025_KYOTO_JR_WINTER_TERM1_MEN, TEAMS_2025_KYOTO_JR_WINTER_TERM1_MEN, TOURNAMENT_2025_KYOTO_JR_WINTER_MEN, TEAMS_2025_KYOTO_JR_WINTER_MEN, TOURNAMENT_2025_KYOTO_ROOKIES_SCHOOL_QUALIFIER_MEN, TEAMS_2025_KYOTO_ROOKIES_SCHOOL_QUALIFIER_MEN, TOURNAMENT_2025_KYOTO_ROOKIES_CLUB_QUALIFIER_MEN, TEAMS_2025_KYOTO_ROOKIES_CLUB_QUALIFIER_MEN, TOURNAMENT_2025_KYOTO_ROOKIES_FINAL_MEN, TEAMS_2025_KYOTO_ROOKIES_FINAL_MEN, TOURNAMENT_2026_KYOTO_JHS_SOUTAI_MEN, TEAMS_2026_KYOTO_JHS_SOUTAI_MEN } from "./data/2025-2026-kyoto-history-men.js?v=20260916-kyoto-history-v1";
 import { TOURNAMENT_2026_KINKI_U15_MEN, TEAMS_2026_KINKI_U15_MEN, MATCHES_2026_KINKI_U15_MEN } from "./data/2026-kinki-u15-men.js";
 import { TOURNAMENT_2025_OSAKA_JR_WINTER_CUP_MEN, TEAMS_2025_OSAKA_JR_WINTER_CUP_MEN, OSAKA_2025_DUPLICATE_TEAM_MERGES } from "./data/2025-osaka-jr-winter-cup-men.js";
 import { TOURNAMENT_2025_OSAKA_CLUB_CUP_MEN, TEAMS_2025_OSAKA_CLUB_CUP_MEN, TOURNAMENT_2025_OSAKA_JUNIOR_CHAMPIONSHIP_MEN, TEAMS_2025_OSAKA_JUNIOR_CHAMPIONSHIP_MEN } from "./data/2025-osaka-history-men.js?v=20260915-osaka-history-v1";
@@ -407,7 +408,7 @@ async function consolidate2025OsakaOpponentTeams(){
 function settingsView(){
   const rows=[...state.seasons].sort((a,b)=>b.sortOrder-a.sortOrder).map(item=>`<div class="season-admin-row"><b>${escapeHtml(item.name)}</b><span>${item.status}${item.id===state.activeSeasonId?' / 現在':''}</span>${state.user&&item.id!==state.activeSeasonId?`<button class="btn small ghost" onclick="setActiveSeason('${item.id}')">現在の世代に設定</button>`:''}</div>`).join('');
   const generationActions=state.user?'<div class="row"><button class="btn" onclick="openSeasonForm()">新しい世代を作成</button><button class="btn ghost" onclick="backupSeasonData()">migration前バックアップ</button><button class="btn ghost" onclick="migrateSeasonData()">Season migration</button></div>':'';
-  const adminActions=state.user?'<button class="btn" onclick="import2026HyogoJhsSoutaiMen()">2026 兵庫県中学校総体を登録</button><button class="btn" onclick="openWakayamaHistoryImportMenu()">和歌山県 2025・2026大会を登録</button><button class="btn" onclick="openNaraHistoryImportMenu()">奈良県 2025・2026大会を登録</button><button class="btn" onclick="recalculateAllSeasonRanks()">全チームのランク・Power再計算</button>':'';
+  const adminActions=state.user?'<button class="btn" onclick="import2026HyogoJhsSoutaiMen()">2026 兵庫県中学校総体を登録</button><button class="btn" onclick="openWakayamaHistoryImportMenu()">和歌山県 2025・2026大会を登録</button><button class="btn" onclick="openNaraHistoryImportMenu()">奈良県 2025・2026大会を登録</button><button class="btn" onclick="openKyotoHistoryImportMenu()">京都府 2025・2026大会を登録</button><button class="btn" onclick="recalculateAllSeasonRanks()">全チームのランク・Power再計算</button>':'';
   return `<div class="card"><h2>設定</h2><section class="season-admin"><div class="section-title">チーム世代</div>${rows}${generationActions}</section><p class="sub">表示世代の切替と「現在の世代に設定」は別の操作です。</p><div class="row"><button class="btn ghost" onclick="location.reload()">再読み込み</button>${adminActions}</div></div>`;
 }
 function bindUpperFilters(){
@@ -1252,7 +1253,7 @@ async function register2025OsakaHistoricalTournament(tournament,importedTeams,de
   for(let index=0;index<importedTeams.length;index++){
     const imported=importedTeams[index],selectedId=decisions.get(index)||'',existing=selectedId?workingTeams.find(team=>team.id===selectedId):null,id=existing?.id||`${tournament.id}-${String(index+1).padStart(2,'0')}`,current=opponentPlacements(existing);
     if(findExistingHistoricalPlacement(current,tournament)){resultsSkipped++;continue}
-    const placement={id:`${id}-${tournament.id}`,tournamentId:tournament.id,tournamentName:tournament.name,tournamentType:tournament.type,tournamentLevel:tournament.tournamentLevel||'prefecture',season:tournament.season,seasonId,generation:tournament.generation,year:tournament.year,prefecture:tournament.prefecture,gender:tournament.gender,category:tournament.category,placement:imported.placementLabel,placementLabel:imported.placementLabel,placementRank:imported.rank,seasonRank:imported.rank,rankValue:imported.rank,source:tournament.source,sourceType:tournament.sourceType,resultConfirmed:true,sortOrder:current.length,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
+    const placement={id:`${id}-${tournament.id}`,tournamentId:tournament.id,tournamentName:tournament.name,tournamentType:tournament.type,tournamentLevel:tournament.tournamentLevel||'prefecture',season:tournament.season,seasonId,generation:tournament.generation,year:tournament.year,prefecture:tournament.prefecture,gender:tournament.gender,category:tournament.category,placement:imported.placementLabel,placementLabel:imported.placementLabel,placementRank:imported.rank,seasonRank:imported.rank,rankValue:imported.rank,teamPowerEligible:tournament.teamPowerEligible!==false&&imported.teamPowerEligible!==false,parentTournamentId:tournament.parentTournamentId||null,competitionStage:tournament.competitionStage||null,source:tournament.source,sourceType:tournament.sourceType,resultConfirmed:true,sortOrder:current.length,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()};
     const placements=[...current,placement],rank=calculateSeasonalTeamRank(placements),aliases=[...new Set([...(Array.isArray(existing?.aliases)?existing.aliases:[]),imported.teamName,...(Array.isArray(imported.aliases)?imported.aliases:[])])],teamName=existing?.teamName||imported.teamName,data={teamName,normalizedTeamName:normalizeTeamNameForMatching(teamName),aliases,prefecture:existing?.prefecture||tournament.prefecture,region:existing?.region||tournament.prefecture,category:existing?.category||tournament.category,gender:existing?.gender||tournament.gender,teamType:existing?.teamType||imported.teamType||(/中学校|中学総体|中学校総体|中学校新人/u.test(`${tournament.name||''} ${tournament.type||''} ${imported.teamName||''}`)?'中学校':'クラブチーム'),ageGroup:existing?.ageGroup||imported.ageGroup||tournament.category,season:tournament.season,tournamentPlacements:placements,seasonRanks:rank.seasonRanks,overallRank:rank.overallRank,overallRankScore:rank.overallScore,overallRankStatus:rank.overallRankStatus,calculatedRank:rank.rank,calculatedRankScore:rank.score,rankCalculatedAt:serverTimestamp(),sourceTournamentId:tournament.id,updatedAt:serverTimestamp()};
     if(existing)updated++;else{created++;data.createdAt=serverTimestamp()}
     resultsCreated++;await setDoc(doc(db,'opponentTeams',id),data,{merge:true});
@@ -1336,6 +1337,34 @@ window.openNaraHistoryImportMenu=async()=>{
   modal(`<h2>奈良県大会を登録</h2><p class="sub">未登録大会だけを表示しています。既存大会と同一結果が検出された場合は書き込みません。類似チーム名がある場合は、次の画面で統合するか別チームとして登録するか選択できます。</p><div class="grid">${missing.map((entry,index)=>`<button class="btn" data-nara-import="${index}">${escapeHtml(entry.tournament.shortName||entry.tournament.name)}</button>`).join('')}</div><button class="btn ghost" id="closeModal">閉じる</button>`);
   document.querySelectorAll('[data-nara-import]').forEach(button=>button.onclick=async()=>{
     const entry=missing[Number(button.dataset.naraImport)];
+    closeModal();
+    await prepare2025OsakaHistoricalImport(entry.tournament,entry.teams);
+  });
+  $('#closeModal').onclick=closeModal;
+};
+
+
+const KYOTO_HISTORY_IMPORTS=[
+  {tournament:TOURNAMENT_2025_KYOTO_JHS_SOUTAI_MEN,teams:TEAMS_2025_KYOTO_JHS_SOUTAI_MEN},
+  {tournament:TOURNAMENT_2025_KYOTO_JR_WINTER_TERM1_MEN,teams:TEAMS_2025_KYOTO_JR_WINTER_TERM1_MEN},
+  {tournament:TOURNAMENT_2025_KYOTO_JR_WINTER_MEN,teams:TEAMS_2025_KYOTO_JR_WINTER_MEN},
+  {tournament:TOURNAMENT_2025_KYOTO_ROOKIES_SCHOOL_QUALIFIER_MEN,teams:TEAMS_2025_KYOTO_ROOKIES_SCHOOL_QUALIFIER_MEN},
+  {tournament:TOURNAMENT_2025_KYOTO_ROOKIES_CLUB_QUALIFIER_MEN,teams:TEAMS_2025_KYOTO_ROOKIES_CLUB_QUALIFIER_MEN},
+  {tournament:TOURNAMENT_2025_KYOTO_ROOKIES_FINAL_MEN,teams:TEAMS_2025_KYOTO_ROOKIES_FINAL_MEN},
+  {tournament:{...TOURNAMENT_2026_KYOTO_U15_MEN,season:'2026-27',generation:'2026-27',tournamentLevel:'prefecture',teamPowerEligible:true},teams:TEAMS_2026_KYOTO_U15_MEN.map(team=>({...team,aliases:[],teamType:'クラブチーム',ageGroup:'U15'}))},
+  {tournament:TOURNAMENT_2026_KYOTO_JHS_SOUTAI_MEN,teams:TEAMS_2026_KYOTO_JHS_SOUTAI_MEN}
+];
+window.openKyotoHistoryImportMenu=async()=>{
+  if(!requireLogin())return;
+  const snapshot=await getDocs(collection(db,'tournaments')),registered=snapshot.docs.map(item=>({id:item.id,...item.data()}));
+  const missing=KYOTO_HISTORY_IMPORTS.filter(entry=>!findDuplicateHistoricalTournament(entry.tournament,registered));
+  if(!missing.length){
+    modal('<h2>京都府大会</h2><p>確認対象の2025・2026年度男子U15大会・予選はすべて登録済みです。</p><button class="btn" id="closeModal">閉じる</button>');
+    $('#closeModal').onclick=closeModal;return;
+  }
+  modal(`<h2>京都府大会を登録</h2><p class="sub">未登録大会だけを表示しています。同じ大会結果は重複登録しません。類似チーム名がある場合は、次の画面で統合するか別チームとして登録するか選択できます。予選として登録する大会は履歴には残しますが、ランク・Team Powerには加算しません。</p><div class="grid">${missing.map((entry,index)=>`<button class="btn" data-kyoto-import="${index}">${escapeHtml(entry.tournament.shortName||entry.tournament.name)}${entry.tournament.teamPowerEligible===false?'（予選・評価対象外）':''}</button>`).join('')}</div><button class="btn ghost" id="closeModal">閉じる</button>`);
+  document.querySelectorAll('[data-kyoto-import]').forEach(button=>button.onclick=async()=>{
+    const entry=missing[Number(button.dataset.kyotoImport)];
     closeModal();
     await prepare2025OsakaHistoricalImport(entry.tournament,entry.teams);
   });
