@@ -21,7 +21,7 @@ export const TOURNAMENT_2025_OSAKA_CLUB_CUP_MEN={
   id:'2025-osaka-club-cup-men',year:2025,season:'2025-26',generation:'2025-26',
   name:'第6回クラブカップ',shortName:'第6回クラブカップ',prefecture:'大阪府',category:'U15',gender:'男子',
   type:'クラブカップ',tournamentLevel:'prefecture',participantCount:31,resultConfirmed:true,resultStatus:'completed',sourceType:'official_bracket',
-  source:{organization:'大阪府バスケットボール協会U15部会',document:'第6回クラブカップ 最終結果',publishedDate:'2025-05-26',verified:true}
+  source:{organization:'大阪府バスケットボール協会U15部会',document:'第6回クラブカップ 最終結果',publishedDate:'2025-05-26',pageUrl:'https://u15.osakabasketball.jp/?p=813',pdfUrl:'https://u15.osakabasketball.jp/wp/wp-content/uploads/2025/05/%E6%9C%80%E7%B5%82_%E7%B5%90%E6%9E%9C.pdf',verified:true}
 };
 
 const CLUB_CUP_ALL=['Akans','ANGRY OWLS','B☆MAX','BLACK UNICORN','B-NETZ','CLUB SPIRITS','EAST.O.ACADEMY U-15 TEAM','EDGE','FRONTIER SPIRITS U15','HOOPERS','HOS','HOSOGO GIBSONS','KAGO CLUB',"K'sLEO BASKETBALL CLUB",'monolith U15','NEXTEST','RED FROGS','REDFORCES','RGS','RISING STAR','sHow time','Sparkle Basketball Club','Switch!',"T's CROWS",'T-SMILE BASKET BALL TEAM U15','ディノニクスU15','SHINE','寝屋川B.C.','泉大津ジュニアバスケットボールクラブ','大阪エヴェッサU-15','八上ワイルドキャッツU-15'];
@@ -43,13 +43,13 @@ const CLUB_CUP_TOP={
   'RISING STAR':['ベスト16','C'],
   'sHow time':['ベスト16','C']
 };
-export const TEAMS_2025_OSAKA_CLUB_CUP_MEN=CLUB_CUP_ALL.map(name=>{const result=CLUB_CUP_TOP[name]||['ベスト32','D'];return team(name,result[0],result[1])});
+export const TEAMS_2025_OSAKA_CLUB_CUP_MEN=CLUB_CUP_ALL.map(name=>{const result=CLUB_CUP_TOP[name]||['予選敗退（ベスト32相当）','D'];return team(name,result[0],result[1])});
 
 export const TOURNAMENT_2025_OSAKA_JUNIOR_CHAMPIONSHIP_MEN={
   id:'2025-osaka-junior-championship-men',year:2025,season:'2025-26',generation:'2025-26',
   name:'第11回大阪府ジュニアバスケットボール選手権',shortName:'第11回大阪府ジュニア選手権',prefecture:'大阪府',category:'U15',gender:'男子',
   type:'大阪府ジュニアバスケットボール選手権',tournamentLevel:'prefecture',participantCount:48,resultConfirmed:true,resultStatus:'completed',sourceType:'official_bracket',
-  source:{organization:'大阪府バスケットボール協会U15部会',document:'第11回大阪府ジュニアバスケットボール選手権 最終結果',publishedDate:'2025-11-24',verified:true}
+  source:{organization:'大阪府バスケットボール協会U15部会',document:'第11回大阪府ジュニアバスケットボール選手権 最終結果',publishedDate:'2025-11-24',pageUrl:'https://u15.osakabasketball.jp/?p=883',pdfUrl:'https://u15.osakabasketball.jp/wp/wp-content/uploads/2025/11/%E6%9C%80%E7%B5%82%E7%B5%90%E6%9E%9C.pdf',verified:true}
 };
 const JUNIOR_ALL=['AIR','Akans','ANGRY OWLS','B☆MAX','BC Alma枚方','BLACK UNICORN','Blue Dolphins','B-NETZ','CLUB SPIRITS','DSELECT','E.M.B.C. U15','EAST.O.ACADEMY U-15 TEAM','EDGE','EL.DRAGON U-15','FRONTIER SPIRITS U15','GRITS','HIRAKATA UNITED BC','HOOPERS','HOS','HOSOGO GIBSONS','IBARAKI BASKETBALL CLUB','KAGO CLUB',"K'sLEO BASKETBALL CLUB",'monolith U15','NEXT HEROES','NEXTEST','OSAKA FIREFLY','RED FROGS','REDFORCES','RGS','RISING STAR','Secret BaseU15','SHINE','sHow time','Sparkle Basketball Club','SUNHEARTS','Switch! U15',"T's CROWS",'TEAM GRIT','T-SMILE BASKET BALL TEAM U15','ディノニクスU15','なみはやバスケットボールクラブ','泉大津ジュニアバスケットボールクラブ','大阪GOLDEN EGG','大阪エヴェッサU-15','八上ワイルドキャッツU-15','ENERGY','TAKATSU CLUB'];
 const JUNIOR_TOP={
@@ -71,4 +71,4 @@ const JUNIOR_TOP={
   'B☆MAX':['ベスト16','C']
 };
 const JUNIOR_SECOND_ROUND=new Set(['Akans','E.M.B.C. U15','BLACK UNICORN','HIRAKATA UNITED BC','sHow time','EDGE','HOS','泉大津ジュニアバスケットボールクラブ','ANGRY OWLS','ディノニクスU15','八上ワイルドキャッツU-15','Switch! U15','RED FROGS','EL.DRAGON U-15','B-NETZ','HOOPERS']);
-export const TEAMS_2025_OSAKA_JUNIOR_CHAMPIONSHIP_MEN=JUNIOR_ALL.map(name=>{const result=JUNIOR_TOP[name]||(JUNIOR_SECOND_ROUND.has(name)?['ベスト32','D']:['県大会出場','E']);return team(name,result[0],result[1])});
+export const TEAMS_2025_OSAKA_JUNIOR_CHAMPIONSHIP_MEN=JUNIOR_ALL.map(name=>{const result=JUNIOR_TOP[name]||(JUNIOR_SECOND_ROUND.has(name)?['2次予選敗退（ベスト32相当）','D']:['1次予選敗退（ベスト64相当）','E']);return team(name,result[0],result[1])});
