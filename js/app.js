@@ -9,7 +9,7 @@ import { auth, db, firestorePersistenceReady, signInWithEmailAndPassword, signOu
 import { createListenerRegistry } from './data/listener-registry.js?v=20260901-scoped-reads-v1';
 import { auditR32Data } from './diagnostics/data-integrity.js?v=20260901-scoped-reads-v1';
 import { buildPlayerSeasonSummary, comparePlayerSeasonSummary, playerSeasonSummaryId } from './calculations/player-season-summary.js?v=20260901-home-summary-v1';
-import { state } from "./core/state.js?v=20260915-tournament-state-v1";
+import { state } from "./core/state.js?v=20260915-settings-stable-v1";
 import { setGameSortDirection, setLastPlayerId, setSelectedSeasonId } from "./core/storage.js";
 import { num, pct, one, sumStats as sumStatsBase, derived, STAT_KEYS, getGameStatsRegistrationType, quarterKey, registeredQuarterNumbers, statHasRegisteredData } from "./calculations/stats-calculations.js";
 import { buildGameHistory, groupGameHistory, historyActionOrderOverrides, createPlayEvent, historyInsertionOverrides, reconcileStatEvents } from "./calculations/game-event-calculations.js?v=20260908-quarter-session-v2";
@@ -45,7 +45,7 @@ import { TOURNAMENT_2026_HYOGO_JHS_SOUTAI_MEN, TEAMS_2026_HYOGO_JHS_SOUTAI_MEN }
 import { findDuplicateHistoricalResultSet, findDuplicateHistoricalTournament, findExistingHistoricalPlacement, findSimilarHistoricalTeamCandidates } from "./calculations/historical-import-calculations.js?v=20260915-osaka-history-v3";
 import { findImportedTeamMatch, findExistingTournamentTeam, normalizeTeamNameForMatching, normalizeTournamentNameForMatching } from "./calculations/team-name-matching.js";
 const quickInputStyles=document.createElement('link');quickInputStyles.rel='stylesheet';quickInputStyles.href='./styles/quick-input.css?v=20260908-quarter-session-v1';document.head.appendChild(quickInputStyles);
-if('serviceWorker' in navigator && !location.pathname.includes('/tests/'))navigator.serviceWorker.register('./service-worker.js?v=20260915-hyogo-2026-history-v5').catch(error=>console.warn('Service worker registration failed',error));
+if('serviceWorker' in navigator && !location.pathname.includes('/tests/'))navigator.serviceWorker.register('./service-worker.js?v=20260915-settings-stable-v1').catch(error=>console.warn('Service worker registration failed',error));
 installOfflineSyncListeners();
 const nav=[['home','ホーム'],['players','選手'],['opponentTeams','対戦チーム'],['games','試合'],['stats','分析'],['team','チーム'],['settings','設定']];
 const navIcons={home:'home',players:'person',opponentTeams:'shield',games:'edit_note',stats:'bar_chart',team:'groups',settings:'settings'};
@@ -83,7 +83,7 @@ function ensureSeasonSync(){const seasonId=state.selectedSeasonId||state.activeS
 let opponentTeamsRenderTimer=0;
 function scheduleOpponentTeamsRender(){clearTimeout(opponentTeamsRenderTimer);opponentTeamsRenderTimer=setTimeout(()=>{opponentTeamsRenderTimer=0;render()},50)}
 function ensureOpponentTeamsSync(){firestoreListeners.set('opponentTeams',()=>onSnapshot(collection(db,'opponentTeams'),s=>{state.opponentTeams=s.docs.map(d=>({id:d.id,...d.data()}));scheduleOpponentTeamsRender()}))}
-function sync(){firestoreListeners.set('seasons',()=>onSnapshot(collection(db,'seasons'),s=>{if(!s.empty)state.seasons=s.docs.map(d=>normalizeSeason({id:d.id,...d.data()}));render()}));firestoreListeners.set('settings',()=>onSnapshot(doc(db,'settings','app'),s=>{if(s.exists()){state.activeSeasonId=s.data().activeSeasonId||DEFAULT_SEASON_ID;if(!localStorage.getItem('r32_selected_season_id'))state.selectedSeasonId=state.activeSeasonId;ensureSeasonSync();refreshSeasonScope();render()}}));firestoreListeners.set('players',()=>onSnapshot(collection(db,'players'),s=>{state.allPlayers=s.docs.map(d=>({id:d.id,...d.data()}));refreshSeasonScope();render()}));firestoreListeners.set('tournaments',()=>onSnapshot(collection(db,'tournaments'),s=>{state.tournaments=s.docs.map(d=>({id:d.id,...d.data()}));if(state.tab==='settings')render()}));ensureSeasonSync();if(['opponentTeams','games','stats','team'].includes(state.tab))ensureOpponentTeamsSync()}
+function sync(){firestoreListeners.set('seasons',()=>onSnapshot(collection(db,'seasons'),s=>{if(!s.empty)state.seasons=s.docs.map(d=>normalizeSeason({id:d.id,...d.data()}));render()}));firestoreListeners.set('settings',()=>onSnapshot(doc(db,'settings','app'),s=>{if(s.exists()){state.activeSeasonId=s.data().activeSeasonId||DEFAULT_SEASON_ID;if(!localStorage.getItem('r32_selected_season_id'))state.selectedSeasonId=state.activeSeasonId;ensureSeasonSync();refreshSeasonScope();render()}}));firestoreListeners.set('players',()=>onSnapshot(collection(db,'players'),s=>{state.allPlayers=s.docs.map(d=>({id:d.id,...d.data()}));refreshSeasonScope();render()}));ensureSeasonSync();if(['opponentTeams','games','stats','team'].includes(state.tab))ensureOpponentTeamsSync()}
 window.runR32DataDiagnostics=()=>{const report=auditR32Data({games:state.allGames,players:state.allPlayers,stats:state.stats,opponentTeams:state.opponentTeams});console.group('R32 data diagnostics');console.table(report.counts);console.table(report.issues);console.groupEnd();return report};
 window.r32FirestoreReadState=()=>({selectedSeasonId:state.selectedSeasonId,listeners:firestoreListeners.keys(),loaded:{seasons:state.seasons.length,players:state.allPlayers.length,playerSeasons:state.playerSeasons.length,games:state.allGames.length,stats:state.stats.length,opponentTeams:state.opponentTeams.length}});
 let latestSyncStatus={state:'idle',pending:0,online:true};
@@ -402,24 +402,11 @@ async function consolidate2025OsakaOpponentTeams(){
     modal(`<h2>大阪府チーム統合完了</h2><p>統合：${merged}組 / 統合済み：${alreadyMerged}組</p><p>試合参照更新：${gamesUpdated}件</p><p>大会試合参照更新：${tournamentGamesUpdated}件</p><p>BC Alma枚方・EAST.O.ACADEMY・T-SMILEへの指定統合を含みます。</p><button class="btn" id="closeModal">閉じる</button>`);$('#closeModal').onclick=closeModal;
   }catch(error){console.error('OSAKA_TEAM_CONSOLIDATION_FAILED',error);modal(`<h2>大阪府チーム統合に失敗しました</h2><p>${escapeHtml(error?.message||String(error))}</p><p class="sub">完了済みの組は再実行時にスキップされます。</p><button class="btn" id="closeModal">閉じる</button>`);$('#closeModal').onclick=closeModal}
 }
-function tournamentRegistrationButton(tournament,label,onclick){
-  if((state.tournaments||[]).some(item=>item.id===tournament.id))return '';
-  return `<button class="btn" onclick="${onclick}">${label}</button>`;
-}
-window.r32TournamentRegistered=id=>(state.tournaments||[]).some(item=>item.id===id);
 function settingsView(){
   const rows=[...state.seasons].sort((a,b)=>b.sortOrder-a.sortOrder).map(item=>`<div class="season-admin-row"><b>${escapeHtml(item.name)}</b><span>${item.status}${item.id===state.activeSeasonId?' / 現在':''}</span>${state.user&&item.id!==state.activeSeasonId?`<button class="btn small ghost" onclick="setActiveSeason('${item.id}')">現在の世代に設定</button>`:''}</div>`).join('');
   const generationActions=state.user?'<div class="row"><button class="btn" onclick="openSeasonForm()">新しい世代を作成</button><button class="btn ghost" onclick="backupSeasonData()">migration前バックアップ</button><button class="btn ghost" onclick="migrateSeasonData()">Season migration</button></div>':'';
-  const registrationActions=state.user?[
-    tournamentRegistrationButton(TOURNAMENT_2026_KINKI_U15_MEN,'2026新ランク＋近畿大会を反映','apply2026RankingAndKinkiMen()'),
-    tournamentRegistrationButton(TOURNAMENT_2025_OSAKA_CLUB_CUP_MEN,'2025 第6回クラブカップを登録','import2025OsakaClubCupMen()'),
-    tournamentRegistrationButton(TOURNAMENT_2025_OSAKA_JUNIOR_CHAMPIONSHIP_MEN,'2025 第11回大阪府ジュニア選手権を登録','import2025OsakaJuniorChampionshipMen()'),
-    tournamentRegistrationButton(TOURNAMENT_2025_HYOGO_JHS_SOUTAI_MEN,'2025 兵庫県中学校総体を登録','import2025HyogoJhsSoutaiMen()'),
-    tournamentRegistrationButton(TOURNAMENT_2025_HYOGO_JHS_ROOKIES_MEN,'2025 兵庫県中学校新人大会を登録','import2025HyogoJhsRookiesMen()'),
-    tournamentRegistrationButton(TOURNAMENT_2026_HYOGO_JHS_SOUTAI_MEN,'2026 兵庫県中学校総体を登録','import2026HyogoJhsSoutaiMen()')
-  ].filter(Boolean).join(''):'';
-  const maintenanceActions=state.user?'<button class="btn" onclick="recalculateAllSeasonRanks()">全チームのランク・Power再計算</button>':'';
-  return `<div class="card"><h2>設定</h2><section class="season-admin"><div class="section-title">チーム世代</div>${rows}${generationActions}</section><p class="sub">表示世代の切替と「現在の世代に設定」は別の操作です。</p><div class="row"><button class="btn ghost" onclick="location.reload()">再読み込み</button>${registrationActions}${maintenanceActions}</div></div>`;
+  const adminActions=state.user?'<button class="btn" onclick="import2026HyogoJhsSoutaiMen()">2026 兵庫県中学校総体を登録</button><button class="btn" onclick="recalculateAllSeasonRanks()">全チームのランク・Power再計算</button>':'';
+  return `<div class="card"><h2>設定</h2><section class="season-admin"><div class="section-title">チーム世代</div>${rows}${generationActions}</section><p class="sub">表示世代の切替と「現在の世代に設定」は別の操作です。</p><div class="row"><button class="btn ghost" onclick="location.reload()">再読み込み</button>${adminActions}</div></div>`;
 }
 function bindUpperFilters(){
   applyAnalysisQuarterPresentation();
