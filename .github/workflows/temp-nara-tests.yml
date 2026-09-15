@@ -2,6 +2,8 @@ name: Temporary Nara import tests
 on:
   push:
     branches: [agent/nara-history-20260916]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
 jobs:
   test:
