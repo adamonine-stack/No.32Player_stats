@@ -112,9 +112,7 @@ export function isValidTournamentAchievement(item={}){
 }
 
 export function isValidHistoricalAchievement(item={}){
-  if(!isValidTournamentAchievement(item))return false;
-  const label=normalizedPlacementText(item.placementLabel??item.placement??"");
-  return Boolean(placementLabelToRank(label));
+  return isValidTournamentAchievement(item);
 }
 
 export function upperTournamentBonus(item={}){
