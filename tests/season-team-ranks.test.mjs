@@ -7,6 +7,7 @@ import {
   calculateHistoricalTeamBonus,
   calculatePrefectureStrengthBonuses,
   isValidTournamentAchievement,
+  isValidHistoricalAchievement,
   placementLabelToRank,
   rankToScore
 } from '../js/calculations/opponent-team-calculations.js';
@@ -33,6 +34,8 @@ assert.equal(isValidTournamentAchievement(p('2025-26','優勝')),true);
 assert.equal(isValidTournamentAchievement({season:'2025-26'}),false);
 assert.equal(isValidTournamentAchievement({season:'2025-26',tournamentName:'旧大会',placementLabel:''}),false);
 assert.equal(isValidTournamentAchievement({season:'2025-26',tournamentName:'旧大会',placementLabel:'出場'}),true);
+assert.equal(isValidHistoricalAchievement({season:'2025-26',tournamentName:'旧大会',placementLabel:'出場'}),false);
+assert.equal(isValidHistoricalAchievement(p('2025-26','県大会出場')),true);
 
 const highest=calculateSeasonRanks([p('2026-27','ベスト8'),p('2026-27','準優勝')])['2026-27'];
 assert.equal(highest.rank,'A+');
@@ -68,7 +71,8 @@ assert.equal(history.bonus,72.3);
 const phantomHistory=[
   {season:'2025-26',tournamentName:'',placementLabel:''},
   {season:'2025-26',sourceType:'registeredGames'},
-  {year:2025,tournamentName:'旧データ',placementLabel:''}
+  {year:2025,tournamentName:'旧データ',placementLabel:''},
+  {season:'2025-26',tournamentName:'非表示の旧大会',placementLabel:'出場'}
 ];
 const phantomBonus=calculateHistoricalTeamBonus(phantomHistory,{currentSeason:'2026-27'});
 assert.equal(phantomBonus.details[0].recordCount,0);
