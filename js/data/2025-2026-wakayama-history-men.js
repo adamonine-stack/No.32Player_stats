@@ -43,7 +43,10 @@ const CLUB_SPECIAL={
   'CHOICE':{teamName:'CHOICE',aliases:[],teamType:'クラブチーム'},
   'ROOKIES':{teamName:'ROOKIES',aliases:[],teamType:'クラブチーム'},
   'ブランリオン':{teamName:'ブランリオン',aliases:['ブラリオン'],teamType:'クラブチーム'},
-  "Gr’s":{teamName:"Gr’s",aliases:["Gr's",'Grs'],teamType:'クラブチーム'}
+  "Gr’s":{teamName:"Gr’s",aliases:["Gr's",'Grs'],teamType:'クラブチーム'},
+  'BLACK PANTHERS':{teamName:'BLACK PANTHERS',aliases:['B.P','B. P','BLACKPANTHERS'],teamType:'クラブチーム'},
+  'CLEVER CATS':{teamName:'和歌山 CLEVER CATS',aliases:['CLEVER CATS','和歌山ＣＬＥＶＥＲ ＣＡＴＳ'],teamType:'クラブチーム'},
+  'Re-birth':{teamName:'Re-birth',aliases:['Reｰbirth','Rebirth'],teamType:'クラブチーム'}
 };
 
 function schoolIdentity(sourceName){
@@ -162,6 +165,25 @@ export const TEAMS_2025_WAKAYAMA_JHS_ROOKIES_MEN=[
   const [placementLabel,rank]=ROOKIES_2025[name]||['県大会出場','E'];
   return row(name,placementLabel,rank,{kind:['ASLEAD有田','CHOICE GB'].includes(name)?'club':'school',ageGroup:'U14'});
 });
+
+
+
+export const TOURNAMENT_2025_WAKAYAMA_JUNIOR_CLUB_MEN=tournament({
+  id:'2025-wakayama-junior-club-games-men',
+  year:2025,season:'2025-26',generation:'2025-26',
+  name:'第11回和歌山県ジュニアバスケットボール選手権大会 兼 第14回U15クラブバスケットボールゲームス 和歌山県予選会 男子',
+  shortName:'2025 和歌山県ジュニア選手権・クラブゲームス予選 男子',
+  type:'県大会 / U15クラブバスケットボールゲームス予選',
+  participantCount:null,
+  resultScope:'男子ベスト4確認済み',
+  source:{organization:'和歌山県バスケットボール協会',document:'第11回和歌山県ジュニアバスケットボール選手権大会 大会結果',publishedDate:'2025-11-16',pageUrl:'https://wakayama.pba-japanbasketball.jp/u15/game/4428/',pdfUrl:'https://wakayama.pba-japanbasketball.jp/wp-content/uploads/2025/11/kekkka_kanan.pdf',verified:true}
+});
+export const TEAMS_2025_WAKAYAMA_JUNIOR_CLUB_MEN=[
+  row('BLACK PANTHERS','優勝','S',{kind:'club'}),
+  row('adorare','準優勝','A+',{kind:'club'}),
+  row('CLEVER CATS','ベスト4','A',{kind:'club'}),
+  row('Re-birth','ベスト4','A',{kind:'club'})
+];
 
 export const TOURNAMENT_2026_WAKAYAMA_JHS_CHAMPIONSHIP_MEN=tournament({
   id:'2026-wakayama-jhs-championship-men',
