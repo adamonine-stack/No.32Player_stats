@@ -403,9 +403,10 @@ async function consolidate2025OsakaOpponentTeams(){
   }catch(error){console.error('OSAKA_TEAM_CONSOLIDATION_FAILED',error);modal(`<h2>大阪府チーム統合に失敗しました</h2><p>${escapeHtml(error?.message||String(error))}</p><p class="sub">完了済みの組は再実行時にスキップされます。</p><button class="btn" id="closeModal">閉じる</button>`);$('#closeModal').onclick=closeModal}
 }
 function tournamentRegistrationButton(tournament,label,onclick){
-  if(findDuplicateHistoricalTournament(tournament,state.tournaments||[]))return '';
+  if((state.tournaments||[]).some(item=>item.id===tournament.id))return '';
   return `<button class="btn" onclick="${onclick}">${label}</button>`;
 }
+window.r32TournamentRegistered=id=>(state.tournaments||[]).some(item=>item.id===id);
 function settingsView(){
   const rows=[...state.seasons].sort((a,b)=>b.sortOrder-a.sortOrder).map(item=>`<div class="season-admin-row"><b>${escapeHtml(item.name)}</b><span>${item.status}${item.id===state.activeSeasonId?' / 現在':''}</span>${state.user&&item.id!==state.activeSeasonId?`<button class="btn small ghost" onclick="setActiveSeason('${item.id}')">現在の世代に設定</button>`:''}</div>`).join('');
   const generationActions=state.user?'<div class="row"><button class="btn" onclick="openSeasonForm()">新しい世代を作成</button><button class="btn ghost" onclick="backupSeasonData()">migration前バックアップ</button><button class="btn ghost" onclick="migrateSeasonData()">Season migration</button></div>':'';
