@@ -39,7 +39,7 @@ import { TOURNAMENT_2026_WAKAYAMA_U15_MEN, TEAMS_2026_WAKAYAMA_U15_MEN, MATCHES_
 import { TOURNAMENT_2025_WAKAYAMA_JHS_CHAMPIONSHIP_MEN, TEAMS_2025_WAKAYAMA_JHS_CHAMPIONSHIP_MEN, TOURNAMENT_2025_WAKAYAMA_JHS_SOUTAI_MEN, TEAMS_2025_WAKAYAMA_JHS_SOUTAI_MEN, TOURNAMENT_2025_WAKAYAMA_JHS_ROOKIES_MEN, TEAMS_2025_WAKAYAMA_JHS_ROOKIES_MEN, TOURNAMENT_2025_WAKAYAMA_JR_WINTER_MEN, TEAMS_2025_WAKAYAMA_JR_WINTER_MEN, TOURNAMENT_2025_WAKAYAMA_JUNIOR_CLUB_MEN, TEAMS_2025_WAKAYAMA_JUNIOR_CLUB_MEN, TOURNAMENT_2026_WAKAYAMA_JHS_CHAMPIONSHIP_MEN, TEAMS_2026_WAKAYAMA_JHS_CHAMPIONSHIP_MEN, TOURNAMENT_2026_WAKAYAMA_JHS_SOUTAI_MEN, TEAMS_2026_WAKAYAMA_JHS_SOUTAI_MEN } from "./data/2025-2026-wakayama-history-men.js?v=20260915-wakayama-history-v3";
 import { TOURNAMENT_2026_SHIGA_U15_MEN, TEAMS_2026_SHIGA_U15_MEN, MATCHES_2026_SHIGA_U15_MEN } from "./data/2026-shiga-u15-men.js";
 import { TOURNAMENT_2026_KYOTO_U15_MEN, TEAMS_2026_KYOTO_U15_MEN, MATCHES_2026_KYOTO_U15_MEN } from "./data/2026-kyoto-u15-men.js";
-import { TOURNAMENT_2025_KYOTO_JHS_SOUTAI_MEN, TEAMS_2025_KYOTO_JHS_SOUTAI_MEN, TOURNAMENT_2025_KYOTO_JR_WINTER_TERM1_MEN, TEAMS_2025_KYOTO_JR_WINTER_TERM1_MEN, TOURNAMENT_2025_KYOTO_JR_WINTER_MEN, TEAMS_2025_KYOTO_JR_WINTER_MEN, TOURNAMENT_2025_KYOTO_ROOKIES_SCHOOL_QUALIFIER_MEN, TEAMS_2025_KYOTO_ROOKIES_SCHOOL_QUALIFIER_MEN, TOURNAMENT_2025_KYOTO_ROOKIES_CLUB_QUALIFIER_MEN, TEAMS_2025_KYOTO_ROOKIES_CLUB_QUALIFIER_MEN, TOURNAMENT_2025_KYOTO_ROOKIES_FINAL_MEN, TEAMS_2025_KYOTO_ROOKIES_FINAL_MEN, TOURNAMENT_2026_KYOTO_JHS_SOUTAI_MEN, TEAMS_2026_KYOTO_JHS_SOUTAI_MEN } from "./data/2025-2026-kyoto-history-men.js?v=20260916-kyoto-history-v1";
+import { TOURNAMENT_2025_KYOTO_JHS_SOUTAI_MEN, TEAMS_2025_KYOTO_JHS_SOUTAI_MEN, TOURNAMENT_2025_KYOTO_JR_WINTER_MEN, TEAMS_2025_KYOTO_JR_WINTER_MEN, TOURNAMENT_2025_KYOTO_ROOKIES_SCHOOL_QUALIFIER_MEN, TEAMS_2025_KYOTO_ROOKIES_SCHOOL_QUALIFIER_MEN, TOURNAMENT_2025_KYOTO_ROOKIES_CLUB_QUALIFIER_MEN, TEAMS_2025_KYOTO_ROOKIES_CLUB_QUALIFIER_MEN, TOURNAMENT_2025_KYOTO_ROOKIES_FINAL_MEN, TEAMS_2025_KYOTO_ROOKIES_FINAL_MEN, TOURNAMENT_2026_KYOTO_JHS_SOUTAI_MEN, TEAMS_2026_KYOTO_JHS_SOUTAI_MEN } from "./data/2025-2026-kyoto-history-men.js?v=20260916-kyoto-history-v1";
 import { TOURNAMENT_2026_KINKI_U15_MEN, TEAMS_2026_KINKI_U15_MEN, MATCHES_2026_KINKI_U15_MEN } from "./data/2026-kinki-u15-men.js";
 import { TOURNAMENT_2025_OSAKA_JR_WINTER_CUP_MEN, TEAMS_2025_OSAKA_JR_WINTER_CUP_MEN, OSAKA_2025_DUPLICATE_TEAM_MERGES } from "./data/2025-osaka-jr-winter-cup-men.js";
 import { TOURNAMENT_2025_OSAKA_CLUB_CUP_MEN, TEAMS_2025_OSAKA_CLUB_CUP_MEN, TOURNAMENT_2025_OSAKA_JUNIOR_CHAMPIONSHIP_MEN, TEAMS_2025_OSAKA_JUNIOR_CHAMPIONSHIP_MEN } from "./data/2025-osaka-history-men.js?v=20260915-osaka-history-v1";
@@ -48,7 +48,7 @@ import { TOURNAMENT_2026_HYOGO_JHS_SOUTAI_MEN, TEAMS_2026_HYOGO_JHS_SOUTAI_MEN }
 import { findDuplicateHistoricalResultSet, findDuplicateHistoricalTournament, findExistingHistoricalPlacement, findSimilarHistoricalTeamCandidates } from "./calculations/historical-import-calculations.js?v=20260915-osaka-history-v3";
 import { findImportedTeamMatch, findExistingTournamentTeam, normalizeTeamNameForMatching, normalizeTournamentNameForMatching } from "./calculations/team-name-matching.js";
 const quickInputStyles=document.createElement('link');quickInputStyles.rel='stylesheet';quickInputStyles.href='./styles/quick-input.css?v=20260908-quarter-session-v1';document.head.appendChild(quickInputStyles);
-if('serviceWorker' in navigator && !location.pathname.includes('/tests/'))navigator.serviceWorker.register('./service-worker.js?v=20260915-wakayama-history-v2').catch(error=>console.warn('Service worker registration failed',error));
+if('serviceWorker' in navigator && !location.pathname.includes('/tests/'))navigator.serviceWorker.register('./service-worker.js?v=20260916-kyoto-history-v1').catch(error=>console.warn('Service worker registration failed',error));
 installOfflineSyncListeners();
 const nav=[['home','ホーム'],['players','選手'],['opponentTeams','対戦チーム'],['games','試合'],['stats','分析'],['team','チーム'],['settings','設定']];
 const navIcons={home:'home',players:'person',opponentTeams:'shield',games:'edit_note',stats:'bar_chart',team:'groups',settings:'settings'};
@@ -1346,7 +1346,6 @@ window.openNaraHistoryImportMenu=async()=>{
 
 const KYOTO_HISTORY_IMPORTS=[
   {tournament:TOURNAMENT_2025_KYOTO_JHS_SOUTAI_MEN,teams:TEAMS_2025_KYOTO_JHS_SOUTAI_MEN},
-  {tournament:TOURNAMENT_2025_KYOTO_JR_WINTER_TERM1_MEN,teams:TEAMS_2025_KYOTO_JR_WINTER_TERM1_MEN},
   {tournament:TOURNAMENT_2025_KYOTO_JR_WINTER_MEN,teams:TEAMS_2025_KYOTO_JR_WINTER_MEN},
   {tournament:TOURNAMENT_2025_KYOTO_ROOKIES_SCHOOL_QUALIFIER_MEN,teams:TEAMS_2025_KYOTO_ROOKIES_SCHOOL_QUALIFIER_MEN},
   {tournament:TOURNAMENT_2025_KYOTO_ROOKIES_CLUB_QUALIFIER_MEN,teams:TEAMS_2025_KYOTO_ROOKIES_CLUB_QUALIFIER_MEN},
