@@ -14,8 +14,8 @@ assert.match(app, /await setDoc\(doc\(db,'opponentTeams',id\),data,\{merge:true\
 assert.ok((app.match(/await recalculatePersistedTeamRankAndPower\(\);/g)||[]).length >= 11);
 assert.match(app, /function opponentHistoricalPowerBonus\(team=\{\}\)/);
 assert.match(app, /<span>過去実績加算<\/span><b>\+\$\{opponentHistoricalPowerBonus\(team\)\}<\/b>/);
-assert.match(index, /app\.js\?v=20260915-team-power-history-refresh-v1/);
-assert.match(app, /service-worker\.js\?v=20260915-team-power-history-refresh-v1/);
-assert.match(sw, /r32-shell-20260915-team-power-history-refresh-v1/);
+assert.match(index, /app\.js\?v=20260915-opponent-freeze-fix-v1/);
+assert.match(app, /service-worker\.js\?v=20260915-opponent-freeze-fix-v1/);
+assert.match(sw, /r32-shell-20260915-opponent-freeze-fix-v1/);
 
 console.log('Team Power historical refresh contract: ok');
