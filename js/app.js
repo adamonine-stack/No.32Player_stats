@@ -42,6 +42,7 @@ import { TOURNAMENT_2025_SHIGA_JHS_SPRING_ZONES_MEN, TEAMS_2025_SHIGA_JHS_SPRING
 import { TOURNAMENT_2026_KYOTO_U15_MEN, TEAMS_2026_KYOTO_U15_MEN, MATCHES_2026_KYOTO_U15_MEN } from "./data/2026-kyoto-u15-men.js";
 import { TOURNAMENT_2025_KYOTO_JHS_SOUTAI_MEN, TEAMS_2025_KYOTO_JHS_SOUTAI_MEN, TOURNAMENT_2025_KYOTO_JR_WINTER_MEN, TEAMS_2025_KYOTO_JR_WINTER_MEN, TOURNAMENT_2025_KYOTO_ROOKIES_SCHOOL_QUALIFIER_MEN, TEAMS_2025_KYOTO_ROOKIES_SCHOOL_QUALIFIER_MEN, TOURNAMENT_2025_KYOTO_ROOKIES_CLUB_QUALIFIER_MEN, TEAMS_2025_KYOTO_ROOKIES_CLUB_QUALIFIER_MEN, TOURNAMENT_2025_KYOTO_ROOKIES_FINAL_MEN, TEAMS_2025_KYOTO_ROOKIES_FINAL_MEN, TOURNAMENT_2026_KYOTO_JHS_SOUTAI_MEN, TEAMS_2026_KYOTO_JHS_SOUTAI_MEN } from "./data/2025-2026-kyoto-history-men.js?v=20260916-kyoto-history-v2";
 import { TOURNAMENT_2026_KINKI_U15_MEN, TEAMS_2026_KINKI_U15_MEN, MATCHES_2026_KINKI_U15_MEN } from "./data/2026-kinki-u15-men.js";
+import { TOURNAMENT_2026_ALL_JAPAN_JHS_MEN, TEAMS_2026_ALL_JAPAN_JHS_MEN, TOURNAMENT_2025_ALL_JAPAN_JHS_MEN, TEAMS_2025_ALL_JAPAN_JHS_MEN, TOURNAMENT_2025_JR_WINTER_CUP_MEN, TEAMS_2025_JR_WINTER_CUP_MEN, TOURNAMENT_2025_U15_CBG_MEN, TEAMS_2025_U15_CBG_MEN } from "./data/2025-2026-national-history-men.js?v=20260916-national-history-v1";
 import { TOURNAMENT_2025_OSAKA_JR_WINTER_CUP_MEN, TEAMS_2025_OSAKA_JR_WINTER_CUP_MEN, OSAKA_2025_DUPLICATE_TEAM_MERGES } from "./data/2025-osaka-jr-winter-cup-men.js";
 import { TOURNAMENT_2025_OSAKA_CLUB_CUP_MEN, TEAMS_2025_OSAKA_CLUB_CUP_MEN, TOURNAMENT_2025_OSAKA_JUNIOR_CHAMPIONSHIP_MEN, TEAMS_2025_OSAKA_JUNIOR_CHAMPIONSHIP_MEN } from "./data/2025-osaka-history-men.js?v=20260915-osaka-history-v1";
 import { TOURNAMENT_2025_HYOGO_JHS_SOUTAI_MEN, TEAMS_2025_HYOGO_JHS_SOUTAI_MEN, TOURNAMENT_2025_HYOGO_JHS_ROOKIES_MEN, TEAMS_2025_HYOGO_JHS_ROOKIES_MEN } from "./data/2025-hyogo-history-men.js?v=20260915-hyogo-history-v1";
@@ -49,7 +50,7 @@ import { TOURNAMENT_2026_HYOGO_JHS_SOUTAI_MEN, TEAMS_2026_HYOGO_JHS_SOUTAI_MEN }
 import { findDuplicateHistoricalResultSet, findDuplicateHistoricalTournament, findExistingHistoricalPlacement, findSimilarHistoricalTeamCandidates } from "./calculations/historical-import-calculations.js?v=20260915-osaka-history-v3";
 import { findImportedTeamMatch, findExistingTournamentTeam, normalizeTeamNameForMatching, normalizeTournamentNameForMatching } from "./calculations/team-name-matching.js";
 const quickInputStyles=document.createElement('link');quickInputStyles.rel='stylesheet';quickInputStyles.href='./styles/quick-input.css?v=20260908-quarter-session-v1';document.head.appendChild(quickInputStyles);
-if('serviceWorker' in navigator && !location.pathname.includes('/tests/'))navigator.serviceWorker.register('./service-worker.js?v=20260916-shiga-history-v1').catch(error=>console.warn('Service worker registration failed',error));
+if('serviceWorker' in navigator && !location.pathname.includes('/tests/'))navigator.serviceWorker.register('./service-worker.js?v=20260916-national-history-v1').catch(error=>console.warn('Service worker registration failed',error));
 installOfflineSyncListeners();
 const nav=[['home','ホーム'],['players','選手'],['opponentTeams','対戦チーム'],['games','試合'],['stats','分析'],['team','チーム'],['settings','設定']];
 const navIcons={home:'home',players:'person',opponentTeams:'shield',games:'edit_note',stats:'bar_chart',team:'groups',settings:'settings'};
@@ -409,7 +410,7 @@ async function consolidate2025OsakaOpponentTeams(){
 function settingsView(){
   const rows=[...state.seasons].sort((a,b)=>b.sortOrder-a.sortOrder).map(item=>`<div class="season-admin-row"><b>${escapeHtml(item.name)}</b><span>${item.status}${item.id===state.activeSeasonId?' / 現在':''}</span>${state.user&&item.id!==state.activeSeasonId?`<button class="btn small ghost" onclick="setActiveSeason('${item.id}')">現在の世代に設定</button>`:''}</div>`).join('');
   const generationActions=state.user?'<div class="row"><button class="btn" onclick="openSeasonForm()">新しい世代を作成</button><button class="btn ghost" onclick="backupSeasonData()">migration前バックアップ</button><button class="btn ghost" onclick="migrateSeasonData()">Season migration</button></div>':'';
-  const adminActions=state.user?'<button class="btn" onclick="import2026HyogoJhsSoutaiMen()">2026 兵庫県中学校総体を登録</button><button class="btn" onclick="openWakayamaHistoryImportMenu()">和歌山県 2025・2026大会を登録</button><button class="btn" onclick="openNaraHistoryImportMenu()">奈良県 2025・2026大会を登録</button><button class="btn" onclick="openKyotoHistoryImportMenu()">京都府 2025・2026大会を登録</button><button class="btn" onclick="openShigaHistoryImportMenu()">滋賀県 2025・2026大会を登録</button><button class="btn" onclick="recalculateAllSeasonRanks()">全チームのランク・Power再計算</button>':'';
+  const adminActions=state.user?'<button class="btn" onclick="import2026HyogoJhsSoutaiMen()">2026 兵庫県中学校総体を登録</button><button class="btn" onclick="openWakayamaHistoryImportMenu()">和歌山県 2025・2026大会を登録</button><button class="btn" onclick="openNaraHistoryImportMenu()">奈良県 2025・2026大会を登録</button><button class="btn" onclick="openKyotoHistoryImportMenu()">京都府 2025・2026大会を登録</button><button class="btn" onclick="openShigaHistoryImportMenu()">滋賀県 2025・2026大会を登録</button><button class="btn" onclick="openNationalHistoryImportMenu()">全国大会 2025・2026実績を登録</button><button class="btn" onclick="recalculateAllSeasonRanks()">全チームのランク・Power再計算</button>':'';
   return `<div class="card"><h2>設定</h2><section class="season-admin"><div class="section-title">チーム世代</div>${rows}${generationActions}</section><p class="sub">表示世代の切替と「現在の世代に設定」は別の操作です。</p><div class="row"><button class="btn ghost" onclick="location.reload()">再読み込み</button>${adminActions}</div></div>`;
 }
 function bindUpperFilters(){
@@ -1395,6 +1396,113 @@ window.openKyotoHistoryImportMenu=async()=>{
     const entry=missing[Number(button.dataset.kyotoImport)];
     closeModal();
     await prepare2025OsakaHistoricalImport(entry.tournament,entry.teams);
+  });
+  $('#closeModal').onclick=closeModal;
+};
+
+
+const NATIONAL_HISTORY_IMPORTS=[
+  {tournament:TOURNAMENT_2026_ALL_JAPAN_JHS_MEN,teams:TEAMS_2026_ALL_JAPAN_JHS_MEN},
+  {tournament:TOURNAMENT_2025_ALL_JAPAN_JHS_MEN,teams:TEAMS_2025_ALL_JAPAN_JHS_MEN},
+  {tournament:TOURNAMENT_2025_JR_WINTER_CUP_MEN,teams:TEAMS_2025_JR_WINTER_CUP_MEN},
+  {tournament:TOURNAMENT_2025_U15_CBG_MEN,teams:TEAMS_2025_U15_CBG_MEN}
+];
+
+function nationalHistoryCandidateLabel(candidate){
+  const pct=Math.round((Number(candidate.score)||0)*100),team=candidate.team;
+  return `${team.teamName||'(名称なし)'} / ${team.prefecture||team.region||'都道府県未設定'} / ${team.category||'カテゴリ未設定'} / 類似度${pct}%`;
+}
+
+async function registerNationalHistoricalTournament(tournament,importedTeams,decisions,baseTeams){
+  const freshTournamentSnapshot=await getDocs(collection(db,'tournaments'));
+  const freshTournaments=freshTournamentSnapshot.docs.map(item=>({id:item.id,...item.data()}));
+  const duplicateTournament=findDuplicateHistoricalTournament(tournament,freshTournaments);
+  if(duplicateTournament)throw new Error(`同じ大会はすでに登録済みです：${duplicateTournament.name||duplicateTournament.id}`);
+  const seasonId=seasonIdForLabel(tournament.season),workingTeams=[...baseTeams];
+  let created=0,updated=0,resultsCreated=0,resultsSkipped=0;
+  await setDoc(doc(db,'tournaments',tournament.id),{...tournament,seasonId,updatedAt:serverTimestamp(),createdAt:serverTimestamp()});
+  for(let index=0;index<importedTeams.length;index++){
+    const imported=importedTeams[index],selectedId=decisions.get(index)||'',existing=selectedId?workingTeams.find(team=>team.id===selectedId):null,id=existing?.id||`${tournament.id}-${String(index+1).padStart(2,'0')}`,current=opponentPlacements(existing);
+    if(findExistingHistoricalPlacement(current,tournament)){resultsSkipped++;continue}
+    const placementRank=placementLabelToRank(imported.placementLabel);
+    const placement={
+      id:`${id}-${tournament.id}`,tournamentId:tournament.id,tournamentName:tournament.name,tournamentType:tournament.type,tournamentLevel:'national',
+      season:tournament.season,seasonId,generation:tournament.generation,year:tournament.year,prefecture:imported.prefecture,gender:tournament.gender,category:tournament.category,
+      placement:imported.placementLabel,placementLabel:imported.placementLabel,placementRank,seasonRank:placementRank,rankValue:placementRank,
+      teamPowerEligible:tournament.teamPowerEligible!==false&&imported.teamPowerEligible!==false,
+      source:tournament.sourceResults||tournament.source,sourceType:tournament.sourceType,resultConfirmed:true,
+      sortOrder:current.length,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString()
+    };
+    const placements=[...current,placement],rank=calculateSeasonalTeamRank(placements);
+    const aliases=[...new Set([...(Array.isArray(existing?.aliases)?existing.aliases:[]),imported.teamName,...(Array.isArray(imported.aliases)?imported.aliases:[])])];
+    const teamName=existing?.teamName||imported.teamName;
+    const data={
+      teamName,normalizedTeamName:normalizeTeamNameForMatching(teamName),aliases,
+      prefecture:existing?.prefecture||imported.prefecture,region:existing?.region||imported.prefecture,
+      category:existing?.category||tournament.category,gender:existing?.gender||tournament.gender,
+      teamType:existing?.teamType||imported.teamType||'クラブチーム',ageGroup:existing?.ageGroup||imported.ageGroup||'U15',
+      season:tournament.season,tournamentPlacements:placements,seasonRanks:rank.seasonRanks,
+      overallRank:rank.overallRank,overallRankScore:rank.overallScore,overallRankStatus:rank.overallRankStatus,
+      calculatedRank:rank.rank,calculatedRankScore:rank.score,rankCalculatedAt:serverTimestamp(),
+      sourceTournamentId:tournament.id,updatedAt:serverTimestamp()
+    };
+    if(existing)updated++;else{created++;data.createdAt=serverTimestamp()}
+    resultsCreated++;
+    await setDoc(doc(db,'opponentTeams',id),data,{merge:true});
+    const saved={id,...existing,...data},oldIndex=workingTeams.findIndex(team=>team.id===id);
+    if(oldIndex>=0)workingTeams[oldIndex]=saved;else workingTeams.push(saved);
+  }
+  const prefectures=[...new Set(importedTeams.map(item=>item.prefecture).filter(Boolean))];
+  await recalculatePersistedTeamRankAndPower('2026-27',prefectures);
+  modal(`<h2>${escapeHtml(tournament.shortName||tournament.name)} 登録完了</h2><p>参加実績：${importedTeams.length}チーム</p><p>新規チーム：${created} / 既存チームへ統合：${updated}</p><p>大会実績追加：${resultsCreated} / 同一大会実績スキップ：${resultsSkipped}</p><p class="sub">全国大会実績はTeam Powerの全国大会枠へ反映し、都道府県大会ランク自体は変更しません。</p><button class="btn" id="closeModal">閉じる</button>`);
+  $('#closeModal').onclick=closeModal;
+}
+
+async function prepareNationalHistoricalImport(tournament,importedTeams){
+  if(!requireLogin())return;
+  const [teamSnapshot,tournamentSnapshot]=await Promise.all([getDocs(collection(db,'opponentTeams')),getDocs(collection(db,'tournaments'))]);
+  const allTeams=teamSnapshot.docs.map(item=>({id:item.id,...item.data()})),existingTournaments=tournamentSnapshot.docs.map(item=>({id:item.id,...item.data()}));
+  const duplicateTournament=findDuplicateHistoricalTournament(tournament,existingTournaments);
+  if(duplicateTournament){
+    modal(`<h2>登録済み大会です</h2><p>${escapeHtml(duplicateTournament.name||tournament.name)}</p><p class="sub">同じ全国大会結果の重複を避けるため、今回は何も書き込みません。</p><button class="btn" id="closeModal">閉じる</button>`);
+    $('#closeModal').onclick=closeModal;return;
+  }
+  const decisions=new Map(),reviews=[],usedExactIds=new Set();
+  importedTeams.forEach((imported,index)=>{
+    const scopedTournament={...tournament,prefecture:imported.prefecture};
+    const candidates=findSimilarHistoricalTeamCandidates(imported,scopedTournament,allTeams);
+    const exact=candidates.filter(candidate=>candidate.score>=.99&&!usedExactIds.has(candidate.team.id));
+    if(exact.length===1){decisions.set(index,exact[0].team.id);usedExactIds.add(exact[0].team.id)}
+    else if(candidates.length)reviews.push({index,imported,candidates});
+  });
+  if(!reviews.length){await registerNationalHistoricalTournament(tournament,importedTeams,decisions,allTeams);return}
+  modal(`<h2>類似チーム名を確認</h2><p>${escapeHtml(tournament.shortName||tournament.name)}</p><p class="sub">全国大会では出場チームの所属都道府県で照合しています。各候補について既存チームへ統合するか、別チームとして登録するか選択してください。</p><div class="grid">${reviews.map(review=>`<label><b>${escapeHtml(review.imported.teamName)}（${escapeHtml(review.imported.prefecture||'')}）</b><select id="nationalHistoryDecision${review.index}"><option value="">選択してください</option>${review.candidates.map(candidate=>`<option value="${escapeHtml(candidate.team.id)}">統合：${escapeHtml(nationalHistoryCandidateLabel(candidate))}</option>`).join('')}<option value="__NEW__">別チームとして新規登録</option></select></label>`).join('')}</div><div class="row"><button class="btn" id="confirmNationalHistoryImport">選択内容で登録</button><button class="btn ghost" id="closeModal">中止</button></div>`);
+  $('#closeModal').onclick=closeModal;
+  $('#confirmNationalHistoryImport').onclick=async()=>{
+    for(const review of reviews){
+      const value=$(`#nationalHistoryDecision${review.index}`)?.value||'';
+      if(!value){toast('すべての類似チームを選択してください');return}
+      if(value!=='__NEW__')decisions.set(review.index,value);
+    }
+    modal(`<h2>${escapeHtml(tournament.shortName||tournament.name)} 登録中</h2><p>全国大会実績を書き込んでいます…</p>`);
+    try{await registerNationalHistoricalTournament(tournament,importedTeams,decisions,allTeams)}
+    catch(error){console.error('NATIONAL_HISTORY_IMPORT_FAILED',error);modal(`<h2>登録に失敗しました</h2><p>${escapeHtml(error?.message||String(error))}</p><button class="btn" id="closeModal">閉じる</button>`);$('#closeModal').onclick=closeModal}
+  };
+}
+
+window.openNationalHistoryImportMenu=async()=>{
+  if(!requireLogin())return;
+  const snapshot=await getDocs(collection(db,'tournaments')),registered=snapshot.docs.map(item=>({id:item.id,...item.data()}));
+  const missing=NATIONAL_HISTORY_IMPORTS.filter(entry=>!findDuplicateHistoricalTournament(entry.tournament,registered));
+  if(!missing.length){
+    modal('<h2>全国大会</h2><p>確認対象の2025・2026年度男子U15全国大会はすべて登録済みです。</p><button class="btn" id="closeModal">閉じる</button>');
+    $('#closeModal').onclick=closeModal;return;
+  }
+  modal(`<h2>全国大会を登録</h2><p class="sub">本年度（2026-27）と前年度（2025-26）の未登録大会だけを表示します。同じ大会結果は重複登録しません。</p><div class="grid">${missing.map((entry,index)=>`<button class="btn" data-national-import="${index}">${escapeHtml(entry.tournament.shortName||entry.tournament.name)}（${entry.teams.length}チーム）</button>`).join('')}</div><button class="btn ghost" id="closeModal">閉じる</button>`);
+  document.querySelectorAll('[data-national-import]').forEach(button=>button.onclick=async()=>{
+    const entry=missing[Number(button.dataset.nationalImport)];
+    closeModal();
+    await prepareNationalHistoricalImport(entry.tournament,entry.teams);
   });
   $('#closeModal').onclick=closeModal;
 };
