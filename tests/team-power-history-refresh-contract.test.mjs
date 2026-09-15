@@ -15,7 +15,11 @@ assert.ok((app.match(/await recalculatePersistedTeamRankAndPower\('2026-27',\[to
 assert.match(app, /function scheduleOpponentTeamsRender\(\)/);
 assert.match(app, /setTimeout\(\(\)=>\{opponentTeamsRenderTimer=0;render\(\)\},50\)/);
 assert.match(app, /function opponentHistoricalPowerBonus\(team=\{\}\)/);
-assert.match(app, /<span>過去実績加算<\/span><b>\+\$\{opponentHistoricalPowerBonus\(team\)\}<\/b>/);
+assert.match(app, /function opponentPrefecturePowerLabel\(team=\{\}\)/);
+assert.match(app, /県大会評価（前年実績・暫定）/);
+assert.match(app, /<span>\$\{opponentPrefecturePowerLabel\(team\)\}<\/span><b>\$\{opponentPrefecturePower\(team\)\} \/ 700<\/b>/);
+assert.match(app, /<span>過去実績平均<\/span><b>\$\{opponentHistoricalPowerBonus\(team\)\} \/ 100<\/b>/);
+assert.match(app, /<span>上位大会実績<\/span><b>\$\{opponentUpperTournamentPower\(team\)\} \/ 200<\/b>/);
 assert.match(index, /app\.js\?v=20260915-team-power-prev-fallback-v1/);
 assert.match(app, /service-worker\.js\?v=20260915-team-power-prev-fallback-v1/);
 assert.match(sw, /r32-shell-20260915-team-power-prev-fallback-v1/);
