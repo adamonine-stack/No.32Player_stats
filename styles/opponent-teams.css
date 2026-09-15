@@ -10,3 +10,38 @@
 @media(max-width:800px){.opponent-team-detail{font-size:13px}.opponent-team-detail .analysis-title h2{font-size:18px}.opponent-team-detail>.card{padding:10px}.opponent-team-profile h1{font-size:19px}.opponent-detail-summary{grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}.opponent-detail-summary>div{padding:7px}.opponent-detail-summary span{font-size:10px}.opponent-detail-summary b{font-size:13px;overflow-wrap:anywhere}.opponent-game-record{grid-template-columns:72px minmax(0,1fr);gap:4px 7px;padding:8px}.opponent-game-record span:nth-child(3),.opponent-game-record span:last-child{grid-column:1/-1}.opponent-game-record span:last-child{margin-top:0}}
 
 .opponent-overall-rank{margin-top:14px;padding:15px;border:1px solid var(--orange);border-radius:10px;background:linear-gradient(135deg,rgba(182,92,255,.14),rgba(249,115,22,.12))}.opponent-overall-rank>span{display:block;color:var(--muted);font-size:12px;font-weight:900}.opponent-overall-rank>b{display:block;margin-top:4px;color:var(--orange);font-size:34px;line-height:1}.opponent-overall-rank>b small{font-size:14px;color:var(--muted)}.opponent-overall-rank>p{margin:8px 0 0;color:var(--muted);font-size:11px}.opponent-season-ranks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}.opponent-season-rank{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px;border:1px solid var(--line);border-radius:8px;background:#0c0c0c}.opponent-season-rank span{font-size:12px;font-weight:800}.opponent-season-rank b{font-size:21px}.opponent-season-rank.previous{color:var(--muted)}.opponent-season-records{margin-top:14px}.opponent-season-records>h3{margin:0 0 8px;padding-bottom:6px;border-bottom:1px solid var(--line);color:var(--orange)}.opponent-season-records>h3 small{color:var(--muted);font-size:11px}@media(max-width:800px){.opponent-overall-rank>b{font-size:28px}.opponent-season-ranks{grid-template-columns:1fr}.opponent-season-rank{padding:8px}.opponent-season-rank b{font-size:18px}}
+
+
+.opponent-page-scroll-controls{
+  position:fixed;
+  right:24px;
+  bottom:24px;
+  z-index:26;
+  display:flex;
+  gap:8px;
+  padding:7px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:rgba(3,7,18,.88);
+  backdrop-filter:blur(12px);
+  box-shadow:0 10px 30px rgba(0,0,0,.35);
+}
+.opponent-page-scroll-controls .btn{
+  min-width:76px;
+  padding:9px 11px;
+  font-size:12px;
+}
+@media(max-width:800px){
+  .opponent-page-scroll-controls{
+    right:10px;
+    bottom:calc(78px + env(safe-area-inset-bottom));
+    gap:5px;
+    padding:5px;
+    border-radius:12px;
+  }
+  .opponent-page-scroll-controls .btn{
+    min-width:62px;
+    padding:8px 9px;
+    font-size:11px;
+  }
+}
