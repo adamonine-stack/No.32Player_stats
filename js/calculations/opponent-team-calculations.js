@@ -2,15 +2,12 @@ export const OPPONENT_RANKS=["E","D","C","B","A","A+","S"];
 
 const SCORE={E:1,D:2,C:3,B:4,"B+":4,A:5,"A+":6,S:7};
 export const TEAM_POWER_BASE={E:100,D:200,C:300,B:400,A:500,"A+":600,S:700};
-const BLOCK_POWER_BONUS={champion:120,runnerUp:100,best4:80,best8:60,best16:40,participation:20};
-const NATIONAL_POWER_BONUS={champion:250,runnerUp:220,best4:180,best8:140,best16:100,best32:70,participation:40};
-const HISTORICAL_ACHIEVEMENT_POINTS={
-  prefecture:{champion:10,runnerUp:8,best4:6,best8:4,best16:2,best32:0,participation:0},
-  block:{champion:14,runnerUp:12,best4:10,best8:8,best16:6,best32:6,participation:6},
-  national:{champion:20,runnerUp:18,best4:16,best8:14,best16:12,best32:10,participation:10}
-};
+const BLOCK_POWER_BONUS={champion:150,runnerUp:130,best4:100,best8:70,best16:55,best32:40,participation:40};
+const NATIONAL_POWER_BONUS={champion:200,runnerUp:200,best4:180,best8:160,best16:140,best32:120,participation:100};
+const HISTORICAL_ACHIEVEMENT_POINTS={champion:100,runnerUp:85,best4:70,best8:55,best16:40,best32:25,participation:10};
 export const HISTORICAL_TEAM_POWER_WEIGHTS=[0.6,0.3,0.1];
-export const HISTORICAL_TEAM_POWER_MAX=15;
+export const HISTORICAL_TEAM_POWER_MAX=100;
+export const TEAM_POWER_MAX=1000;
 
 export function rankToScore(rank){return SCORE[rank]||0}
 export function scoreToRank(score){
@@ -114,8 +111,8 @@ export function upperTournamentBonus(item={}){
 }
 
 export function historicalAchievementPoints(item={}){
-  const level=normalizeTournamentLevel(item),stage=placementStage(item.placementLabel||item.placement),table=HISTORICAL_ACHIEVEMENT_POINTS[level];
-  return table?.[stage]??table?.participation??0;
+  const stage=placementStage(item.placementLabel||item.placement);
+  return HISTORICAL_ACHIEVEMENT_POINTS[stage]??HISTORICAL_ACHIEVEMENT_POINTS.participation;
 }
 
 export function calculateHistoricalTeamBonus(placements=[],options={}){
@@ -136,17 +133,18 @@ export function calculateHistoricalTeamBonus(placements=[],options={}){
 
 export function calculateTeamPower(placements=[],options={}){
   const season=options.currentSeason||options.season||currentSeasonLabel(),seasonItems=placements.filter(item=>placementSeason(item)===season);
-  const seasonRank=calculateSeasonRanks(seasonItems)[season],rank=options.rank||seasonRank?.rank||null,history=calculateHistoricalTeamBonus(placements,{currentSeason:season});
-  if(!rank)return {rank:null,basePower:null,prefectureStrengthBonus:0,prefectureStrengthIndex:null,blockBonus:0,nationalBonus:0,historicalAchievementBonus:history.bonus,historicalAchievementRawBonus:history.rawBonus,historicalAchievementDetails:history.details,power:null};
-  const basePower=TEAM_POWER_BASE[rank],prefectureStrengthBonus=Math.max(0,Number(options.prefectureStrengthBonus)||0);
+  const seasonRank=calculateSeasonRanks(seasonItems)[season],rank=seasonRank?.rank||null,history=calculateHistoricalTeamBonus(placements,{currentSeason:season});
+  const basePower=rank?(TEAM_POWER_BASE[rank]||0):0;
   let blockBonus=0,nationalBonus=0;
   for(const item of seasonItems){
-    const level=normalizeTournamentLevel(item),bonus=upperTournamentBonus(item);
+    const level=normalizeTournamentLevel(item),bonus=Math.min(200,Math.max(0,upperTournamentBonus(item)));
     if(level==="block")blockBonus=Math.max(blockBonus,bonus);
     if(level==="national")nationalBonus=Math.max(nationalBonus,bonus);
   }
-  const power=Math.round((basePower+prefectureStrengthBonus+blockBonus+nationalBonus+history.bonus)*10)/10;
-  return {rank,basePower,prefectureStrengthBonus,prefectureStrengthIndex:100+prefectureStrengthBonus,blockBonus,nationalBonus,historicalAchievementBonus:history.bonus,historicalAchievementRawBonus:history.rawBonus,historicalAchievementDetails:history.details,power};
+  const upperTournamentPower=Math.min(200,Math.max(blockBonus,nationalBonus));
+  const total=Math.round((basePower+history.bonus+upperTournamentPower)*10)/10;
+  const power=total>0?Math.min(TEAM_POWER_MAX,total):null;
+  return {rank,basePower,prefecturePower:basePower,prefectureStrengthBonus:0,prefectureStrengthIndex:null,blockBonus,nationalBonus,upperTournamentPower,historicalAchievementBonus:history.bonus,historicalAchievementRawBonus:history.rawBonus,historicalAchievementDetails:history.details,power,maxPower:TEAM_POWER_MAX,calculationMethod:"current-prefecture-700-plus-history-100-plus-upper-200"};
 }
 
 export function calculatePrefectureStrengthBonuses(teams=[],options={}){
