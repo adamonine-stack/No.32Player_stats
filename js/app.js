@@ -40,7 +40,7 @@ import { TOURNAMENT_2026_KYOTO_U15_MEN, TEAMS_2026_KYOTO_U15_MEN, MATCHES_2026_K
 import { TOURNAMENT_2026_KINKI_U15_MEN, TEAMS_2026_KINKI_U15_MEN, MATCHES_2026_KINKI_U15_MEN } from "./data/2026-kinki-u15-men.js";
 import { TOURNAMENT_2025_OSAKA_JR_WINTER_CUP_MEN, TEAMS_2025_OSAKA_JR_WINTER_CUP_MEN, OSAKA_2025_DUPLICATE_TEAM_MERGES } from "./data/2025-osaka-jr-winter-cup-men.js";
 import { TOURNAMENT_2025_OSAKA_CLUB_CUP_MEN, TEAMS_2025_OSAKA_CLUB_CUP_MEN, TOURNAMENT_2025_OSAKA_JUNIOR_CHAMPIONSHIP_MEN, TEAMS_2025_OSAKA_JUNIOR_CHAMPIONSHIP_MEN } from "./data/2025-osaka-history-men.js?v=20260915-osaka-history-v1";
-import { findDuplicateHistoricalTournament, findExistingHistoricalPlacement, findSimilarHistoricalTeamCandidates } from "./calculations/historical-import-calculations.js?v=20260915-osaka-history-v1";
+import { findDuplicateHistoricalTournament, findExistingHistoricalPlacement, findSimilarHistoricalTeamCandidates } from "./calculations/historical-import-calculations.js?v=20260915-osaka-history-v2";
 import { findImportedTeamMatch, findExistingTournamentTeam, normalizeTeamNameForMatching, normalizeTournamentNameForMatching } from "./calculations/team-name-matching.js";
 const quickInputStyles=document.createElement('link');quickInputStyles.rel='stylesheet';quickInputStyles.href='./styles/quick-input.css?v=20260908-quarter-session-v1';document.head.appendChild(quickInputStyles);
 if('serviceWorker' in navigator && !location.pathname.includes('/tests/'))navigator.serviceWorker.register('./service-worker.js?v=20260915-opponent-scroll-buttons-v1').catch(error=>console.warn('Service worker registration failed',error));
