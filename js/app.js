@@ -38,6 +38,7 @@ import { TOURNAMENT_2025_CBG_HYOGO_MEN, TEAMS_2025_CBG_HYOGO_MEN, MATCHES_2025_C
 import { TOURNAMENT_2026_WAKAYAMA_U15_MEN, TEAMS_2026_WAKAYAMA_U15_MEN, MATCHES_2026_WAKAYAMA_U15_MEN } from "./data/2026-wakayama-u15-men.js";
 import { TOURNAMENT_2025_WAKAYAMA_JHS_CHAMPIONSHIP_MEN, TEAMS_2025_WAKAYAMA_JHS_CHAMPIONSHIP_MEN, TOURNAMENT_2025_WAKAYAMA_JHS_SOUTAI_MEN, TEAMS_2025_WAKAYAMA_JHS_SOUTAI_MEN, TOURNAMENT_2025_WAKAYAMA_JHS_ROOKIES_MEN, TEAMS_2025_WAKAYAMA_JHS_ROOKIES_MEN, TOURNAMENT_2025_WAKAYAMA_JR_WINTER_MEN, TEAMS_2025_WAKAYAMA_JR_WINTER_MEN, TOURNAMENT_2025_WAKAYAMA_JUNIOR_CLUB_MEN, TEAMS_2025_WAKAYAMA_JUNIOR_CLUB_MEN, TOURNAMENT_2026_WAKAYAMA_JHS_CHAMPIONSHIP_MEN, TEAMS_2026_WAKAYAMA_JHS_CHAMPIONSHIP_MEN, TOURNAMENT_2026_WAKAYAMA_JHS_SOUTAI_MEN, TEAMS_2026_WAKAYAMA_JHS_SOUTAI_MEN } from "./data/2025-2026-wakayama-history-men.js?v=20260915-wakayama-history-v3";
 import { TOURNAMENT_2026_SHIGA_U15_MEN, TEAMS_2026_SHIGA_U15_MEN, MATCHES_2026_SHIGA_U15_MEN } from "./data/2026-shiga-u15-men.js";
+import { TOURNAMENT_2025_SHIGA_JHS_SPRING_ZONES_MEN, TEAMS_2025_SHIGA_JHS_SPRING_ZONES_MEN, TOURNAMENT_2025_SHIGA_JHS_SOUTAI_MEN, TEAMS_2025_SHIGA_JHS_SOUTAI_MEN, TOURNAMENT_2025_SHIGA_JHS_ROOKIES_ZONES_MEN, TEAMS_2025_SHIGA_JHS_ROOKIES_ZONES_MEN, TOURNAMENT_2025_SHIGA_U15_CHAMPIONSHIP_MEN, TEAMS_2025_SHIGA_U15_CHAMPIONSHIP_MEN, TOURNAMENT_2025_SHIGA_JUNIOR_CHAMPIONSHIP_MEN, TEAMS_2025_SHIGA_JUNIOR_CHAMPIONSHIP_MEN, TOURNAMENT_2026_SHIGA_JHS_SPRING_ZONES_MEN, TEAMS_2026_SHIGA_JHS_SPRING_ZONES_MEN, TOURNAMENT_2026_SHIGA_JHS_SOUTAI_MEN, TEAMS_2026_SHIGA_JHS_SOUTAI_MEN } from "./data/2025-2026-shiga-history-men.js?v=20260916-shiga-history-v1";
 import { TOURNAMENT_2026_KYOTO_U15_MEN, TEAMS_2026_KYOTO_U15_MEN, MATCHES_2026_KYOTO_U15_MEN } from "./data/2026-kyoto-u15-men.js";
 import { TOURNAMENT_2025_KYOTO_JHS_SOUTAI_MEN, TEAMS_2025_KYOTO_JHS_SOUTAI_MEN, TOURNAMENT_2025_KYOTO_JR_WINTER_MEN, TEAMS_2025_KYOTO_JR_WINTER_MEN, TOURNAMENT_2025_KYOTO_ROOKIES_SCHOOL_QUALIFIER_MEN, TEAMS_2025_KYOTO_ROOKIES_SCHOOL_QUALIFIER_MEN, TOURNAMENT_2025_KYOTO_ROOKIES_CLUB_QUALIFIER_MEN, TEAMS_2025_KYOTO_ROOKIES_CLUB_QUALIFIER_MEN, TOURNAMENT_2025_KYOTO_ROOKIES_FINAL_MEN, TEAMS_2025_KYOTO_ROOKIES_FINAL_MEN, TOURNAMENT_2026_KYOTO_JHS_SOUTAI_MEN, TEAMS_2026_KYOTO_JHS_SOUTAI_MEN } from "./data/2025-2026-kyoto-history-men.js?v=20260916-kyoto-history-v2";
 import { TOURNAMENT_2026_KINKI_U15_MEN, TEAMS_2026_KINKI_U15_MEN, MATCHES_2026_KINKI_U15_MEN } from "./data/2026-kinki-u15-men.js";
@@ -48,7 +49,7 @@ import { TOURNAMENT_2026_HYOGO_JHS_SOUTAI_MEN, TEAMS_2026_HYOGO_JHS_SOUTAI_MEN }
 import { findDuplicateHistoricalResultSet, findDuplicateHistoricalTournament, findExistingHistoricalPlacement, findSimilarHistoricalTeamCandidates } from "./calculations/historical-import-calculations.js?v=20260915-osaka-history-v3";
 import { findImportedTeamMatch, findExistingTournamentTeam, normalizeTeamNameForMatching, normalizeTournamentNameForMatching } from "./calculations/team-name-matching.js";
 const quickInputStyles=document.createElement('link');quickInputStyles.rel='stylesheet';quickInputStyles.href='./styles/quick-input.css?v=20260908-quarter-session-v1';document.head.appendChild(quickInputStyles);
-if('serviceWorker' in navigator && !location.pathname.includes('/tests/'))navigator.serviceWorker.register('./service-worker.js?v=20260916-kyoto-history-v2').catch(error=>console.warn('Service worker registration failed',error));
+if('serviceWorker' in navigator && !location.pathname.includes('/tests/'))navigator.serviceWorker.register('./service-worker.js?v=20260916-shiga-history-v1').catch(error=>console.warn('Service worker registration failed',error));
 installOfflineSyncListeners();
 const nav=[['home','ホーム'],['players','選手'],['opponentTeams','対戦チーム'],['games','試合'],['stats','分析'],['team','チーム'],['settings','設定']];
 const navIcons={home:'home',players:'person',opponentTeams:'shield',games:'edit_note',stats:'bar_chart',team:'groups',settings:'settings'};
@@ -408,7 +409,7 @@ async function consolidate2025OsakaOpponentTeams(){
 function settingsView(){
   const rows=[...state.seasons].sort((a,b)=>b.sortOrder-a.sortOrder).map(item=>`<div class="season-admin-row"><b>${escapeHtml(item.name)}</b><span>${item.status}${item.id===state.activeSeasonId?' / 現在':''}</span>${state.user&&item.id!==state.activeSeasonId?`<button class="btn small ghost" onclick="setActiveSeason('${item.id}')">現在の世代に設定</button>`:''}</div>`).join('');
   const generationActions=state.user?'<div class="row"><button class="btn" onclick="openSeasonForm()">新しい世代を作成</button><button class="btn ghost" onclick="backupSeasonData()">migration前バックアップ</button><button class="btn ghost" onclick="migrateSeasonData()">Season migration</button></div>':'';
-  const adminActions=state.user?'<button class="btn" onclick="import2026HyogoJhsSoutaiMen()">2026 兵庫県中学校総体を登録</button><button class="btn" onclick="openWakayamaHistoryImportMenu()">和歌山県 2025・2026大会を登録</button><button class="btn" onclick="openNaraHistoryImportMenu()">奈良県 2025・2026大会を登録</button><button class="btn" onclick="openKyotoHistoryImportMenu()">京都府 2025・2026大会を登録</button><button class="btn" onclick="recalculateAllSeasonRanks()">全チームのランク・Power再計算</button>':'';
+  const adminActions=state.user?'<button class="btn" onclick="import2026HyogoJhsSoutaiMen()">2026 兵庫県中学校総体を登録</button><button class="btn" onclick="openWakayamaHistoryImportMenu()">和歌山県 2025・2026大会を登録</button><button class="btn" onclick="openNaraHistoryImportMenu()">奈良県 2025・2026大会を登録</button><button class="btn" onclick="openKyotoHistoryImportMenu()">京都府 2025・2026大会を登録</button><button class="btn" onclick="openShigaHistoryImportMenu()">滋賀県 2025・2026大会を登録</button><button class="btn" onclick="recalculateAllSeasonRanks()">全チームのランク・Power再計算</button>':'';
   return `<div class="card"><h2>設定</h2><section class="season-admin"><div class="section-title">チーム世代</div>${rows}${generationActions}</section><p class="sub">表示世代の切替と「現在の世代に設定」は別の操作です。</p><div class="row"><button class="btn ghost" onclick="location.reload()">再読み込み</button>${adminActions}</div></div>`;
 }
 function bindUpperFilters(){
@@ -1337,6 +1338,34 @@ window.openNaraHistoryImportMenu=async()=>{
   modal(`<h2>奈良県大会を登録</h2><p class="sub">未登録大会だけを表示しています。既存大会と同一結果が検出された場合は書き込みません。類似チーム名がある場合は、次の画面で統合するか別チームとして登録するか選択できます。</p><div class="grid">${missing.map((entry,index)=>`<button class="btn" data-nara-import="${index}">${escapeHtml(entry.tournament.shortName||entry.tournament.name)}</button>`).join('')}</div><button class="btn ghost" id="closeModal">閉じる</button>`);
   document.querySelectorAll('[data-nara-import]').forEach(button=>button.onclick=async()=>{
     const entry=missing[Number(button.dataset.naraImport)];
+    closeModal();
+    await prepare2025OsakaHistoricalImport(entry.tournament,entry.teams);
+  });
+  $('#closeModal').onclick=closeModal;
+};
+
+
+const SHIGA_HISTORY_IMPORTS=[
+  {tournament:TOURNAMENT_2025_SHIGA_JHS_SPRING_ZONES_MEN,teams:TEAMS_2025_SHIGA_JHS_SPRING_ZONES_MEN},
+  {tournament:TOURNAMENT_2025_SHIGA_JHS_SOUTAI_MEN,teams:TEAMS_2025_SHIGA_JHS_SOUTAI_MEN},
+  {tournament:TOURNAMENT_2025_SHIGA_JHS_ROOKIES_ZONES_MEN,teams:TEAMS_2025_SHIGA_JHS_ROOKIES_ZONES_MEN},
+  {tournament:TOURNAMENT_2025_SHIGA_U15_CHAMPIONSHIP_MEN,teams:TEAMS_2025_SHIGA_U15_CHAMPIONSHIP_MEN},
+  {tournament:TOURNAMENT_2025_SHIGA_JUNIOR_CHAMPIONSHIP_MEN,teams:TEAMS_2025_SHIGA_JUNIOR_CHAMPIONSHIP_MEN},
+  {tournament:{...TOURNAMENT_2026_SHIGA_U15_MEN,season:'2026-27',generation:'2026-27',category:'U15',tournamentLevel:'prefecture',teamPowerEligible:true},teams:TEAMS_2026_SHIGA_U15_MEN.map(team=>({...team,aliases:team.teamName==='滋賀レイクスU15Next'?['滋賀レイクスU15 Next','滋賀レイクス U15 Next']:[],teamType:'クラブチーム',ageGroup:'U15'}))},
+  {tournament:TOURNAMENT_2026_SHIGA_JHS_SPRING_ZONES_MEN,teams:TEAMS_2026_SHIGA_JHS_SPRING_ZONES_MEN},
+  {tournament:TOURNAMENT_2026_SHIGA_JHS_SOUTAI_MEN,teams:TEAMS_2026_SHIGA_JHS_SOUTAI_MEN}
+];
+window.openShigaHistoryImportMenu=async()=>{
+  if(!requireLogin())return;
+  const snapshot=await getDocs(collection(db,'tournaments')),registered=snapshot.docs.map(item=>({id:item.id,...item.data()}));
+  const missing=SHIGA_HISTORY_IMPORTS.filter(entry=>!findDuplicateHistoricalTournament(entry.tournament,registered));
+  if(!missing.length){
+    modal('<h2>滋賀県大会</h2><p>確認対象の2025・2026年度男子U15大会・予選はすべて登録済みです。</p><button class="btn" id="closeModal">閉じる</button>');
+    $('#closeModal').onclick=closeModal;return;
+  }
+  modal(`<h2>滋賀県大会を登録</h2><p class="sub">未登録大会だけを表示しています。同じ大会結果は重複登録しません。類似チーム名がある場合は、次の画面で統合するか別チームとして登録するか選択できます。ゾーン・ブロック予選は履歴には残しますが、ランク・Team Powerには加算しません。</p><div class="grid">${missing.map((entry,index)=>`<button class="btn" data-shiga-import="${index}">${escapeHtml(entry.tournament.shortName||entry.tournament.name)}${entry.tournament.teamPowerEligible===false?'（予選・評価対象外）':''}</button>`).join('')}</div><button class="btn ghost" id="closeModal">閉じる</button>`);
+  document.querySelectorAll('[data-shiga-import]').forEach(button=>button.onclick=async()=>{
+    const entry=missing[Number(button.dataset.shigaImport)];
     closeModal();
     await prepare2025OsakaHistoricalImport(entry.tournament,entry.teams);
   });
