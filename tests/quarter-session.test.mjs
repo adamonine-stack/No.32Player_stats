@@ -64,3 +64,13 @@ test('same-device predecessor receipt prevents another tab from overtaking an ea
  await assert.rejects(s.commit(c.ops[1]),/前の入力/);assert.equal(s.writes(),0);
  await run(s,c.ops);await run(s,c.ops);assert.equal(s.game().playEvents.length,2);
 });
+
+test('unchanged game document is not rewritten when only stats change',async()=>{
+ const stat={id:'g_p',gameId:'g',playerId:'p',quarters:{q1:{registered:true,quarter:1,dr:1}}};
+ const beforeGame=structuredClone(base),beforeStats=[structuredClone(stat)];
+ const afterStats=[{...structuredClone(stat),quarters:{q1:{registered:true,quarter:1,dr:2}}}];
+ const op={id:'stat-only',operationId:'stat-only',deviceId:'A',gameId:'g',quarter:1,clientCreatedAt:1000,createdAt:1000,localSequence:1,type:'event',ownerUid:'qa',sessionVersion:1,syncState:'draft',historyClock:{clientId:'A:q1',revision:1},payload:{},overlay:createHistoryOverlay(beforeGame,beforeStats,beforeGame,afterStats)};
+ const s=server(base,[stat]);await s.commit(op);
+ assert.equal(s.writes(),2);
+ assert.equal(s.stats()[0].quarters.q1.dr,2);
+});
