@@ -200,3 +200,16 @@ body{font-family:"Inter","Noto Sans JP",system-ui,-apple-system,sans-serif}.mate
     padding-right:8px!important;
   }
 }
+
+/* Restore readable game-list registration status without post-render rewriting. */
+.game-sort-item .game-line2{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px}
+.game-sort-item .game-line2>span:first-child{min-width:0;overflow-wrap:anywhere}
+.game-sort-item .game-line2>span:last-child{white-space:nowrap;text-align:right}
+.game-list-registration-status{display:flex;flex-wrap:wrap;align-items:center;gap:5px 12px;margin-top:6px;font-size:12px;font-weight:700;line-height:1.35;color:var(--muted,#9aa7bd)}
+.game-list-registration-status .shot-point-registered{color:#5ed6a7}
+.game-list-registration-status .playing-time-registered{color:#7dd3fc}
+@media(max-width:800px){
+  .game-sort-item .game-line2{grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px}
+  .game-sort-item .game-line2>span:last-child{white-space:nowrap}
+  .game-list-registration-status{font-size:11px;gap:4px 10px;margin-top:5px}
+}

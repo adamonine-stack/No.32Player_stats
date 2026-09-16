@@ -24,3 +24,11 @@ test('settings exposes public summary rebuild',()=>{
  assert.match(app,/rebuildPublicGameSummaries\(\)/);
  assert.match(app,/公開試合Summaryを再構築/);
 });
+
+
+test('game cards render registration status directly and keep quarter details off the score line',()=>{
+ assert.match(app,/function gameListRegistrationHtml\(game\)/);
+ assert.match(app,/スタッツ \$\{status\.registeredQuarters\}\/\$\{status\.totalQuarters\}Q/);
+ assert.match(app,/const gameListCard=String\(cls\).*right=gameListCard\?/s);
+ assert.match(app,/gameListCard\?gameListRegistrationHtml\(g\):''/);
+});
