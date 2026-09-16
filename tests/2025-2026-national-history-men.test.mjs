@@ -45,6 +45,27 @@ assert.equal(upperTournamentBonus(nationalPlacement('ベスト32')),120);
 assert.equal(upperTournamentBonus(nationalPlacement('出場')),100);
 assert.equal(calculateSeasonalTeamRank([nationalPlacement('優勝')],{currentSeason:'2026-27',previousSeason:'2025-26'}).rank,null,'national result must not become prefecture rank');
 
+
+const nationalOnlyCurrent=calculateTeamPower([nationalPlacement('出場')],{currentSeason:'2026-27'});
+assert.equal(nationalOnlyCurrent.rank,null,'national result must not become official prefecture rank');
+assert.equal(nationalOnlyCurrent.prefecturePowerRank,'A+');
+assert.equal(nationalOnlyCurrent.prefecturePower,600);
+assert.equal(nationalOnlyCurrent.prefecturePowerSource,'national-inferred-current');
+assert.equal(nationalOnlyCurrent.isPrefecturePowerInferredFromNational,true);
+assert.equal(nationalOnlyCurrent.nationalBonus,100);
+assert.equal(nationalOnlyCurrent.power,700);
+
+const nationalOnlyPrevious=calculateTeamPower([nationalPlacement('出場','2025-26')],{currentSeason:'2026-27'});
+assert.equal(nationalOnlyPrevious.rank,null);
+assert.equal(nationalOnlyPrevious.prefecturePowerRank,'A+');
+assert.equal(nationalOnlyPrevious.prefecturePower,600);
+assert.equal(nationalOnlyPrevious.prefecturePowerSource,'national-inferred-previous');
+assert.equal(nationalOnlyPrevious.isPrefecturePowerProvisional,true);
+assert.equal(nationalOnlyPrevious.isPrefecturePowerInferredFromNational,true);
+assert.equal(nationalOnlyPrevious.nationalBonus,0);
+assert.equal(nationalOnlyPrevious.historicalAchievementBonus,6);
+assert.equal(nationalOnlyPrevious.power,606);
+
 const prefecturePlacement={
   tournamentId:'pref-test',tournamentName:'県大会',tournamentLevel:'prefecture',season:'2026-27',
   placementLabel:'ベスト8',placementRank:'B',resultConfirmed:true,teamPowerEligible:true
