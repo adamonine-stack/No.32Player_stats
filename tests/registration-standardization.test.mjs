@@ -16,6 +16,8 @@ assert.ok(gameForm.includes("data-stats-type"));
 assert.ok(statsForm.includes("allowShotModeChoice"));
 assert.ok(statsForm.includes("data-shooting-mode"));
 assert.ok(gameForm.includes("Q毎スコアを1つ以上入力してください"));
+assert.ok(gameForm.includes("const localGame=state.allGames.find(item=>item.id===id);if(localGame)Object.assign(localGame,data)"),"edited games update local state immediately after save");
+assert.ok(gameForm.includes("const serverGame=serverGames.find(item=>item.id===id);if(serverGame)Object.assign(serverGame,data)"),"edited games update server snapshot cache immediately after save");
 assert.ok(statsForm.includes("!allowShotModeChoice||hasDetailedShots"));
 assert.ok(!analysisList.includes("g.tournament||'大会未登録'"));
 assert.ok(!teamList.includes("g.tournament||'大会未登録'"));
