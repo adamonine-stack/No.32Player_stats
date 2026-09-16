@@ -4,7 +4,7 @@ import { createHistoryOverlay, projectLocalHistory, receiveHistoryDocuments, res
 import { assistCandidates, isAssistEvent, isMadeEvent, nearbyMadeShots, planAssistMutation } from './calculations/assist-play-calculations.js?v=20260908-quarter-session-v2';
 import { commitAssistMutation } from './core/assist-play-store.js?v=20260908-quarter-session-v2';
 import { commitQuickStatMutation, commitQuickFreeThrowMutation } from './core/quick-history-store.js?v=20260908-quarter-session-v2';
-import { initializeOfflineSync, installOfflineSyncListeners, submitOfflineCapable, synchronizeOfflineOperations, confirmQuarterSession, confirmAllPendingSessions, quarterSessionStatus, discardPendingOperationsForGame } from './core/offline-sync.js?v=20260913-game-delete-v1';
+import { initializeOfflineSync, installOfflineSyncListeners, submitOfflineCapable, synchronizeOfflineOperations, confirmQuarterSession, confirmAllPendingSessions, quarterSessionStatus, discardPendingOperationsForGame } from './core/offline-sync.js?v=20260916-history-rebase-v1';
 import { auth, db, firestorePersistenceReady, signInWithEmailAndPassword, signOut, onAuthStateChanged, collection, doc, getDoc, getDocs, setDoc, deleteDoc, onSnapshot, query, where, serverTimestamp } from "./core/firebase.js?v=20260901-scoped-reads-v1";
 import { createListenerRegistry } from './data/listener-registry.js?v=20260901-scoped-reads-v1';
 import { auditR32Data } from './diagnostics/data-integrity.js?v=20260901-scoped-reads-v1';

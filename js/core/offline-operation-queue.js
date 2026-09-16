@@ -1,5 +1,5 @@
 const DB_NAME = 'r32-offline-operations';
-import { stampSessionOverlay } from './quarter-session-model.js?v=20260908-quarter-session-v2';
+import { stampSessionOverlay } from './quarter-session-model.js?v=20260916-history-rebase-v1';
 const DB_VERSION = 2;
 const STORE_NAME = 'operations';
 const OPEN_TIMEOUT_MS = 1500;
