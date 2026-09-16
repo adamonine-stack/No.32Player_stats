@@ -1,7 +1,11 @@
-import { state } from "../core/state.js";
-
 function isGamesTab() {
-  return state.tab === "games";
+  const view = document.getElementById("view");
+  if (!view) return false;
+  const title = view.querySelector(".card h2");
+  return Boolean(
+    view.querySelector(".game-sort-control")
+    && title?.textContent?.includes("試合一覧")
+  );
 }
 
 function jumpTo(direction) {
