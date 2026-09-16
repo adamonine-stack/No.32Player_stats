@@ -16,8 +16,8 @@ assert.match(app, /function opponentPrefecturePowerLabel\(team=\{\}\)/);
 assert.match(app, /県大会評価（前年実績・暫定）/);
 assert.match(app, /県大会評価（全国大会出場から補完）/);
 assert.match(app, /<span>過去実績平均<\/span><b>\$\{opponentHistoricalPowerBonus\(team\)\} \/ 100<\/b>/);
-assert.match(index, /app\.js\?v=20260916-team-type-tabs-v1/);
-assert.match(app, /service-worker\.js\?v=20260916-team-type-tabs-v1/);
-assert.match(sw, /r32-shell-20260916-team-type-tabs-v1/);
+assert.match(index, /app\\.js\\?v=20260917-opponent-edit-rank-v1/);
+assert.match(app, /service-worker\\.js\\?v=20260917-opponent-edit-rank-v1/);
+assert.match(sw, /r32-shell-20260917-opponent-edit-rank-v1/);
 
 console.log('Team Power validated history UI contract: ok');
