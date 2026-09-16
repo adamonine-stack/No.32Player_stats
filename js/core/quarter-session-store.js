@@ -31,6 +31,7 @@ export async function commitQuarterOperation(operation) {
     }
     for(let index=0;index<changes.length;index++) {
       const change=changes[index],snapshot=snapshots[index];
+      if(!change.patch)continue;
       const current=snapshot.exists()?{...snapshot.data(),id:snapshot.id}:undefined;
       const projected=projectSessionDocument(current,change);
       const {id,...data}=projected;
