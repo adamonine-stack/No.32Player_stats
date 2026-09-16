@@ -40,5 +40,5 @@ export function playerForSeason(player = {}, membership = null) {
     seasonMembership: membership
   };
 }
-export function rankForGame(game = {}, team = {}, fallback = DEFAULT_SEASON_ID) { const seasonId = effectiveSeasonId(game, fallback), label = seasonLabelForId(seasonId), value = team.teamSeasonData?.[seasonId] || team.seasonRanks?.[label]; return game.opponentRankAtGame || value?.rank || null; }
+export function rankForGame(game = {}, team = {}, fallback = DEFAULT_SEASON_ID) { const seasonId = effectiveSeasonId(game, fallback), label = seasonLabelForId(seasonId), value = team.teamSeasonData?.[seasonId] || team.seasonRanks?.[label]; return value?.rank || team.calculatedRank || team.teamRank || team.rank || null; }
 export function seasonLabelForId(id = "") { const match = String(id).match(/^season_(\d{4})_(\d{2,4})$/); return match ? `${match[1]}-${match[2].slice(-2)}` : id; }

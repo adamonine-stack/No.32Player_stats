@@ -18,7 +18,7 @@ const teams = [
   { id: "c", teamName: "No Data" }
 ];
 const games = [
-  { id: "g1", opponentTeamId: "a", opponent: "old", category: "U15", date: "2026-07-01", tournament: "Cup" },
+  { id: "g1", opponentTeamId: "a", opponent: "old", category: "U15", date: "2026-07-01", tournament: "Cup", opponentRankAtGame: "D" },
   { id: "g2", opponent: " alpha club ", category: "U14", date: "2026-07-02", tournament: "Cup" },
   { id: "g3", opponentTeamId: "b", opponent: "ベータ", category: "U13", date: "2026-08-01", tournament: "League" },
   { id: "g4", opponent: "Unknown", date: "2025-08-01", tournament: "League" }

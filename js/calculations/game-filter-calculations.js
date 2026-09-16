@@ -28,7 +28,7 @@ export function opponentRankForGame(game, opponentTeams = []) {
   const team = resolveOpponentTeam(game, opponentTeams);
   const seasonId = game?.seasonId || "season_2026_27";
   const label = seasonId.replace(/^season_/, "").replace("_", "-");
-  return String(game?.opponentRankAtGame || team?.teamSeasonData?.[seasonId]?.rank || team?.seasonRanks?.[label]?.rank || team?.calculatedRank || team?.teamRank || team?.rank || "").trim();
+  return String(team?.teamSeasonData?.[seasonId]?.rank || team?.seasonRanks?.[label]?.rank || team?.calculatedRank || team?.teamRank || team?.rank || game?.opponentRankAtGame || "").trim();
 }
 
 export function getOpponentCategoryOptions(games = []) {
