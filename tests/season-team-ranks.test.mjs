@@ -29,6 +29,8 @@ assert.equal(placementLabelToRank('ベスト8'),'B');
 assert.equal(placementLabelToRank('ベスト16'),'C');
 assert.equal(placementLabelToRank('ベスト32'),'D');
 assert.equal(placementLabelToRank('ベスト64以下・県大会出場'),'E');
+assert.equal(placementLabelToRank('出場'),'E');
+assert.equal(placementLabelToRank('初戦敗退'),'E');
 
 assert.equal(isValidTournamentAchievement(p('2025-26','優勝')),true);
 assert.equal(isValidTournamentAchievement({season:'2025-26'}),false);
@@ -40,6 +42,10 @@ assert.equal(isValidHistoricalAchievement(p('2025-26','県大会出場')),true);
 const highest=calculateSeasonRanks([p('2026-27','ベスト8'),p('2026-27','準優勝')])['2026-27'];
 assert.equal(highest.rank,'A+');
 assert.equal(calculateSeasonalTeamRank([p('2025-26','優勝')],{currentSeason:'2026-27'}).overallRankStatus,'provisional');
+const withdrawn={season:'2025-26',tournamentName:'CBG兵庫県予選',tournamentLevel:'prefecture',placementLabel:'棄権',placementRank:'D',rankValue:'D'};
+assert.equal(isValidTournamentAchievement(withdrawn),false);
+assert.equal(calculateSeasonRanks([withdrawn])['2025-26'],undefined);
+assert.equal(calculateTeamPower([withdrawn],{season:'2026-27'}).power,0);
 
 const noHistoryCurrent=calculateTeamPower([
   p('2026-27','優勝'),
@@ -102,7 +108,9 @@ assert.equal(participationBonus.bonus,6);
 const participationPower=calculateTeamPower(participationOnly,{season:'2026-27'});
 assert.equal(participationPower.historicalRecordCount,1);
 assert.equal(participationPower.hasHistoricalResults,true);
-assert.equal(participationPower.power,6);
+assert.equal(participationPower.previousRank,'E');
+assert.equal(participationPower.prefecturePower,100);
+assert.equal(participationPower.power,106);
 
 const blueDolphinsLike=calculateTeamPower([{
   season:'2025-26',
@@ -113,13 +121,13 @@ const blueDolphinsLike=calculateTeamPower([{
   rankValue:'D',
   resultConfirmed:true
 }],{season:'2026-27'});
-assert.equal(blueDolphinsLike.previousRank,'D');
-assert.equal(blueDolphinsLike.rank,'D');
-assert.equal(blueDolphinsLike.prefecturePower,200);
+assert.equal(blueDolphinsLike.previousRank,'E');
+assert.equal(blueDolphinsLike.rank,'E');
+assert.equal(blueDolphinsLike.prefecturePower,100);
 assert.equal(blueDolphinsLike.prefecturePowerSource,'previous');
 assert.equal(blueDolphinsLike.isPrefecturePowerProvisional,true);
 assert.equal(blueDolphinsLike.historicalAchievementBonus,6);
-assert.equal(blueDolphinsLike.power,206);
+assert.equal(blueDolphinsLike.power,106);
 
 const previousFallback=calculateTeamPower([p('2025-26','優勝')],{season:'2026-27'});
 assert.equal(previousFallback.prefecturePower,700);

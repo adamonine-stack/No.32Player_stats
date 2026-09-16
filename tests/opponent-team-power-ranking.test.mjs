@@ -10,8 +10,8 @@ assert.match(app, /values=teams\.map\(opponentTeamPowerValue\)\.filter\(value=>v
 assert.match(app, /if\(power===null\|\|power<=0\)return \{rank:null,total:values\.length,label:'対象外'\}/);
 assert.match(app, /const rank=1\+values\.filter\(value=>value>power\)\.length/);
 assert.match(app, /Number\.isFinite\(value\)&&value>=0/);
-assert.match(index, /app\.js\?v=20260916-team-type-tabs-v1/);
-assert.match(app, /service-worker\.js\?v=20260916-team-type-tabs-v1/);
-assert.match(sw, /r32-shell-20260916-team-type-tabs-v1/);
+assert.match(index, /app\.js\?v=20260917-audit-consistency-v1/);
+assert.match(app, /service-worker\.js\?v=20260917-audit-consistency-v1/);
+assert.match(sw, /r32-shell-20260917-audit-consistency-v1/);
 
 console.log('opponent team power ranking contract: ok');

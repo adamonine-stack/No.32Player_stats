@@ -46,14 +46,14 @@ export function placementLabelToRank(label){
   if(/ベスト8|5位|第5位|6位|第6位|7位|第7位|8位|第8位|準々決勝敗退/u.test(text))return "B";
   if(/ベスト16/u.test(text))return "C";
   if(/ベスト32/u.test(text))return "D";
-  if(/ベスト64|県大会出場|都道府県大会出場/u.test(text))return "E";
+  if(/ベスト64|県大会出場|都道府県大会出場|初戦敗退|1回戦敗退|2回戦敗退|予選敗退|リーグ敗退|(^|[^不])参加$|(^|[^不])出場$/u.test(text))return "E";
   return null;
 }
 
 function normalizeLegacyRank(rank){return rank==="B+"?"B":OPPONENT_RANKS.includes(rank)?rank:null}
 
 export function prefectureRankForPlacement(item={}){
-  if(item.teamPowerEligible===false)return null;
+  if(item.teamPowerEligible===false||!isValidTournamentAchievement(item))return null;
   if(normalizeTournamentLevel(item)!=="prefecture")return null;
   const byPlacement=placementLabelToRank(item.placementLabel||item.placement);
   if(byPlacement)return byPlacement;
@@ -65,6 +65,7 @@ export function prefectureRankForPlacement(item={}){
 export function calculateSeasonRanks(placements=[]){
   const groups={};
   for(const item of placements){
+    if(!isValidTournamentAchievement(item))continue;
     const season=placementSeason(item),rank=prefectureRankForPlacement(item),score=rankToScore(rank);
     if(!season||!score)continue;
     const group=groups[season]||{rank:null,score:0,recordCount:0,calculationMethod:"highest-prefecture-placement"};

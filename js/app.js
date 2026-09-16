@@ -8,6 +8,7 @@ import { initializeOfflineSync, installOfflineSyncListeners, submitOfflineCapabl
 import { auth, db, firestorePersistenceReady, signInWithEmailAndPassword, signOut, onAuthStateChanged, collection, doc, getDoc, getDocs, setDoc, deleteDoc, onSnapshot, query, where, serverTimestamp } from "./core/firebase.js?v=20260901-scoped-reads-v1";
 import { createListenerRegistry } from './data/listener-registry.js?v=20260901-scoped-reads-v1';
 import { auditR32Data } from './diagnostics/data-integrity.js?v=20260901-scoped-reads-v1';
+import { AUDIT_CONSISTENCY_MIGRATION_VERSION, normalizeTournamentPlacementRanks, planSafeStatQuarterCleanup } from './diagnostics/audit-consistency-migration.js?v=20260917-audit-consistency-v1';
 import { buildPlayerSeasonSummary, comparePlayerSeasonSummary, playerSeasonSummaryId } from './calculations/player-season-summary.js?v=20260901-home-summary-v1';
 import { planHomeSummaryRefresh } from './calculations/home-summary-invalidation.js?v=20260916-firestore-load-v1';
 import { buildPublicGameSummary, hasCompletePublicGameSummaryCoverage } from './calculations/public-game-summary.js?v=20260916-public-read-v1';
@@ -21,7 +22,7 @@ import { changedOptimisticEventIds, rollbackOptimisticEvents, rollbackOptimistic
 import { resultMark, resultText, resultWord, resultClass, gameRecord, dateRange, finalScoreFromQuarterScores, quarterScoreKey, hasQuarterScoreData, hasShotPointData, registrationChoiceVisibility } from "./calculations/game-calculations.js";
 import { selectedTeamQuarterStatus, teamGamePeriods, teamRegisteredQuarterNumbers, teamStatsForView } from "./calculations/team-game-period-calculations.js";
 import { filterGamesByDate, filterGamesByMonth } from "./calculations/analysis-calculations.js";
-import { OPPONENT_RANKS, calculateOpponentTeamRank, calculateSeasonalTeamRank, calculateTeamPower, calculatePrefectureStrengthBonuses, isValidTournamentAchievement, normalizeTournamentLevel, placementSeason, placementLabelToRank, sortPlayerNumbers } from "./calculations/opponent-team-calculations.js?v=20260916-national-team-power-floor-v1";
+import { OPPONENT_RANKS, calculateOpponentTeamRank, calculateSeasonalTeamRank, calculateTeamPower, calculatePrefectureStrengthBonuses, isValidTournamentAchievement, normalizeTournamentLevel, placementSeason, placementLabelToRank, sortPlayerNumbers } from "./calculations/opponent-team-calculations.js?v=20260917-audit-consistency-v1";
 import { DEFAULT_SEASON_ID, ALL_SEASONS_ID, DEFAULT_SEASONS, effectiveSeasonId, migrationSeasonIdForGame, filterBySeason, normalizeSeason, previousSeasonId, carryPlayerSeason, playerForSeason, rankForGame, seasonIdForLabel, seasonLabelForId } from "./calculations/season-calculations.js";
 import { mergeOpponentTeamRecords, opponentReferencePatch } from "./calculations/opponent-team-merge-calculations.js";
 import { getGameDateKey, getDatesWithRegisteredGames, calendarMonthFor, moveCalendarMonth, buildCalendarDays } from "./calculations/calendar-calculations.js";
@@ -53,7 +54,7 @@ import { TOURNAMENT_2026_HYOGO_JHS_SOUTAI_MEN, TEAMS_2026_HYOGO_JHS_SOUTAI_MEN }
 import { findDuplicateHistoricalResultSet, findDuplicateHistoricalTournament, findExistingHistoricalPlacement, findSimilarHistoricalTeamCandidates } from "./calculations/historical-import-calculations.js?v=20260915-osaka-history-v3";
 import { findImportedTeamMatch, findExistingTournamentTeam, normalizeTeamNameForMatching, normalizeTournamentNameForMatching } from "./calculations/team-name-matching.js";
 const quickInputStyles=document.createElement('link');quickInputStyles.rel='stylesheet';quickInputStyles.href='./styles/quick-input.css?v=20260908-quarter-session-v1';document.head.appendChild(quickInputStyles);
-if('serviceWorker' in navigator && !location.pathname.includes('/tests/'))navigator.serviceWorker.register('./service-worker.js?v=20260917-opponent-edit-rank-v1').catch(error=>console.warn('Service worker registration failed',error));
+if('serviceWorker' in navigator && !location.pathname.includes('/tests/'))navigator.serviceWorker.register('./service-worker.js?v=20260917-audit-consistency-v1').catch(error=>console.warn('Service worker registration failed',error));
 installOfflineSyncListeners();
 const nav=[['home','ホーム'],['players','選手'],['opponentTeams','対戦チーム'],['games','試合'],['stats','分析'],['team','チーム'],['settings','設定']];
 const navIcons={home:'home',players:'person',opponentTeams:'shield',games:'edit_note',stats:'bar_chart',team:'groups',settings:'settings'};
@@ -109,7 +110,7 @@ function updateGameBulkSyncAction(){const host=$('#gameBulkSyncAction');if(!host
 async function bulkSyncPending(){const button=$('#bulkSyncPending');if(button)button.disabled=true;try{const result=await confirmAllPendingSessions();if(result.pending)toast(`一括同期後も未同期が ${result.pending}件残っています`);else toast('未同期データをすべて同期しました')}catch(error){console.error(error);toast(error.message||'一括同期に失敗しました')}finally{updateGameBulkSyncAction()}}
 function renderSyncStatus(detail={}){latestSyncStatus={...latestSyncStatus,...detail,pending:Number(detail.pending)||0};const pending=latestSyncStatus.pending,stateName=latestSyncStatus.state||'idle',offline=latestSyncStatus.online===false||stateName==='offline',label=offline?`オフライン${pending?`・未同期 ${pending}件`:''}`:stateName==='syncing'?`同期中・残り ${pending}件`:stateName==='error'?`同期エラー・未同期 ${pending}件`:pending?`未同期 ${pending}件`:'クラウド接続済み';for(const id of ['cloudStatus','syncStatus']){const element=$('#'+id);if(!element)continue;element.textContent=label;element.dataset.syncState=offline?'offline':stateName;element.title=pending?'タップして同期を再試行':'同期済み';}updateGameBulkSyncAction()}
 window.addEventListener('r32-sync-status',event=>renderSyncStatus(event.detail));
-onAuthStateChanged(auth,async u=>{state.user=u; $('#pcLoginBtn').textContent=u?'ログアウト':'管理者としてログイン'; await firestorePersistenceReady;await restoreLocalHistory(u).catch(error=>console.warn('Local history restore failed',error));syncOnce();await initializeOfflineSync(u);ensureDataForView();render();if(u)ensureCurrentGameOpponentRanks().catch(error=>console.warn('Current opponent rank sync failed',error))});let did=false;function syncOnce(){if(!did){did=true;sync()}}
+onAuthStateChanged(auth,async u=>{state.user=u; $('#pcLoginBtn').textContent=u?'ログアウト':'管理者としてログイン'; await firestorePersistenceReady;await restoreLocalHistory(u).catch(error=>console.warn('Local history restore failed',error));syncOnce();await initializeOfflineSync(u);ensureDataForView();render();if(u)ensureAuditConsistencyMigration().catch(error=>console.warn('Audit consistency migration failed',error))});let did=false;function syncOnce(){if(!did){did=true;sync()}}
 for(const id of ['cloudStatus','syncStatus'])$('#'+id)?.addEventListener('click',()=>synchronizeOfflineOperations());
 $('#pcLoginBtn').onclick=()=>state.user?logout():loginModal();
 function loginModal(){modal(`<h2>ログイン</h2><div class="grid"><label>メール<input id="loginEmail" autocomplete="username" type="email"></label><label>パスワード<input id="loginPass" autocomplete="current-password" type="password"></label><button class="btn" id="doLogin">ログイン</button><button class="btn ghost" id="closeModal">閉じる</button></div>`);$('#doLogin').onclick=async()=>{try{await signInWithEmailAndPassword(auth,$('#loginEmail').value,$('#loginPass').value);closeModal();toast('ログインしました')}catch(e){toast('ログイン失敗')}};$('#closeModal').onclick=closeModal}
@@ -328,8 +329,7 @@ function normalizedOpponentPlacementRank(item={}){
   return OPPONENT_RANKS.includes(stored)?stored:'';
 }
 function normalizeOpponentPlacementForCurrentRanks(item={}){
-  const rank=normalizedOpponentPlacementRank(item);
-  return rank?{...item,placementRank:rank,seasonRank:rank,rankValue:rank}:{...item};
+  return normalizeTournamentPlacementRanks([item])[0];
 }
 function opponentTeamDisplayRank(team={}){
   const calculated=calculateSeasonalTeamRank(validOpponentPlacements(team));
@@ -426,15 +426,15 @@ async function import2026WakayamaMen(){
   await recalculatePersistedTeamRankAndPower('2026-27',[tournament.prefecture]);
 }
 function openOpponentTeamForm(team={}){if(!requireLogin())return;opponentDraft={...team,tournamentPlacements:opponentPlacements(team).map(item=>normalizeOpponentPlacementForCurrentRanks(item)),playerNumbers:sortPlayerNumbers(team.playerNumbers)};renderOpponentTeamForm()}
-function placementRows(){return opponentDraft.tournamentPlacements.map((item,index)=>{const currentRank=normalizedOpponentPlacementRank(item);return `<div class="opponent-placement" data-placement="${index}"><label>世代<select data-field="seasonId">${[...state.seasons].sort((a,b)=>b.sortOrder-a.sortOrder).map(season=>`<option value="${season.id}" ${season.id===(item.seasonId||seasonIdForLabel(placementSeason(item)))?'selected':''}>${escapeHtml(season.name)}</option>`).join('')}</select></label><label>大会名<input data-field="tournamentName" value="${escapeHtml(item.tournamentName||'')}"></label><label>大会順位<input data-field="placement" value="${escapeHtml(item.placement||'')}"></label><label>ランク<select data-field="placementRank">${[...OPPONENT_RANKS].reverse().map(rank=>`<option ${rank===currentRank?'selected':''}>${rank}</option>`).join('')}</select></label><button type="button" class="btn small ghost" data-placement-move="${index}">↑↓</button><button type="button" class="btn small danger" data-placement-delete="${index}">削除</button></div>`}).join('')||'<p class="sub">大会順位未登録</p>'}
+function placementRows(){return opponentDraft.tournamentPlacements.map((item,index)=>{const currentRank=normalizedOpponentPlacementRank(item);return `<div class="opponent-placement" data-placement="${index}"><label>世代<select data-field="seasonId">${[...state.seasons].sort((a,b)=>b.sortOrder-a.sortOrder).map(season=>`<option value="${season.id}" ${season.id===(item.seasonId||seasonIdForLabel(placementSeason(item)))?'selected':''}>${escapeHtml(season.name)}</option>`).join('')}</select></label><label>大会名<input data-field="tournamentName" value="${escapeHtml(item.tournamentName||'')}"></label><label>大会順位<input data-field="placement" value="${escapeHtml(item.placement||'')}"></label><label>ランク<select data-field="placementRank"><option value="" ${!currentRank?'selected':''}>未設定</option>${[...OPPONENT_RANKS].reverse().map(rank=>`<option ${rank===currentRank?'selected':''}>${rank}</option>`).join('')}</select></label><button type="button" class="btn small ghost" data-placement-move="${index}">↑↓</button><button type="button" class="btn small danger" data-placement-delete="${index}">削除</button></div>`}).join('')||'<p class="sub">大会順位未登録</p>'}
 function collectOpponentDraft(){const name=$('#opponentTeamName'),pref=$('#opponentPrefecture');if(name)opponentDraft.teamName=name.value.trim();if(pref)opponentDraft.prefecture=pref.value;document.querySelectorAll('[data-placement]').forEach(row=>{const item=opponentDraft.tournamentPlacements[Number(row.dataset.placement)];row.querySelectorAll('[data-field]').forEach(input=>item[input.dataset.field]=input.value.trim());const season=state.seasons.find(value=>value.id===item.seasonId);if(season){item.season=season.name;item.year=season.startYear}Object.assign(item,normalizeOpponentPlacementForCurrentRanks(item))});const number=$('#opponentNumber');if(number?.value.trim()){opponentDraft.playerNumbers=sortPlayerNumbers([...opponentDraft.playerNumbers,number.value]);number.value=''}}
 function renderOpponentTeamForm(){const rank=calculateOpponentTeamRank(opponentDraft.tournamentPlacements);modal(`<h2>${opponentDraft.id?'対戦チーム編集':'対戦チーム登録'}</h2><div class="form-grid"><label>チーム名<input id="opponentTeamName" value="${escapeHtml(opponentDraft.teamName||'')}"></label><label>都道府県<select id="opponentPrefecture"><option value="">都道府県を選択</option>${PREFECTURES.map(pref=>`<option value="${pref}" ${pref===opponentDraft.prefecture?'selected':''}>${pref}</option>`).join('')}</select></label></div><div class="opponent-rank-summary"><span>チームランク</span><b>${rank.rank||'未設定'}</b><span>${rank.score==null?'':`平均 ${rank.score}`}</span></div><div class="section-title">大会順位</div><div id="placementRows">${placementRows()}</div><button type="button" class="btn ghost" id="addPlacement">＋ 大会順位を追加</button><div class="section-title">選手№</div><div class="opponent-numbers">${opponentDraft.playerNumbers.map(number=>`<button type="button" class="opponent-number" data-number-delete="${number}">${number} ×</button>`).join('')||'<span class="sub">未登録</span>'}</div><div class="row"><input type="number" min="0" id="opponentNumber" placeholder="選手№"><button type="button" class="btn ghost" id="addOpponentNumber">追加</button></div><div class="row game-form-actions"><button class="btn" id="saveOpponentTeam">保存</button><button class="btn ghost" id="closeModal">閉じる</button>${opponentDraft.id?'<button class="btn danger delete-right" id="deleteOpponentTeam">削除</button>':''}</div>`);document.querySelector('#modalRoot > .modal')?.classList.add('opponent-team-form-modal');bindOpponentTeamForm()}
-function bindOpponentTeamForm(){document.querySelectorAll('[data-placement] input,[data-placement] select').forEach(input=>input.onchange=()=>{collectOpponentDraft();renderOpponentTeamForm()});$('#addPlacement').onclick=()=>{collectOpponentDraft();opponentDraft.tournamentPlacements.push({id:uid(),year:new Date().getFullYear(),tournamentName:'',placement:'',placementRank:'D',sortOrder:opponentDraft.tournamentPlacements.length});renderOpponentTeamForm()};document.querySelectorAll('[data-placement-delete]').forEach(button=>button.onclick=()=>{if(confirm('この大会順位を削除しますか？')){collectOpponentDraft();opponentDraft.tournamentPlacements.splice(Number(button.dataset.placementDelete),1);renderOpponentTeamForm()}});document.querySelectorAll('[data-placement-move]').forEach(button=>button.onclick=()=>{collectOpponentDraft();const i=Number(button.dataset.placementMove),next=i===0?1:i-1;if(opponentDraft.tournamentPlacements[next]){[opponentDraft.tournamentPlacements[i],opponentDraft.tournamentPlacements[next]]=[opponentDraft.tournamentPlacements[next],opponentDraft.tournamentPlacements[i]];renderOpponentTeamForm()}});$('#addOpponentNumber').onclick=()=>{collectOpponentDraft();renderOpponentTeamForm()};document.querySelectorAll('[data-number-delete]').forEach(button=>button.onclick=()=>{collectOpponentDraft();opponentDraft.playerNumbers=opponentDraft.playerNumbers.filter(number=>number!==button.dataset.numberDelete);renderOpponentTeamForm()});$('#saveOpponentTeam').onclick=saveOpponentTeam;bindGameFormCloseAction($('#closeModal'));const del=$('#deleteOpponentTeam');if(del)del.onclick=async()=>{if(state.games.some(game=>game.opponentTeamId===opponentDraft.id)){toast('登録済み試合で使用中のため削除できません');return}if(confirm('この対戦チームを削除しますか？')){await deleteDoc(doc(db,'opponentTeams',opponentDraft.id));closeModal()}}}
+function bindOpponentTeamForm(){document.querySelectorAll('[data-placement] input,[data-placement] select').forEach(input=>input.onchange=()=>{collectOpponentDraft();renderOpponentTeamForm()});$('#addPlacement').onclick=()=>{collectOpponentDraft();opponentDraft.tournamentPlacements.push({id:uid(),year:new Date().getFullYear(),tournamentName:'',placement:'',placementRank:'',sortOrder:opponentDraft.tournamentPlacements.length});renderOpponentTeamForm()};document.querySelectorAll('[data-placement-delete]').forEach(button=>button.onclick=()=>{if(confirm('この大会順位を削除しますか？')){collectOpponentDraft();opponentDraft.tournamentPlacements.splice(Number(button.dataset.placementDelete),1);renderOpponentTeamForm()}});document.querySelectorAll('[data-placement-move]').forEach(button=>button.onclick=()=>{collectOpponentDraft();const i=Number(button.dataset.placementMove),next=i===0?1:i-1;if(opponentDraft.tournamentPlacements[next]){[opponentDraft.tournamentPlacements[i],opponentDraft.tournamentPlacements[next]]=[opponentDraft.tournamentPlacements[next],opponentDraft.tournamentPlacements[i]];renderOpponentTeamForm()}});$('#addOpponentNumber').onclick=()=>{collectOpponentDraft();renderOpponentTeamForm()};document.querySelectorAll('[data-number-delete]').forEach(button=>button.onclick=()=>{collectOpponentDraft();opponentDraft.playerNumbers=opponentDraft.playerNumbers.filter(number=>number!==button.dataset.numberDelete);renderOpponentTeamForm()});$('#saveOpponentTeam').onclick=saveOpponentTeam;bindGameFormCloseAction($('#closeModal'));const del=$('#deleteOpponentTeam');if(del)del.onclick=async()=>{if(state.games.some(game=>game.opponentTeamId===opponentDraft.id)){toast('登録済み試合で使用中のため削除できません');return}if(confirm('この対戦チームを削除しますか？')){await deleteDoc(doc(db,'opponentTeams',opponentDraft.id));closeModal()}}}
 async function saveOpponentTeam(){
   collectOpponentDraft();
   opponentDraft.tournamentPlacements=opponentDraft.tournamentPlacements.map(item=>normalizeOpponentPlacementForCurrentRanks(item));
   if(!opponentDraft.teamName||!opponentDraft.prefecture){toast('チーム名と都道府県は必須です');return}
-  if(opponentDraft.tournamentPlacements.some(item=>!item.year||!item.tournamentName||!item.placement||!item.placementRank)){toast('大会順位の必須項目を入力してください');return}
+  if(opponentDraft.tournamentPlacements.some(item=>!item.year||!item.tournamentName||!item.placement||(isValidTournamentAchievement(item)&&!normalizedOpponentPlacementRank(item)))){toast('大会順位の必須項目を入力してください');return}
   const keys=new Set();
   for(const item of opponentDraft.tournamentPlacements){
     const key=`${item.year}:${item.tournamentName}`;
@@ -1268,25 +1268,31 @@ async function syncGameOpponentRanksForTeams(teams=[]){
   const snapshot=await getDocs(collection(db,'games')),games=snapshot.docs.map(item=>({id:item.id,...item.data()}));let updated=0;
   for(const game of games){
     const team=resolveOpponentTeam(game,teams);if(!team)continue;
-    const latestRank=rankForGame(game,team);if(!latestRank||String(game.opponentRankAtGame||'').trim()===String(latestRank).trim())continue;
+    const latestRank=rankForGame(game,team)||null,savedRank=String(game.opponentRankAtGame||'').trim()||null;
+    if(savedRank===latestRank)continue;
     await setDoc(doc(db,'games',game.id),{opponentRankAtGame:latestRank,updatedAt:serverTimestamp()},{merge:true});updated++;
   }
   return {updated};
 }
+function teamCalculationPatch(team,season,rank,power,placements){
+  return {tournamentPlacements:placements,seasonRanks:rank.seasonRanks,overallRank:rank.overallRank,overallRankScore:rank.overallScore,overallRankStatus:rank.overallRankStatus,calculatedRank:rank.rank,calculatedRankScore:rank.score,teamPower:power.power,teamPowerBase:power.basePower,prefectureStrengthBonus:0,prefectureStrengthIndex:null,blockTournamentBonus:power.blockBonus,nationalTournamentBonus:power.nationalBonus,upperTournamentPower:power.upperTournamentPower,historicalAchievementBonus:power.historicalAchievementBonus,historicalAchievementRawBonus:power.historicalAchievementRawBonus,historicalAchievementDetails:power.historicalAchievementDetails,teamPowerSeason:season,rankCalculationMethod:'highest-prefecture-placement',teamPowerCalculationMethod:power.calculationMethod};
+}
+function teamCalculationChanged(team,patch){return Object.keys(patch).some(key=>JSON.stringify(team?.[key]??null)!==JSON.stringify(patch[key]??null))}
 async function recalculateTeamRankAndPower(teams,season='2026-27'){
-  const strengths=calculatePrefectureStrengthBonuses(teams,{season});let updated=0;const updatedTeams=[];
-  for(const team of teams){
-    const placements=opponentPlacements(team);if(!placements.length)continue;
+  const normalizedTeams=teams.map(team=>({...team,tournamentPlacements:normalizeTournamentPlacementRanks(opponentPlacements(team))}));
+  const strengths=calculatePrefectureStrengthBonuses(normalizedTeams,{season});let updated=0;const updatedTeams=[];
+  for(const team of normalizedTeams){
+    const placements=opponentPlacements(team);
     const rank=calculateSeasonalTeamRank(placements,{currentSeason:season}),strength=strengths[team.prefecture]?.bonus||0,power=calculateTeamPower(placements,{season,rank:rank.rank,prefectureStrengthBonus:strength});
-    const persisted={...team,tournamentPlacements:placements,seasonRanks:rank.seasonRanks,overallRank:rank.overallRank,overallRankScore:rank.overallScore,overallRankStatus:rank.overallRankStatus,calculatedRank:rank.rank,calculatedRankScore:rank.score,teamPower:power.power,teamPowerBase:power.basePower,prefectureStrengthBonus:0,prefectureStrengthIndex:null,blockTournamentBonus:power.blockBonus,nationalTournamentBonus:power.nationalBonus,upperTournamentPower:power.upperTournamentPower,historicalAchievementBonus:power.historicalAchievementBonus,historicalAchievementRawBonus:power.historicalAchievementRawBonus,historicalAchievementDetails:power.historicalAchievementDetails,teamPowerSeason:season,rankCalculationMethod:'highest-prefecture-placement',teamPowerCalculationMethod:power.calculationMethod};
-    await setDoc(doc(db,'opponentTeams',team.id),{...persisted,rankCalculatedAt:serverTimestamp(),updatedAt:serverTimestamp()},{merge:true});
-    updatedTeams.push(persisted);updated++;
+    const patch=teamCalculationPatch(team,season,rank,power,placements),persisted={...team,...patch};
+    if(teamCalculationChanged(team,patch)){await setDoc(doc(db,'opponentTeams',team.id),{...patch,rankCalculatedAt:serverTimestamp(),updatedAt:serverTimestamp()},{merge:true});updated++}
+    updatedTeams.push(persisted);
   }
   const gameRanks=await syncGameOpponentRanksForTeams(updatedTeams);
-  return {updated,strengths,gameRanksUpdated:gameRanks.updated};
+  return {updated,processed:normalizedTeams.length,strengths,gameRanksUpdated:gameRanks.updated};
 }
-const TEAM_POWER_HISTORY_REFRESH_VERSION='2026-09-16-national-team-power-floor-v1';
-const CURRENT_GAME_RANK_SYNC_VERSION='2026-09-16-current-opponent-rank-v1';
+const TEAM_POWER_HISTORY_REFRESH_VERSION='2026-09-17-audit-consistency-v1';
+const CURRENT_GAME_RANK_SYNC_VERSION='2026-09-17-audit-consistency-v1';
 async function persistedOpponentTeams(){const snapshot=await getDocs(collection(db,'opponentTeams'));return snapshot.docs.map(item=>({id:item.id,...item.data()}))}
 async function ensureCurrentGameOpponentRanks(){
   if(!state.user)return {updated:0,skipped:true};
@@ -1297,6 +1303,49 @@ async function ensureCurrentGameOpponentRanks(){
   return result;
 }
 async function recalculatePersistedTeamRankAndPower(season='2026-27',prefectures=[]){const teams=await persistedOpponentTeams(),targets=Array.isArray(prefectures)&&prefectures.length?teams.filter(team=>prefectures.includes(team.prefecture||team.region)):teams;return recalculateTeamRankAndPower(targets,season)}
+async function rebuildConsistencySummaries(games,stats){
+  const [existingPlayerSummaries,existingPublicSummaries,playerSeasons]=await Promise.all(['playerSeasonSummaries','publicGameSummaries','playerSeasons'].map(fetchCollectionRows));
+  const gameById=new Map(games.map(game=>[game.id,game])),targets=new Map();
+  for(const summary of existingPlayerSummaries)if(summary.seasonId&&summary.playerId)targets.set(`${summary.seasonId}__${summary.playerId}`,{seasonId:summary.seasonId,playerId:summary.playerId});
+  for(const membership of playerSeasons)if(membership.seasonId&&membership.playerId)targets.set(`${membership.seasonId}__${membership.playerId}`,{seasonId:membership.seasonId,playerId:membership.playerId});
+  for(const stat of stats){const game=gameById.get(stat.gameId);if(!game||!stat.playerId)continue;const seasonId=effectiveSeasonId(game);targets.set(`${seasonId}__${stat.playerId}`,{seasonId,playerId:stat.playerId})}
+  let playerWritten=0,playerMismatches=0;
+  for(const target of targets.values()){
+    const expected=buildPlayerSeasonSummary({seasonId:target.seasonId,playerId:target.playerId,games,stats}),id=playerSeasonSummaryId(target.seasonId,target.playerId),ref=doc(db,'playerSeasonSummaries',id);
+    await setDoc(ref,{...expected,updatedAt:serverTimestamp()});
+    const check=await getDoc(ref);if(!comparePlayerSeasonSummary(expected,check.data()).equal)playerMismatches++;playerWritten++;
+  }
+  const gameIds=new Set(games.map(game=>game.id));let publicWritten=0,publicDeleted=0;
+  for(const game of games){const summary=buildPublicGameSummary({...game,seasonId:effectiveSeasonId(game)},stats.filter(stat=>stat.gameId===game.id));await setDoc(doc(db,'publicGameSummaries',game.id),{...summary,updatedAt:serverTimestamp()},{merge:true});publicWritten++}
+  for(const summary of existingPublicSummaries){const gameId=summary.gameId||summary.id;if(gameIds.has(gameId))continue;await deleteDoc(doc(db,'publicGameSummaries',summary.id));publicDeleted++}
+  return {playerWritten,playerMismatches,publicWritten,publicDeleted};
+}
+async function cleanupLegacyStatsSafely(games,stats){
+  const gameById=new Map(games.map(game=>[game.id,game])),cleanedStats=[],result={updated:0,legacyNumericPreserved:0,removedNullQuarterKeys:0,removedEmptyOutOfRangeQuarterKeys:0,protectedOutOfRangeQuarterKeys:0};
+  for(const stat of stats){
+    const plan=planSafeStatQuarterCleanup(stat,gameById.get(stat.gameId)||{});
+    if(plan.legacyNumeric)result.legacyNumericPreserved++;
+    result.removedNullQuarterKeys+=plan.removedNullQuarterKeys;
+    result.removedEmptyOutOfRangeQuarterKeys+=plan.removedEmptyOutOfRangeQuarterKeys;
+    result.protectedOutOfRangeQuarterKeys+=plan.protectedOutOfRangeQuarterKeys;
+    if(plan.changed){
+      await setDoc(doc(db,'stats',stat.id),{quarters:plan.quarters,auditConsistencyMigrationVersion:AUDIT_CONSISTENCY_MIGRATION_VERSION,updatedAt:serverTimestamp()},{mergeFields:['quarters','auditConsistencyMigrationVersion','updatedAt']});
+      cleanedStats.push({...stat,quarters:plan.quarters,auditConsistencyMigrationVersion:AUDIT_CONSISTENCY_MIGRATION_VERSION});result.updated++;
+    }else cleanedStats.push(stat);
+  }
+  return {...result,stats:cleanedStats};
+}
+async function ensureAuditConsistencyMigration(){
+  if(!state.user)return {skipped:true};
+  const settingsRef=doc(db,'settings','app'),settingsSnapshot=await getDoc(settingsRef);
+  if(settingsSnapshot.data()?.auditConsistencyMigrationVersion===AUDIT_CONSISTENCY_MIGRATION_VERSION)return {skipped:true};
+  const teams=await persistedOpponentTeams(),teamResult=await recalculateTeamRankAndPower(teams);
+  const [games,stats]=await Promise.all(['games','stats'].map(fetchCollectionRows)),statsResult=await cleanupLegacyStatsSafely(games,stats),summaryResult=await rebuildConsistencySummaries(games,statsResult.stats);
+  const report={teamUpdates:teamResult.updated,teamsProcessed:teamResult.processed,gameRanksUpdated:teamResult.gameRanksUpdated,statsUpdated:statsResult.updated,legacyNumericStatsPreserved:statsResult.legacyNumericPreserved,removedNullQuarterKeys:statsResult.removedNullQuarterKeys,removedEmptyOutOfRangeQuarterKeys:statsResult.removedEmptyOutOfRangeQuarterKeys,protectedOutOfRangeQuarterKeys:statsResult.protectedOutOfRangeQuarterKeys,playerSummariesWritten:summaryResult.playerWritten,playerSummaryMismatches:summaryResult.playerMismatches,publicSummariesWritten:summaryResult.publicWritten,publicSummariesDeleted:summaryResult.publicDeleted};
+  await setDoc(settingsRef,{auditConsistencyMigrationVersion:AUDIT_CONSISTENCY_MIGRATION_VERSION,auditConsistencyMigratedAt:serverTimestamp(),auditConsistencyMigrationReport:report,teamPowerHistoryRefreshVersion:TEAM_POWER_HISTORY_REFRESH_VERSION,currentGameRankSyncVersion:CURRENT_GAME_RANK_SYNC_VERSION,updatedAt:serverTimestamp()},{merge:true});
+  console.info('AUDIT_CONSISTENCY_MIGRATION_COMPLETE',report);
+  return report;
+}
 function historicalTeamSplitCandidates(teams=[]){const groups=new Map();for(const team of teams){const ids=new Set(),names=[team.teamName,team.normalizedTeamName,...(Array.isArray(team.aliases)?team.aliases:[])].map(normalizeTeamNameForMatching).filter(Boolean);for(const name of names){const key=`${team.prefecture||''}|${name}`,group=groups.get(key)||new Map();group.set(team.id,team.teamName||team.normalizedTeamName||team.id);groups.set(key,group)}}return [...groups.entries()].filter(([,items])=>items.size>1).map(([key,items])=>({key,teams:[...items.entries()].map(([id,teamName])=>({id,teamName}))}))}
 async function ensureHistoricalTeamPowerRefresh(){if(!state.user)return {updated:0,skipped:true};const settingsRef=doc(db,'settings','app'),settingsSnapshot=await getDoc(settingsRef);if(settingsSnapshot.data()?.teamPowerHistoryRefreshVersion===TEAM_POWER_HISTORY_REFRESH_VERSION)return {updated:0,skipped:true};const teams=await persistedOpponentTeams(),splitCandidates=historicalTeamSplitCandidates(teams),result=await recalculateTeamRankAndPower(teams);await setDoc(settingsRef,{teamPowerHistoryRefreshVersion:TEAM_POWER_HISTORY_REFRESH_VERSION,teamPowerHistoryRefreshedAt:serverTimestamp(),teamPowerHistorySplitCandidateCount:splitCandidates.length,updatedAt:serverTimestamp()},{merge:true});if(splitCandidates.length)console.warn('TEAM_POWER_HISTORY_SPLIT_CANDIDATES',splitCandidates);return {...result,splitCandidates}}
 async function recalculateAllSeasonRanks(){if(!requireLogin()||!confirm('全対戦チームを新基準（県大会の最高到達順位＋Team Power）で再計算しますか？'))return;const teams=state.opponentTeams.map(team=>{const corrected=corrected2026PrefecturePlacements(team);return {...team,tournamentPlacements:corrected.placements}}),result=await recalculateTeamRankAndPower(teams);modal(`<h2>ランク・Team Power再計算完了</h2><p>更新チーム：${result.updated}件</p><p>県大会順位は S / A+ / A / B / C / D / E、初戦敗退による例外は廃止しました。Team Powerは1000点満点で、本年度県大会最大700点＋過去3季の大会実績平均最大100点（前年60％・2年前30％・3年前10％）＋本年度上位大会最大200点です。本年度の県大会実績が未登録でも全国大会出場実績がある場合は、県大会A+相当（600点）を最低保証として補完します。実際の県大会結果が登録されている場合は実データを優先し、それも無い場合は前年県大会ランクを暫定評価として使用します。</p><button class="btn" id="closeModal">閉じる</button>`);$('#closeModal').onclick=closeModal}
