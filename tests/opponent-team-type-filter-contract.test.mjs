@@ -16,7 +16,7 @@ assert.match(app, /window\.setOpponentTeamTypeFilter=type=>/);
 assert.match(app, /Team Power総合順位/);
 assert.match(app, /Team Power \$\{escapeHtml\(teamTypeLabel\)\}順位/);
 assert.match(app, /Team Power \$\{escapeHtml\(standingLabel\)\}順位/);
-assert.match(index, /app\.js\?v=20260916-team-type-tabs-v1/);
+assert.match(index, /app\.js\?v=20260916-firestore-load-v1/);
 assert.match(index, /opponent-teams\.css\?v=20260916-team-type-tabs-v1/);
 assert.match(css, /\.opponent-team-type-tabs/);
 assert.match(css, /\.opponent-team-type-tab\.active/);
