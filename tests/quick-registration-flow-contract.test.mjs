@@ -43,3 +43,8 @@ test('active lineup remains category and number sorted after substitution', () =
   assert.match(app, /currentAtTime=sortParticipationPlayerIds\(game,currentPlayersAt/);
   assert.match(app, /function quickPlayers[\s\S]*?sortPlayersByCategoryAndNumber\(ids\.map/);
 });
+
+
+test('assist candidates use the same category and jersey-number order', () => {
+  assert.match(app, /const players=sortPlayersByCategoryAndNumber\(assistCandidates\(game,quarter,shot,participationPlayers\(game\),state\.stats\)\)/);
+});

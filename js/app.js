@@ -52,7 +52,7 @@ import { TOURNAMENT_2026_HYOGO_JHS_SOUTAI_MEN, TEAMS_2026_HYOGO_JHS_SOUTAI_MEN }
 import { findDuplicateHistoricalResultSet, findDuplicateHistoricalTournament, findExistingHistoricalPlacement, findSimilarHistoricalTeamCandidates } from "./calculations/historical-import-calculations.js?v=20260915-osaka-history-v3";
 import { findImportedTeamMatch, findExistingTournamentTeam, normalizeTeamNameForMatching, normalizeTournamentNameForMatching } from "./calculations/team-name-matching.js";
 const quickInputStyles=document.createElement('link');quickInputStyles.rel='stylesheet';quickInputStyles.href='./styles/quick-input.css?v=20260908-quarter-session-v1';document.head.appendChild(quickInputStyles);
-if('serviceWorker' in navigator && !location.pathname.includes('/tests/'))navigator.serviceWorker.register('./service-worker.js?v=20260916-participation-local-v1').catch(error=>console.warn('Service worker registration failed',error));
+if('serviceWorker' in navigator && !location.pathname.includes('/tests/'))navigator.serviceWorker.register('./service-worker.js?v=20260916-assist-order-v1').catch(error=>console.warn('Service worker registration failed',error));
 installOfflineSyncListeners();
 const nav=[['home','ホーム'],['players','選手'],['opponentTeams','対戦チーム'],['games','試合'],['stats','分析'],['team','チーム'],['settings','設定']];
 const navIcons={home:'home',players:'person',opponentTeams:'shield',games:'edit_note',stats:'bar_chart',team:'groups',settings:'settings'};
@@ -969,7 +969,7 @@ function finishHistoryEdit(game,quarter){const session=quickSession(game,quarter
 function bindLatestHistory(game,quarter){const root=document.querySelector('.quick-latest-history');if(root){root.dataset.gameId=game.id;root.dataset.quarter=String(quarter)}const byId=new Map(groupGameHistory(buildGameHistory(game,state.stats,participationPlayers(game))).map(item=>[item.eventId,item]));document.querySelectorAll('[data-quick-latest-edit]').forEach(button=>button.onclick=()=>{const item=byId.get(button.dataset.quickLatestEdit);if(item)editLatestHistoryItem(game,item,item.quarter||quarter)});document.querySelectorAll('[data-quick-latest-delete]').forEach(button=>button.onclick=()=>{const item=byId.get(button.dataset.quickLatestDelete);if(item){quickSetSession(game,item.quarter||quarter,{returnToQuickAfterEdit:true});deleteHistoryItem(game,item)}})}
 function assistSelectionSheet(game,quarter,shot,onPick,onBack,{allowNone=true}={}){
   const keyboard=document.querySelector('#modalRoot>.modal')?.dataset.quickKeyboard==='true';
-  const players=assistCandidates(game,quarter,shot,participationPlayers(game),state.stats);
+  const players=sortPlayersByCategoryAndNumber(assistCandidates(game,quarter,shot,participationPlayers(game),state.stats));
   modal(`<div class="quick-sheet-head"><button type="button" class="btn ghost" id="assistBack">戻る</button><div><small>${escapeHtml(assistPlayerLabel(participationPlayer(game,shot.playerId)))}</small><h2>アシスト</h2></div></div><div class="quick-player-grid assist-player-grid">${allowNone?'<button type="button" class="quick-player" data-assist-player=""><b>なし</b><span>アシストなし</span></button>':''}${players.map(p=>`<button type="button" class="quick-player" data-assist-player="${escapeHtml(p.id)}"><b>No.${escapeHtml(p.number??'-')}</b><span>${escapeHtml(p.name||'未登録選手')}</span></button>`).join('')}</div>${players.length?'':'<p class="sub">この時点の出場選手を確認できません。出場・交代情報を確認してください。</p>'}`);
   quickModalClass('quick-sheet-modal',keyboard);$('#assistBack').onclick=onBack;
   let saving=false;
