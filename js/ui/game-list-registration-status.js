@@ -30,9 +30,22 @@ function ensureStyles() {
   document.head.appendChild(style);
 }
 
+function publicSummaryForGame(game) {
+  const summary = (state.publicGameSummaries || []).find(item => (item.gameId || item.id) === game.id);
+  return summary && Number(summary.schemaVersion) >= 1 ? summary : null;
+}
+
 function statusHtml(game) {
-  const status = gameListRegistrationStatus(game, state.stats);
-  const participation = participationStatus(game);
+  const summary = publicSummaryForGame(game);
+  const status = summary ? {
+    registeredQuarters: Number(summary.registeredQuarters) || 0,
+    totalQuarters: Number(summary.totalQuarters) || 0,
+    hasShotPoints: Boolean(summary.hasShotPoints)
+  } : gameListRegistrationStatus(game, state.stats);
+  const participation = summary ? {
+    registered: Number(summary.participationRegisteredQuarters) || 0,
+    total: Number(summary.participationTotalQuarters) || 0
+  } : participationStatus(game);
   const playingTime = participation.registered
     ? `<span class="playing-time-registered">出場時間 ${participation.registered}/${participation.total}Q</span>`
     : '';
