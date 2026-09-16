@@ -12,8 +12,8 @@ assert.match(app, /function opponentTeamDisplayRank\(team=\{\}\)/);
 assert.match(app, /チームランク：\$\{opponentTeamDisplayRank\(team\)\|\|'未設定'\}/);
 assert.match(app, /bindGameFormCloseAction\(\$\('#closeModal'\)\)/);
 assert.match(app, /await setDoc\(doc\(db,'opponentTeams',id\),data,\{merge:true\}\);\s*closeModal\(\);\s*toast\('保存しました'\);\s*try\{await recalculatePersistedTeamRankAndPower/s);
-assert.match(index, /app\.js\?v=20260917-opponent-edit-rank-v1/);
-assert.match(app, /service-worker\.js\?v=20260917-opponent-edit-rank-v1/);
-assert.match(sw, /r32-shell-20260917-opponent-edit-rank-v1/);
+assert.match(index, /app\.js\?v=20260917-audit-consistency-v1/);
+assert.match(app, /service-worker\.js\?v=20260917-audit-consistency-v1/);
+assert.match(sw, /r32-shell-20260917-audit-consistency-v1/);
 
 console.log('opponent team edit/rank regression contract: ok');
