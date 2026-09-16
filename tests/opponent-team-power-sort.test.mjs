@@ -10,8 +10,8 @@ assert.match(app, /option value="power-asc".*Team Power（低い順）/);
 assert.match(app, /const aZero=av===0,bZero=bv===0/);
 assert.match(app, /if\(aZero!==bZero\)return aZero\?1:-1/);
 assert.match(app, /if\(aZero&&bZero\)return opponentTeamNameCompare\(a,b\)/);
-assert.match(index, /app\.js\?v=20260915-team-power-current-results-v1/);
-assert.match(app, /service-worker\.js\?v=20260915-team-power-current-results-v1/);
-assert.match(sw, /r32-shell-20260915-team-power-current-results-v1/);
+assert.match(index, /app\.js\?v=20260916-national-team-power-floor-v1/);
+assert.match(app, /service-worker\.js\?v=20260916-national-team-power-floor-v1/);
+assert.match(sw, /r32-shell-20260916-national-team-power-floor-v1/);
 
 console.log('opponent team power sort contract: ok');
