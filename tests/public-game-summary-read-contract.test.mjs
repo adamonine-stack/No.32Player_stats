@@ -32,3 +32,9 @@ test('game cards render registration status directly and keep quarter details of
  assert.match(app,/const gameListCard=String\(cls\).*right=gameListCard\?/s);
  assert.match(app,/gameListCard\?gameListRegistrationHtml\(g\):''/);
 });
+
+
+test('game-list score line includes one-quarter duration before quarter count',()=>{
+ assert.match(app,/durationMinutes=Math\.max\(1,Math\.round\(quarterDurationSeconds\(g\)\/60\)\)/);
+ assert.match(app,/\$\{durationMinutes\}分\$\{g\.quarters\|\|0\}Q/);
+});
