@@ -4,8 +4,8 @@ import fs from 'node:fs';
 
 const app=fs.readFileSync(new URL('../js/app.js',import.meta.url),'utf8');
 
-test('settings view does not subscribe all stats',()=>{
-  assert.match(app,/if\(\['games','stats','team'\]\.includes\(state\.tab\)\)ensureStatsSync/);
+test('settings view does not start or tear down stats subscriptions',()=>{
+  assert.match(app,/if\(\['games','stats','team'\]\.includes\(state\.tab\)\)\{ensureStatsSync\(state\.allGames\.map\(game=>game\.id\),seasonId\);return\}if\(state\.tab==='settings'\)return;ensureStatsSync\(\[\],seasonId\)/);
   assert.doesNotMatch(app,/\['games','stats','team','settings'\]/);
 });
 
