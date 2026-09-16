@@ -31,3 +31,15 @@ test('changed history action is replaced only after new save', () => {
   assert.match(app, /await removeHistoryItemForReplacement\(game,replacement\)/);
   assert.match(app, /replacementHistoryItem:null/);
 });
+
+
+test('participation save is immediately visible before quarter sync', () => {
+  assert.match(app, /function saveParticipationGame[\s\S]*?Object\.assign\(game,after\)[\s\S]*?submitOfflineCapable/);
+  assert.match(app, /catch\(error\)[\s\S]*?Object\.assign\(game,before\)/);
+});
+
+test('active lineup remains category and number sorted after substitution', () => {
+  assert.match(app, /function participationPlayers\(game=\{\}\)\{return sortPlayersByCategoryAndNumber/);
+  assert.match(app, /currentAtTime=sortParticipationPlayerIds\(game,currentPlayersAt/);
+  assert.match(app, /function quickPlayers[\s\S]*?sortPlayersByCategoryAndNumber\(ids\.map/);
+});
