@@ -827,7 +827,7 @@ function gameForm(g={}){
     if(!g.id)data.createdAt=serverTimestamp();
     await setDoc(doc(db,'games',id),data,{merge:true});
     if(shouldPromote){await saveSameDateOrdersForDate(oldDate,{excludeId:id});await saveSameDateOrdersForDate(newDate,{promotedGame:{id,...data}})}
-    if(!g.id){const created={id,...data};if(!state.allGames.some(item=>item.id===id))state.allGames.push(created);refreshSeasonScope();toast('保存しました');participationForm(id,1,'',{newGameEntry:true})}else{closeModal();toast('保存しました')}
+    if(!g.id){const created={id,...data};if(!state.allGames.some(item=>item.id===id))state.allGames.push(created);refreshSeasonScope();toast('保存しました');participationForm(id,1,'',{newGameEntry:true})}else{const localGame=state.allGames.find(item=>item.id===id);if(localGame)Object.assign(localGame,data);const serverGame=serverGames.find(item=>item.id===id);if(serverGame)Object.assign(serverGame,data);refreshSeasonScope();closeModal();toast('保存しました');render()}
   };
   bindGameFormCloseAction($('#closeModal'));
   const del=$('#deleteGameFromEdit');
