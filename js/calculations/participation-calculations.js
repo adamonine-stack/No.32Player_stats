@@ -26,6 +26,33 @@ export function sortSubstitutions(substitutions = []) {
   });
 }
 
+export function sameSubstitution(a = {}, b = {}) {
+  return integer(a.remainingSeconds) === integer(b.remainingSeconds)
+    && String(a.playerOutId || "") === String(b.playerOutId || "")
+    && String(a.playerInId || "") === String(b.playerInId || "");
+}
+
+export function duplicateSubstitutionIds(substitutions = []) {
+  const uniqueEvents = [];
+  const duplicateIds = [];
+  for (const event of sortSubstitutions(substitutions)) {
+    if (uniqueEvents.some(existing => sameSubstitution(existing, event))) {
+      if (event.id) duplicateIds.push(event.id);
+      continue;
+    }
+    uniqueEvents.push(event);
+  }
+  return duplicateIds;
+}
+
+export function dedupeSubstitutions(substitutions = []) {
+  const uniqueEvents = [];
+  for (const event of sortSubstitutions(substitutions)) {
+    if (!uniqueEvents.some(existing => sameSubstitution(existing, event))) uniqueEvents.push(event);
+  }
+  return uniqueEvents;
+}
+
 export function validateQuarterParticipation({ starters = [], substitutions = [], durationSeconds = 480 } = {}) {
   const initial = unique(starters);
   if (initial.length !== 5) return { valid: false, error: "Q開始メンバーを5人設定してください。", lineups: [], secondsByPlayer: {} };
