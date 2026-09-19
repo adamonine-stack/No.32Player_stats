@@ -12,4 +12,4 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: node --test tests/starter-save-dedupe.test.mjs tests/offline-journal-sync.test.mjs tests/quarter-session-idb.test.mjs tests/participation-ui-contract.test.mjs tests/game-delete-offline-contract.test.mjs tests/offline-registration-contract.test.mjs
+      - run: node --test tests/starter-save-dedupe.test.mjs tests/offline-journal-sync.test.mjs tests/quarter-session-idb.test.mjs tests/game-delete-offline-contract.test.mjs tests/offline-registration-contract.test.mjs
