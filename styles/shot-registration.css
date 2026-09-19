@@ -104,16 +104,23 @@ body.modal-open { position:fixed; left:0; right:0; width:100%; }
 @media (min-width: 801px) {
   .shot-modal .shot-panel,
   .shot-modal #shotTypeOptions,
+  .shot-modal #quickShotTypeOptions,
   .shot-modal .shot-type-grid {
     position: relative;
     z-index: 6;
     pointer-events: auto;
   }
 
-  .shot-modal [data-shot-type] {
+  .shot-modal [data-shot-type],
+  .shot-modal [data-quick-shot-type] {
     position: relative;
     z-index: 7;
     pointer-events: auto !important;
     cursor: pointer;
+  }
+
+  .quick-shot-modal [data-quick-shot-type].pc-pointer-hit:not(.selected) {
+    outline: 2px solid rgba(196,181,253,.7);
+    outline-offset: -2px;
   }
 }
