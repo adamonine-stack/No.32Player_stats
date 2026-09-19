@@ -204,7 +204,7 @@ export async function markQuarterReady(gameId,quarter,ownerUid) {
   const db=await openDatabase();
   return new Promise((resolve,reject)=>{
     const tx=db.transaction(STORE_NAME,'readwrite'),store=tx.objectStore(STORE_NAME),request=store.getAll();
-    request.onsuccess=()=>{for(const op of request.result)if(op.sessionVersion&&op.gameId===gameId&&op.quarter===Number(quarter)&&op.ownerUid===ownerUid&&op.syncState==='draft')store.put({...op,syncState:'ready'})};
+    request.onsuccess=()=>{for(const op of request.result)if(op.sessionVersion&&op.gameId===gameId&&op.quarter===Number(quarter)&&(!op.ownerUid||op.ownerUid===ownerUid)&&op.syncState==='draft')store.put({...op,ownerUid:op.ownerUid||ownerUid,syncState:'ready',lastError:''})};
     tx.oncomplete=resolve;tx.onerror=tx.onabort=()=>reject(tx.error);
   });
 }
