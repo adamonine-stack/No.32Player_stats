@@ -14,7 +14,7 @@ import {
   offlineOperationCount,
   removeOfflineOperation,
   updateOfflineOperation
-} from './offline-operation-queue.js?v=20260916-history-rebase-v1';
+} from './offline-operation-queue.js?v=20260920-starter-dedupe-v1';
 
 let syncing = false;
 let currentUser = null;
