@@ -37,6 +37,28 @@ export function createHistoryOverlay(beforeGame,beforeStats,afterGame,afterStats
   return {documents};
 }
 const time = value => Number(value?.seconds||0)*1e9+Number(value?.nanoseconds||0);
+function operationGameDocument(operation={}) {
+  return (operation.overlay?.documents||[]).find(item=>String(item?.key||'').startsWith('games/'))||null;
+}
+function operationSeasonId(operation={},gameDocument=null) {
+  return gameDocument?.before?.seasonId||operation.seasonId||operation.payload?.game?.seasonId||operation.payload?.data?.seasonId||'';
+}
+export function orphanedGameOperationIds(operations=[],serverGameIds=[],{seasonId='',allSeasonsId='all'}={}) {
+  const serverIds=new Set([...serverGameIds].map(id=>String(id||'')).filter(Boolean));
+  const ids=[];
+  for(const operation of operations||[]) {
+    const gameDocument=operationGameDocument(operation);
+    if(!gameDocument||!operation?.id)continue;
+    const gameId=String(gameDocument.key).slice('games/'.length);
+    if(!gameId||serverIds.has(gameId))continue;
+    if(seasonId&&seasonId!==allSeasonsId) {
+      const opSeasonId=operationSeasonId(operation,gameDocument);
+      if(!opSeasonId||opSeasonId!==seasonId)continue;
+    }
+    ids.push(operation.id);
+  }
+  return ids;
+}
 export class HistoryJournal {
   constructor(){this.documents=new Map();this.operations=new Map()}
   start(operation){
