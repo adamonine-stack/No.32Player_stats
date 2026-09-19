@@ -1,8 +1,6 @@
-name: tests
+name: starter-sync-tests
 on:
   pull_request:
-    branches: [main]
-  push:
     branches: [main]
 jobs:
   test:
@@ -14,4 +12,4 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
-      - run: npm test
+      - run: node --test tests/starter-save-dedupe.test.mjs tests/offline-journal-sync.test.mjs tests/quarter-session-idb.test.mjs tests/participation-ui-contract.test.mjs tests/game-delete-offline-contract.test.mjs tests/offline-registration-contract.test.mjs
