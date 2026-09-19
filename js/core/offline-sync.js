@@ -4,6 +4,7 @@ import { commitQuickFreeThrowMutation, commitQuickStatMutation } from './quick-h
 import { commitQuarterOperation } from './quarter-session-store.js?v=20260916-history-rebase-v1';
 import { sessionScope } from './quarter-session-model.js?v=20260916-history-rebase-v1';
 import {
+  compactNoopSessionOperations,
   createOfflineOperation,
   enqueueOfflineOperation,
   enqueueSessionOperation,
@@ -13,7 +14,7 @@ import {
   offlineOperationCount,
   removeOfflineOperation,
   updateOfflineOperation
-} from './offline-operation-queue.js?v=20260916-history-rebase-v1';
+} from './offline-operation-queue.js?v=20260920-starter-dedupe-v1';
 
 let syncing = false;
 let currentUser = null;
@@ -62,6 +63,9 @@ async function execute(operation) {
 }
 
 export async function submitOfflineCapable(type, payload, onlineAction, options = {}) {
+  if(options.overlay && (options.overlay.documents||[]).every(change=>!change.patch)) {
+    return {queued:false, result:null, noop:true};
+  }
   const operation = createOfflineOperation(type, payload, {...options, ownerUid: currentUser?.uid || ''});
   if(options.overlay){
     Object.assign(operation,sessionScope(type,payload,options));
@@ -201,6 +205,10 @@ export async function quarterSessionStatus(gameId,quarter) {
 
 export async function initializeOfflineSync(user) {
   currentUser = user || null;
+  if(currentUser){
+    const compacted=await compactNoopSessionOperations(currentUser.uid).catch(error=>{console.warn('Offline no-op cleanup failed',error);return {removedIds:[]}});
+    for(const operationId of compacted.removedIds||[])announceOperation({action:'discarded',operationId});
+  }
   await status(globalThis.navigator?.onLine === false ? 'offline' : 'idle');
   if (currentUser) await synchronizeOfflineOperations();
 }

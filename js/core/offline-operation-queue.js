@@ -86,6 +86,46 @@ export function sortOfflineOperations(rows = []) {
   return [...rows].sort((a, b) => Number(a.createdAt) - Number(b.createdAt) || Number(a.localSequence||0)-Number(b.localSequence||0) || String(a.id).localeCompare(String(b.id)));
 }
 
+function sessionScopeKey(operation={}) {
+  return `session:${operation.ownerUid||''}:${operation.gameId||operation.payload?.gameId||operation.payload?.game?.id||''}:${Number(operation.quarter)||1}`;
+}
+
+function isNoopSessionOperation(operation={}) {
+  return Boolean(operation.sessionVersion) && (operation.overlay?.documents||[]).every(change=>!change.patch);
+}
+
+export async function compactNoopSessionOperations(ownerUid='') {
+  const db=await openDatabase();
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction([STORE_NAME,'metadata'],'readwrite'),store=tx.objectStore(STORE_NAME),metadata=tx.objectStore('metadata'),request=store.getAll();
+    let result={removed:0,rewired:0,removedIds:[]};
+    request.onsuccess=()=>{
+      const operations=sortOfflineOperations(request.result||[]);
+      const removed=new Map(operations.filter(operation=>isNoopSessionOperation(operation)&&(!ownerUid||operation.ownerUid===ownerUid)).map(operation=>[operation.id,operation]));
+      if(!removed.size)return;
+      const resolvePredecessor=id=>{
+        let current=id,guard=0;
+        while(current&&removed.has(current)&&guard++<operations.length)current=removed.get(current)?.predecessorId||null;
+        return current||null;
+      };
+      const affectedScopes=new Set([...removed.values()].map(sessionScopeKey));
+      for(const operation of operations){
+        if(removed.has(operation.id))continue;
+        const next=resolvePredecessor(operation.predecessorId);
+        if((operation.predecessorId||null)!==next){store.put({...operation,predecessorId:next});result.rewired++}
+      }
+      for(const id of removed.keys()){store.delete(id);result.removedIds.push(id)}
+      for(const scopeKey of affectedScopes){
+        const remaining=operations.filter(operation=>!removed.has(operation.id)&&operation.sessionVersion&&sessionScopeKey(operation)===scopeKey);
+        if(remaining.length)metadata.put(remaining.at(-1).operationId||remaining.at(-1).id,scopeKey);else metadata.delete(scopeKey);
+      }
+      result.removed=removed.size;
+    };
+    tx.oncomplete=()=>resolve(result);
+    tx.onerror=tx.onabort=()=>reject(tx.error||new Error('重複した未同期処理の整理に失敗しました。'));
+  });
+}
+
 export async function enqueueSessionOperation(operation) {
   const db=await openDatabase();
   return new Promise((resolve,reject)=>{
