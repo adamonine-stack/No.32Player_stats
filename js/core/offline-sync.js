@@ -1,4 +1,4 @@
-import { db, doc, setDoc, serverTimestamp } from './firebase.js?v=20260901-scoped-reads-v1';
+import { db, doc, getDoc, setDoc, serverTimestamp } from './firebase.js?v=20260901-scoped-reads-v1';
 import { commitAssistMutation } from './assist-play-store.js?v=20260908-quarter-session-v2';
 import { commitQuickFreeThrowMutation, commitQuickStatMutation } from './quick-history-store.js?v=20260908-quarter-session-v2';
 import { commitQuarterOperation } from './quarter-session-store.js?v=20260916-history-rebase-v1';
@@ -31,6 +31,18 @@ async function status(state, extra = {}) {
   const pending = await offlineOperationCount().catch(() => 0);
   announce({state, pending, online: globalThis.navigator?.onLine !== false, ...extra});
   return pending;
+}
+
+function operationTargetGameId(operation={}) {
+  const overlayGame=(operation.overlay?.documents||[]).find(item=>String(item?.key||'').startsWith('games/'));
+  return operation.gameId||operation.payload?.gameId||operation.payload?.game?.id||(overlayGame?String(overlayGame.key).slice('games/'.length):'');
+}
+
+async function operationTargetGameExists(operation={}) {
+  const gameId=operationTargetGameId(operation);
+  if(!gameId)return true;
+  const snapshot=await getDoc(doc(db,'games',gameId));
+  return snapshot.exists();
 }
 
 async function execute(operation) {
@@ -102,6 +114,7 @@ async function runOfflineSynchronization() {
     for (const operation of operations) {
       try {
         if(operation.committed){announceOperation({action:'completed',operationId:operation.id});continue}
+        if(!(await operationTargetGameExists(operation))){await removeOfflineOperation(operation.id);announceOperation({action:'discarded',operationId:operation.id});await status('syncing');continue}
         await execute(operation);
         // Keep the durable overlay until listeners acknowledge every affected document.
         if(operation.overlay)await updateOfflineOperation({...operation,committed:true,syncState:'synced',lastError:''});
