@@ -165,7 +165,9 @@ export async function compactRedundantSessionOperations(ownerUid='') {
   });
 }
 
-export const compactNoopSessionOperations=compactRedundantSessionOperations;
+export async function compactNoopSessionOperations(ownerUid='') {
+  return compactRedundantSessionOperations(ownerUid);
+}
 
 export async function enqueueSessionOperation(operation) {
   const db=await openDatabase();
