@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {HistoryJournal,createHistoryOverlay} from '../js/core/history-journal.js';
+import {HistoryJournal,createHistoryOverlay,orphanedGameOperationIds} from '../js/core/history-journal.js';
 import {planAssistMutation} from '../js/calculations/assist-play-calculations.js';
 import {buildGameHistory,createPlayEvent} from '../js/calculations/game-event-calculations.js';
 import {createShot} from '../js/calculations/shot-calculations.js';
@@ -19,3 +19,15 @@ test('pending deletion remains absent when the create resolves; no resurrection 
 test('offline journal reload restores edited SHOT exactly once then releases acknowledged payloads',()=>{const j=setup();stage(j,{kind:'saveShot',shot},1);const edited=stage(j,{kind:'saveShot',shot:{...shot,result:'missed'},edit:true},2);const reboot=setup();for(const op of structuredClone([...j.operations.values()]))reboot.start(op);assert.equal(history(reboot).length,1);assert.equal(history(reboot)[0].result,'missed');const server=confirmed(edited,2);reboot.receive('stats',server.stats);reboot.receive('games',[server.game]);for(const id of reboot.operations.keys())reboot.complete(id);assert.equal(reboot.retire().length,2);assert.equal(history(reboot).length,1)});
 test('pending Made SHOT supports AST links and metadata survives both listener orders',()=>{const j=setup(),first=stage(j,{kind:'saveShot',shot},1),linked=stage(j,{kind:'link',shotEventId:history(j)[0].eventId,assistPlayerId:'8'},2);const server=confirmed(first,1);j.receive('stats',server.stats);const h=history(j),sh=h.find(e=>e.type==='shot'),ast=h.find(e=>e.statKey==='ast');assert.equal(sh.assistEventId,ast.eventId);assert.equal(sh.playId,ast.playId);assert.equal(ast.shotEventId,sh.eventId);assert.equal(current(j).stats.find(s=>s.playerId==='32').quarters.q1.shots[0].shotType,shot.shotType)});
 test('remote same-player counter increments survive pending overlay',()=>{const j=setup();const before=current(j),event=createPlayEvent({id:'reb',gameId:'g',quarter:1,player:players[0],statKey:'dr',sequence:101}),stat={id:'g_32',gameId:'g',playerId:'32',quarters:{q1:{dr:1,quarter:1,registered:true}}};j.start({id:'op',createdAt:1,historyClock:{clientId:'a',revision:1},overlay:createHistoryOverlay(before.game,[],{...game,playEvents:[event]},[stat])});j.receive('stats',[{...stat,quarters:{q1:{dr:3,quarter:1,registered:true}}}]);assert.equal(current(j).stats[0].quarters.q1.dr,4);assert.equal(current(j).stats[0].quarters.q1.quarter,1)});
+
+
+test('authoritative game reconciliation identifies only local overlays whose game disappeared from the same season',()=>{
+  const operations=[
+    {id:'same-season-orphan',seasonId:'season_2025_26',overlay:{documents:[{key:'games/old-glanz',before:{id:'old-glanz',seasonId:'season_2025_26'},patch:{kind:'map',fields:{}}}]}},
+    {id:'server-game',seasonId:'season_2025_26',overlay:{documents:[{key:'games/current-glanz',before:{id:'current-glanz',seasonId:'season_2025_26'},patch:{kind:'map',fields:{}}}]}},
+    {id:'other-season',seasonId:'season_2026_27',overlay:{documents:[{key:'games/new-season',before:{id:'new-season',seasonId:'season_2026_27'},patch:{kind:'map',fields:{}}}]}},
+    {id:'stats-only',seasonId:'season_2025_26',overlay:{documents:[{key:'stats/current-glanz_37',before:{id:'current-glanz_37'},patch:{kind:'map',fields:{}}}]}}
+  ];
+  assert.deepEqual(orphanedGameOperationIds(operations,['current-glanz'],{seasonId:'season_2025_26',allSeasonsId:'all'}),['same-season-orphan']);
+  assert.deepEqual(orphanedGameOperationIds(operations,['current-glanz','new-season'],{seasonId:'all',allSeasonsId:'all'}),['same-season-orphan']);
+});
