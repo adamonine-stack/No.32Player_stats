@@ -90,18 +90,57 @@ function sessionScopeKey(operation={}) {
   return `session:${operation.ownerUid||''}:${operation.gameId||operation.payload?.gameId||operation.payload?.game?.id||''}:${Number(operation.quarter)||1}`;
 }
 
+function operationBelongsToOwner(operation={},ownerUid='') {
+  return !ownerUid || !operation.ownerUid || operation.ownerUid===ownerUid;
+}
+
 function isNoopSessionOperation(operation={}) {
   return Boolean(operation.sessionVersion) && (operation.overlay?.documents||[]).every(change=>!change.patch);
 }
 
-export async function compactNoopSessionOperations(ownerUid='') {
+function canonical(value) {
+  if(Array.isArray(value))return value.map(canonical);
+  if(value&&typeof value==='object')return Object.fromEntries(Object.keys(value).sort().map(key=>[key,canonical(value[key])]));
+  return value;
+}
+
+function participationStateSignature(operation={}) {
+  if(!operation.sessionVersion||operation.type!=='gamePatch')return '';
+  const quarter=Number(operation.quarter)||1,qk=`q${quarter}`,data=operation.payload?.data?.quarterParticipation;
+  if(!data||!data[qk])return '';
+  const gameChange=(operation.overlay?.documents||[]).find(change=>String(change?.key||'').startsWith('games/'));
+  const patch=gameChange?.patch;
+  if(!patch||patch.kind!=='map')return '';
+  const topFields=Object.keys(patch.fields||{});
+  if(topFields.length!==1||topFields[0]!=='quarterParticipation')return '';
+  const participationPatch=patch.fields.quarterParticipation;
+  if(participationPatch?.kind!=='map')return '';
+  const qFields=Object.keys(participationPatch.fields||{});
+  if(qFields.length!==1||qFields[0]!==qk)return '';
+  const q=data[qk],starters=Array.isArray(q.starters)?[...q.starters].map(String).sort():[];
+  if(starters.length!==5)return '';
+  return JSON.stringify(canonical({...q,starters}));
+}
+
+export async function compactRedundantSessionOperations(ownerUid='') {
   const db=await openDatabase();
   return new Promise((resolve,reject)=>{
     const tx=db.transaction([STORE_NAME,'metadata'],'readwrite'),store=tx.objectStore(STORE_NAME),metadata=tx.objectStore('metadata'),request=store.getAll();
-    let result={removed:0,rewired:0,removedIds:[]};
+    let result={removed:0,noopRemoved:0,duplicateRemoved:0,rewired:0,removedIds:[]};
     request.onsuccess=()=>{
-      const operations=sortOfflineOperations(request.result||[]);
-      const removed=new Map(operations.filter(operation=>isNoopSessionOperation(operation)&&(!ownerUid||operation.ownerUid===ownerUid)).map(operation=>[operation.id,operation]));
+      const operations=sortOfflineOperations(request.result||[]),removed=new Map(),previousByScope=new Map();
+      for(const operation of operations){
+        if(!operation.sessionVersion||operation.committed||!operationBelongsToOwner(operation,ownerUid))continue;
+        const scope=sessionScopeKey(operation);
+        if(isNoopSessionOperation(operation)){
+          removed.set(operation.id,operation);result.noopRemoved++;continue;
+        }
+        const signature=participationStateSignature(operation),previous=previousByScope.get(scope);
+        if(signature&&previous?.signature===signature){
+          removed.set(operation.id,operation);result.duplicateRemoved++;continue;
+        }
+        previousByScope.set(scope,{signature,id:operation.id});
+      }
       if(!removed.size)return;
       const resolvePredecessor=id=>{
         let current=id,guard=0;
@@ -112,7 +151,7 @@ export async function compactNoopSessionOperations(ownerUid='') {
       for(const operation of operations){
         if(removed.has(operation.id))continue;
         const next=resolvePredecessor(operation.predecessorId);
-        if((operation.predecessorId||null)!==next){store.put({...operation,predecessorId:next});result.rewired++}
+        if((operation.predecessorId||null)!==next){store.put({...operation,predecessorId:next,lastError:operation.lastError||''});result.rewired++}
       }
       for(const id of removed.keys()){store.delete(id);result.removedIds.push(id)}
       for(const scopeKey of affectedScopes){
@@ -125,6 +164,8 @@ export async function compactNoopSessionOperations(ownerUid='') {
     tx.onerror=tx.onabort=()=>reject(tx.error||new Error('重複した未同期処理の整理に失敗しました。'));
   });
 }
+
+export const compactNoopSessionOperations=compactRedundantSessionOperations;
 
 export async function enqueueSessionOperation(operation) {
   const db=await openDatabase();
