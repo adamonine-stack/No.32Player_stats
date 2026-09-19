@@ -1,4 +1,4 @@
-import { HistoryJournal, createHistoryOverlay } from './history-journal.js?v=20260908-quarter-session-v2';
+import { HistoryJournal, createHistoryOverlay, orphanedGameOperationIds } from './history-journal.js?v=20260919-orphan-prune-v1';
 import { state } from './state.js';
 import { listOfflineOperations, removeOfflineOperation } from './offline-operation-queue.js?v=20260908-quarter-session-v2';
 export { createHistoryOverlay };
@@ -19,6 +19,16 @@ export async function restoreLocalHistory(user){
   if(!user)return;
   for(const operation of await listOfflineOperations())if(owned(operation))journal.start(operation);
   projectLocalHistory();
+}
+
+export async function reconcileAuthoritativeGames(rows=[], {seasonId='', allSeasonsId='all'} = {}) {
+  if(!ownerUid)return {discarded:0};
+  const ids=orphanedGameOperationIds([...journal.operations.values()],rows.map(row=>row.id),{seasonId,allSeasonsId});
+  for(const id of ids){
+    journal.operations.delete(id);
+    await removeOfflineOperation(id).catch(error=>console.warn('Failed to remove orphaned local history',id,error));
+  }
+  return {discarded:ids.length};
 }
 globalThis.addEventListener?.('r32-offline-operation-change',event=>{
   const {action,operation,operationId}=event.detail||{};
