@@ -34,6 +34,13 @@ async function status(state, extra = {}) {
   return pending;
 }
 
+async function compactCurrentPendingOperations() {
+  if(!currentUser)return {removed:0,removedIds:[]};
+  const compacted=await compactRedundantSessionOperations(currentUser.uid).catch(error=>{console.warn('Offline pending cleanup failed',error);return {removed:0,removedIds:[]}});
+  for(const operationId of compacted.removedIds||[])announceOperation({action:'discarded',operationId});
+  return compacted;
+}
+
 function operationTargetGameId(operation={}) {
   const overlayGame=(operation.overlay?.documents||[]).find(item=>String(item?.key||'').startsWith('games/'));
   return operation.gameId||operation.payload?.gameId||operation.payload?.game?.id||(overlayGame?String(overlayGame.key).slice('games/'.length):'');
@@ -166,6 +173,7 @@ export async function confirmAllPendingSessions() {
     const pending = await status('idle');
     return {sessions: 0, pending};
   }
+  await compactCurrentPendingOperations();
   const operations = await listOfflineOperations();
   const drafts = operations.filter(operation =>
     operation.sessionVersion &&
@@ -189,6 +197,7 @@ export async function confirmAllPendingSessions() {
 
 export async function confirmQuarterSession(gameId,quarter) {
   await journalWrites;
+  await compactCurrentPendingOperations();
   const operations=(await listOfflineOperations()).filter(op=>op.sessionVersion&&op.gameId===gameId&&op.quarter===Number(quarter)&&(!op.ownerUid||op.ownerUid===currentUser?.uid)&&!op.committed);
   await markQuarterReady(gameId,quarter,currentUser?.uid);
   if(activeSync)await activeSync;
@@ -205,10 +214,7 @@ export async function quarterSessionStatus(gameId,quarter) {
 
 export async function initializeOfflineSync(user) {
   currentUser = user || null;
-  if(currentUser){
-    const compacted=await compactRedundantSessionOperations(currentUser.uid).catch(error=>{console.warn('Offline pending cleanup failed',error);return {removedIds:[]}});
-    for(const operationId of compacted.removedIds||[])announceOperation({action:'discarded',operationId});
-  }
+  if(currentUser)await compactCurrentPendingOperations();
   await status(globalThis.navigator?.onLine === false ? 'offline' : 'idle');
   if (currentUser) await synchronizeOfflineOperations();
 }
