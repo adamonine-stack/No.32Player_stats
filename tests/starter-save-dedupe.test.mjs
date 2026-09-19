@@ -47,5 +47,34 @@ test('starter save UI locks while saving and offline sync skips empty overlays',
   assert.ok(app.includes("saveStartersButton.disabled=true"));
   assert.ok(app.includes("saveStartersButton.textContent='保存中…'"));
   assert.ok(sync.includes("(options.overlay.documents||[]).every(change=>!change.patch)"));
-  assert.ok(sync.includes("compactNoopSessionOperations(currentUser.uid)"));
+  assert.ok(sync.includes("compactRedundantSessionOperations(currentUser.uid)"));
+  assert.ok(app.includes("latestSyncStatus.pending?bulkSyncPending():synchronizeOfflineOperations()"));
+});
+
+test('repeated non-noop participation saves are compacted to one operation',async()=>{
+  const ctx=open(),q1={starters:['1','2','3','4','5'],substitutions:[]};
+  const make=id=>{
+    const operation=ctx.createOfflineOperation('gamePatch',{gameId:'duplicate-game',data:{quarterParticipation:{q1}}},{id,ownerUid:'u'});
+    Object.assign(operation,{gameId:'duplicate-game',quarter:1,overlay:{documents:[{key:'games/duplicate-game',before:{id:'duplicate-game'},patch:{kind:'map',fields:{quarterParticipation:{kind:'map',fields:{q1:{kind:'map',fields:{starters:{kind:'value',value:q1.starters}}}}}}}}]}});
+    return operation;
+  };
+  await ctx.enqueueSessionOperation(make('duplicate-first'));
+  await ctx.enqueueSessionOperation(make('duplicate-second'));
+  const result=await ctx.compactRedundantSessionOperations('u');
+  assert.equal(result.duplicateRemoved,1);
+  const rows=await ctx.listOfflineOperations();
+  assert.equal(rows.some(row=>row.id==='duplicate-first'),true);
+  assert.equal(rows.some(row=>row.id==='duplicate-second'),false);
+});
+
+test('ownerless legacy draft is adopted when the current user confirms the quarter',async()=>{
+  const ctx=open();
+  const operation=ctx.createOfflineOperation('gamePatch',{gameId:'legacy-ownerless-game',data:{}},{id:'legacy-ownerless',ownerUid:''});
+  Object.assign(operation,{gameId:'legacy-ownerless-game',quarter:1,overlay:{documents:[{key:'games/legacy-ownerless-game',before:{id:'legacy-ownerless-game'},patch:{kind:'map',fields:{quarterParticipation:{kind:'map',fields:{q1:{kind:'map',fields:{starters:{kind:'value',value:['1','2','3','4','5']}}}}}}}}]}});
+  await ctx.enqueueSessionOperation(operation);
+  await ctx.markQuarterReady('legacy-ownerless-game',1,'current-user');
+  const saved=(await ctx.listOfflineOperations()).find(row=>row.id==='legacy-ownerless');
+  assert.equal(saved.ownerUid,'current-user');
+  assert.equal(saved.syncState,'ready');
+  assert.equal(saved.lastError,'');
 });

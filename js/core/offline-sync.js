@@ -4,7 +4,7 @@ import { commitQuickFreeThrowMutation, commitQuickStatMutation } from './quick-h
 import { commitQuarterOperation } from './quarter-session-store.js?v=20260916-history-rebase-v1';
 import { sessionScope } from './quarter-session-model.js?v=20260916-history-rebase-v1';
 import {
-  compactNoopSessionOperations,
+  compactRedundantSessionOperations,
   createOfflineOperation,
   enqueueOfflineOperation,
   enqueueSessionOperation,
@@ -14,7 +14,7 @@ import {
   offlineOperationCount,
   removeOfflineOperation,
   updateOfflineOperation
-} from './offline-operation-queue.js?v=20260920-starter-dedupe-v1';
+} from './offline-operation-queue.js?v=20260920-pending-repair-v1';
 
 let syncing = false;
 let currentUser = null;
@@ -32,6 +32,13 @@ async function status(state, extra = {}) {
   const pending = await offlineOperationCount().catch(() => 0);
   announce({state, pending, online: globalThis.navigator?.onLine !== false, ...extra});
   return pending;
+}
+
+async function compactCurrentPendingOperations() {
+  if(!currentUser)return {removed:0,removedIds:[]};
+  const compacted=await compactRedundantSessionOperations(currentUser.uid).catch(error=>{console.warn('Offline pending cleanup failed',error);return {removed:0,removedIds:[]}});
+  for(const operationId of compacted.removedIds||[])announceOperation({action:'discarded',operationId});
+  return compacted;
 }
 
 function operationTargetGameId(operation={}) {
@@ -166,10 +173,11 @@ export async function confirmAllPendingSessions() {
     const pending = await status('idle');
     return {sessions: 0, pending};
   }
+  await compactCurrentPendingOperations();
   const operations = await listOfflineOperations();
   const drafts = operations.filter(operation =>
     operation.sessionVersion &&
-    operation.ownerUid === currentUser.uid &&
+    (!operation.ownerUid || operation.ownerUid === currentUser.uid) &&
     !operation.committed &&
     operation.syncState === 'draft'
   );
@@ -189,26 +197,24 @@ export async function confirmAllPendingSessions() {
 
 export async function confirmQuarterSession(gameId,quarter) {
   await journalWrites;
-  const operations=(await listOfflineOperations()).filter(op=>op.sessionVersion&&op.gameId===gameId&&op.quarter===Number(quarter)&&op.ownerUid===currentUser?.uid&&!op.committed);
+  await compactCurrentPendingOperations();
+  const operations=(await listOfflineOperations()).filter(op=>op.sessionVersion&&op.gameId===gameId&&op.quarter===Number(quarter)&&(!op.ownerUid||op.ownerUid===currentUser?.uid)&&!op.committed);
   await markQuarterReady(gameId,quarter,currentUser?.uid);
   if(activeSync)await activeSync;
   await synchronizeOfflineOperations();
-  const remaining=(await listOfflineOperations()).filter(op=>op.gameId===gameId&&op.quarter===Number(quarter)&&op.ownerUid===currentUser?.uid&&!op.committed);
+  const remaining=(await listOfflineOperations()).filter(op=>op.gameId===gameId&&op.quarter===Number(quarter)&&(!op.ownerUid||op.ownerUid===currentUser?.uid)&&!op.committed);
   if(remaining.length)throw Error(remaining.find(op=>op.lastError)?.lastError||'未同期入力を端末に保持しています。オンラインで再度確定してください。');
   return {count:operations.length};
 }
 
 export async function quarterSessionStatus(gameId,quarter) {
-  const operations=(await listOfflineOperations()).filter(op=>op.gameId===gameId&&op.quarter===Number(quarter)&&op.ownerUid===currentUser?.uid&&!op.committed);
+  const operations=(await listOfflineOperations()).filter(op=>op.gameId===gameId&&op.quarter===Number(quarter)&&(!op.ownerUid||op.ownerUid===currentUser?.uid)&&!op.committed);
   return {pending:operations.length,failed:operations.some(op=>op.lastError),syncing:syncing&&operations.some(op=>op.syncState!=='draft')};
 }
 
 export async function initializeOfflineSync(user) {
   currentUser = user || null;
-  if(currentUser){
-    const compacted=await compactNoopSessionOperations(currentUser.uid).catch(error=>{console.warn('Offline no-op cleanup failed',error);return {removedIds:[]}});
-    for(const operationId of compacted.removedIds||[])announceOperation({action:'discarded',operationId});
-  }
+  if(currentUser)await compactCurrentPendingOperations();
   await status(globalThis.navigator?.onLine === false ? 'offline' : 'idle');
   if (currentUser) await synchronizeOfflineOperations();
 }
