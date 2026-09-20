@@ -925,10 +925,12 @@ async function saveParticipationGame(game,data,quarter=1){
 window.openParticipationForm=(gameId,quarter=1)=>participationForm(gameId,quarter);
 function participationForm(gameId,initialQuarter=1,selectedOutId='',options={}){
   if(!requireLogin())return;
-  const game=state.games.find(item=>item.id===gameId);if(!game)return;
+  let game=state.games.find(item=>item.id===gameId)||state.allGames.find(item=>item.id===gameId);if(!game)return;
+  const currentParticipationGame=()=>state.games.find(item=>item.id===gameId)||state.allGames.find(item=>item.id===gameId)||game;
   let quarter=Math.min(Math.max(1,num(initialQuarter)),Math.max(1,num(game.quarters||4)));
   const duration=quarterDurationSeconds(game);
   const renderForm=()=>{
+    game=currentParticipationGame();
     const q=quarterParticipation(game,quarter),starters=[...(q.starters||[])],events=sortSubstitutions(q.substitutions||[]),duplicateIds=duplicateSubstitutionIds(events),result=starters.length===5?validateQuarterParticipation({...q,durationSeconds:duration}):null,players=participationPlayers(game),totals=gamePlayingTime(game);
     const tabs=Array.from({length:Math.max(1,num(game.quarters||4))},(_,index)=>`<button type="button" class="btn small ${quarter===index+1?'':'ghost'}" data-participation-quarter="${index+1}">${index+1}Q</button>`).join('');
     const starterOptions=players.map(player=>`<label class="participation-player-option"><input type="checkbox" data-starter-id="${player.id}" ${starters.includes(player.id)?'checked':''}>${escapeHtml(participationPlayerLabel(game,player.id))}</label>`).join('');
