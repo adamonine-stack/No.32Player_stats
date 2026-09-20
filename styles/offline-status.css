@@ -42,3 +42,37 @@
     max-width: 56vw;
   }
 }
+
+
+.pending-manager{display:grid;gap:14px;min-width:min(720px,88vw)}
+.pending-manager-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px}
+.pending-manager-head h2{margin:0 0 4px}
+.pending-manager-head .sub{margin:0;max-width:560px}
+.pending-manager-summary{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid rgba(255,255,255,.14);border-radius:14px;background:rgba(255,255,255,.035)}
+.pending-manager-summary b{font-size:20px}
+.pending-manager-actions{display:flex;gap:10px;flex-wrap:wrap}
+.pending-action-list{display:grid;gap:12px}
+.pending-action-card{display:grid;gap:10px;padding:14px;border:1px solid rgba(255,255,255,.15);border-radius:16px;background:rgba(8,12,22,.72)}
+.pending-action-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.pending-state{font-size:12px;font-weight:800;padding:3px 8px;border-radius:999px;background:rgba(255,255,255,.08)}
+.pending-state-error{background:rgba(180,83,9,.38);color:#ffedd5}
+.pending-state-draft{background:rgba(30,58,138,.42);color:#dbeafe}
+.pending-state-ready{background:rgba(30,64,175,.34);color:#dbeafe}
+.pending-action-meta,.pending-action-extra{display:flex;gap:10px 14px;flex-wrap:wrap;font-size:12px;color:rgba(255,255,255,.72)}
+.pending-error-message{display:grid;gap:5px;padding:10px 12px;border-radius:12px;background:rgba(120,53,15,.34);border:1px solid rgba(251,146,60,.34)}
+.pending-error-message b{font-size:12px;color:#fdba74}
+.pending-error-message span{font-size:14px;line-height:1.5;color:#fff}
+.pending-technical{font-size:12px;color:rgba(255,255,255,.76)}
+.pending-technical summary{cursor:pointer}
+.pending-technical code{display:block;margin-top:7px;padding:8px;border-radius:8px;white-space:pre-wrap;overflow-wrap:anywhere;background:rgba(0,0,0,.28)}
+.pending-action-buttons{margin-top:2px}
+.pending-empty{padding:24px 12px;text-align:center;color:rgba(255,255,255,.72)}
+
+@media(max-width:800px){
+  .pending-manager{min-width:0;width:100%}
+  .pending-manager-head{align-items:flex-start}
+  .pending-manager-head .btn{flex:0 0 auto}
+  .pending-action-card{padding:12px}
+  .pending-action-head{align-items:flex-start}
+  .pending-action-buttons .btn{flex:1}
+}
