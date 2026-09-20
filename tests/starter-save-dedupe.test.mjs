@@ -41,6 +41,12 @@ test('no-op starter retries are removed and predecessor chain is rewired',async(
   assert.equal(fourth.predecessorId,'third');
 });
 
+test('participation form refreshes its game reference after local history projection',()=>{
+  const app=fs.readFileSync(new URL('../js/app.js',import.meta.url),'utf8');
+  assert.ok(app.includes("const currentParticipationGame=()=>state.games.find(item=>item.id===gameId)||state.allGames.find(item=>item.id===gameId)||game"));
+  assert.ok(app.includes("game=currentParticipationGame();"));
+});
+
 test('starter save UI locks while saving and offline sync skips empty overlays',()=>{
   const app=fs.readFileSync(new URL('../js/app.js',import.meta.url),'utf8');
   const sync=fs.readFileSync(new URL('../js/core/offline-sync.js',import.meta.url),'utf8');
