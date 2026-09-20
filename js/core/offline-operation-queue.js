@@ -198,6 +198,38 @@ export async function removeOfflineOperation(id) {
   await withStore('readwrite', store => store.delete(id));
 }
 
+export async function removeOfflineOperationSafely(id, ownerUid='') {
+  const db=await openDatabase();
+  return new Promise((resolve,reject)=>{
+    const tx=db.transaction([STORE_NAME,'metadata'],'readwrite'),store=tx.objectStore(STORE_NAME),metadata=tx.objectStore('metadata'),request=store.getAll();
+    let result={removed:false,rewired:0,operation:null};
+    request.onsuccess=()=>{
+      const operations=sortOfflineOperations(request.result||[]),target=operations.find(operation=>operation.id===id);
+      if(!target||target.committed)return;
+      result.operation=target;
+      const predecessorId=target.predecessorId||null;
+      for(const operation of operations){
+        if(operation.id===id||operation.predecessorId!==id)continue;
+        const dependencyError=String(operation.lastError||'').includes('前の入力');
+        store.put({...operation,predecessorId,...(dependencyError?{lastError:'',syncState:operation.syncState==='error'?'ready':operation.syncState}:{})});
+        result.rewired++;
+      }
+      store.delete(id);
+      if(target.sessionVersion){
+        const gameId=target.gameId||target.payload?.gameId||target.payload?.game?.id||'',quarter=Number(target.quarter)||1;
+        const keys=new Set([sessionScopeKey(target),`session:${ownerUid||target.ownerUid||''}:${gameId}:${quarter}`]);
+        for(const scopeKey of keys){
+          const remaining=operations.filter(operation=>operation.id!==id&&operation.sessionVersion&&operationBelongsToOwner(operation,ownerUid||target.ownerUid||'')&&(operation.gameId||operation.payload?.gameId||operation.payload?.game?.id||'')===gameId&&Number(operation.quarter||1)===quarter);
+          if(remaining.length)metadata.put(remaining.at(-1).operationId||remaining.at(-1).id,scopeKey);else metadata.delete(scopeKey);
+        }
+      }
+      result.removed=true;
+    };
+    tx.oncomplete=()=>resolve(result);
+    tx.onerror=tx.onabort=()=>reject(tx.error||new Error('未同期操作の削除に失敗しました。'));
+  });
+}
+
 export async function updateOfflineOperation(operation) {
   await withStore('readwrite', store => store.put(operation));
 }
