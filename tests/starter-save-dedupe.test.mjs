@@ -48,7 +48,7 @@ test('starter save UI locks while saving and offline sync skips empty overlays',
   assert.ok(app.includes("saveStartersButton.textContent='保存中…'"));
   assert.ok(sync.includes("(options.overlay.documents||[]).every(change=>!change.patch)"));
   assert.ok(sync.includes("compactRedundantSessionOperations(currentUser.uid)"));
-  assert.ok(app.includes("latestSyncStatus.pending?bulkSyncPending():synchronizeOfflineOperations()"));
+  assert.ok(app.includes("latestSyncStatus.pending?openPendingOperationManager():synchronizeOfflineOperations()"));
 });
 
 test('repeated non-noop participation saves are compacted to one operation',async()=>{
