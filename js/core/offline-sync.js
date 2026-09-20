@@ -13,8 +13,9 @@ import {
   listOfflineOperations,
   offlineOperationCount,
   removeOfflineOperation,
+  removeOfflineOperationSafely,
   updateOfflineOperation
-} from './offline-operation-queue.js?v=20260920-pending-repair-v1';
+} from './offline-operation-queue.js?v=20260920-pending-manager-v1';
 
 let syncing = false;
 let currentUser = null;
@@ -147,6 +148,96 @@ async function runOfflineSynchronization() {
   }
 }
 
+
+function pendingOperationReason(operation={}) {
+  const raw=String(operation.lastError||'').trim();
+  const lower=raw.toLowerCase();
+  if(raw.includes('前の入力'))return {code:'predecessor',message:'前の入力がまだ同期されていないため、この入力は待機しています。',technical:raw};
+  if(raw.includes('試合が見つかりません'))return {code:'missing-game',message:'対象の試合がサーバー側で見つからないため同期できません。',technical:raw};
+  if(raw.includes('登録方式が変更'))return {code:'registration-changed',message:'試合の登録方式が保存時から変更されているため、安全のため同期を停止しています。',technical:raw};
+  if(lower.includes('permission-denied')||raw.includes('権限'))return {code:'permission',message:'サーバーへの書き込み権限が拒否されています。ログイン状態や権限を確認してください。',technical:raw};
+  if(lower.includes('network')||lower.includes('offline')||lower.includes('failed to fetch')||lower.includes('unavailable'))return {code:'network',message:'通信エラーのため同期できません。ネットワーク接続を確認してください。',technical:raw};
+  if(raw)return {code:'server-error',message:raw,technical:raw};
+  if(operation.syncState==='draft')return {code:'draft',message:'Qがまだ確定されていないため、同期待ちになっています。',technical:''};
+  if(operation.syncState==='error')return {code:'error',message:'同期処理でエラーが発生しています。再同期して詳細を確認してください。',technical:''};
+  if(operation.predecessorId)return {code:'waiting',message:'前の入力の同期完了を待っています。',technical:''};
+  return {code:'pending',message:'同期待ちの入力です。',technical:''};
+}
+
+function pendingOperationSummary(operation={}) {
+  const action=operation.payload?.action||{};
+  if(operation.type==='gamePatch'){
+    const data=operation.payload?.data||{},qk=`q${Number(operation.quarter)||1}`;
+    if(data.quarterParticipation?.[qk]?.starters)return '開始5人・出場情報の保存';
+    if(data.temporaryPlayers)return '未登録選手の保存';
+    return '試合情報の更新';
+  }
+  if(action.kind==='saveShot')return 'シュート登録';
+  if(action.kind==='delete')return '履歴削除';
+  if(action.kind==='edit')return '履歴修正';
+  if(action.kind==='substitution')return '選手交代';
+  if(operation.type==='quickStat')return 'クイックスタッツ登録';
+  if(operation.type==='freeThrow')return 'フリースロー登録';
+  if(operation.type==='assist')return action.kind?String(action.kind):'スタッツ登録';
+  if(operation.type==='documentBatch')return '一括データ更新';
+  return String(operation.type||'未同期入力');
+}
+
+function pendingOperationView(operation={}) {
+  const reason=pendingOperationReason(operation);
+  return {
+    id:operation.id,
+    operationId:operation.operationId||operation.id,
+    gameId:operationTargetGameId(operation),
+    quarter:Number(operation.quarter)||null,
+    type:operation.type||'',
+    summary:pendingOperationSummary(operation),
+    createdAt:Number(operation.createdAt)||0,
+    syncState:operation.syncState||'pending',
+    attempts:Number(operation.attempts)||0,
+    predecessorId:operation.predecessorId||'',
+    ownerMissing:!operation.ownerUid,
+    reasonCode:reason.code,
+    reason:reason.message,
+    technicalError:reason.technical
+  };
+}
+
+export async function listPendingOperations() {
+  await journalWrites;
+  if(!currentUser)return [];
+  return (await listOfflineOperations())
+    .filter(operation=>(!operation.ownerUid||operation.ownerUid===currentUser.uid)&&!operation.committed)
+    .map(pendingOperationView);
+}
+
+export async function retryPendingOperation(operationId) {
+  await journalWrites;
+  if(!currentUser)throw new Error('ログインが必要です。');
+  const operation=(await listOfflineOperations()).find(item=>item.id===operationId&&(!item.ownerUid||item.ownerUid===currentUser.uid)&&!item.committed);
+  if(!operation)throw new Error('対象の未同期入力が見つかりません。');
+  if(operation.sessionVersion){
+    await markQuarterReady(operation.gameId,operation.quarter,currentUser.uid);
+  }else if(operation.syncState==='error'){
+    await updateOfflineOperation({...operation,syncState:'ready',lastError:''});
+  }
+  if(activeSync)try{await activeSync}catch{}
+  await synchronizeOfflineOperations();
+  const remaining=(await listOfflineOperations()).find(item=>item.id===operationId&&!item.committed);
+  return remaining?{synced:false,operation:pendingOperationView(remaining)}:{synced:true};
+}
+
+export async function deletePendingOperation(operationId) {
+  await journalWrites;
+  if(!currentUser)throw new Error('ログインが必要です。');
+  if(activeSync)try{await activeSync}catch{}
+  const target=(await listOfflineOperations()).find(item=>item.id===operationId&&(!item.ownerUid||item.ownerUid===currentUser.uid)&&!item.committed);
+  if(!target)throw new Error('対象の未同期入力が見つかりません。');
+  const result=await removeOfflineOperationSafely(operationId,currentUser.uid);
+  if(result.removed)announceOperation({action:'discarded',operationId});
+  await status(globalThis.navigator?.onLine===false?'offline':'idle');
+  return {removed:Boolean(result.removed),rewired:Number(result.rewired)||0};
+}
 
 export async function discardPendingOperationsForGame(gameId) {
   await journalWrites;
