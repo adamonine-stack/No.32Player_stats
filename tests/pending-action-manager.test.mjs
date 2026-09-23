@@ -57,4 +57,9 @@ test('pending manager exposes readable sync error reasons and controls',()=>{
   assert.ok(app.includes("data-delete-pending"));
   assert.ok(app.includes("openPendingOperationManager()"));
   assert.ok(app.includes("タップして未同期内容を確認"));
+  assert.ok(app.includes("bindPendingManagerAction"));
+  assert.ok(app.includes("'touchend'"));
+  assert.ok(app.includes("同期を開始しています…"));
+  assert.ok(app.includes("updatePendingManagerProgress"));
+  assert.ok(app.includes("pendingManagerLiveStatus"));
 });
