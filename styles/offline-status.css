@@ -76,3 +76,12 @@
   .pending-action-head{align-items:flex-start}
   .pending-action-buttons .btn{flex:1}
 }
+
+
+.pending-manager .btn:disabled,
+.game-bulk-sync-action .btn:disabled{
+  opacity:.62;
+  filter:saturate(.65);
+  cursor:wait;
+}
+#pendingManagerLiveStatus{min-width:0}
