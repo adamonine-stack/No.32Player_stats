@@ -41,7 +41,7 @@ const BEST16=new Set([
 ]);
 
 const BEST32=new Set([
-  'DREAM SEEKER','ICE','Turkeys 2nd','UNICORN BASKETBALL CLUB',
+  'DREAM SEEKER','ICE','U14 ゴッドドア','UNICORN BASKETBALL CLUB',
   '神戸センターサークル2','Dpro Laluz','Turkeys','Three B U14',
   'B-LION','神戸ストークスU14','cantera karter','Wild Wolves',
   'ARMS','ZERO','EPIC BASKETBALL CLUB U14','VEARTH'
