@@ -18,9 +18,9 @@ export const TOURNAMENT_2026_CBG_HYOGO_MEN={
   teamPowerEligible:true,
   sourceType:'user_confirmed_final_bracket',
   source:{
-    document:'2026 U15男子バスケ兵庫県予選最終結果.png',
+    document:'2026 U15 CLUB BASKETBALL GAMES 兵庫県予選大会 男子 トーナメント表 + 最終結果',
     confirmedDate:'2026-09-30',
-    note:'ChatGPTで作成・確認した最終結果画像を登録元データとして使用'
+    note:'ユーザー提供トーナメント表でベスト16・ベスト32まで再検証し、最終順位情報と統合'
   }
 };
 
@@ -29,15 +29,27 @@ const TOP8=new Map([
   ['North Wave',['準優勝','A+',2]],
   ['センターサークル',['3位','A',3]],
   ['BAY CROWN JUNIOR',['4位','A',4]],
-  ['V-WAVE',['5位','B',5]],
+  ['Three B',['5位','B',5]],
   ['DunkGo Club',['6位','B',6]],
   ['HDC Academy Cranes',['7位','B',7]],
   ['DIVE basketball academy',['8位','B',8]]
 ]);
 
+const BEST16=new Set([
+  'V-WAVE','SAMURAI','VLakers Basketball Club U15 男子','中崎B.B.C.U15',
+  'G.Dark Horse','EPIC BASKETBALL CLUB U15','GOAT','KARTER'
+]);
+
+const BEST32=new Set([
+  'DREAM SEEKER','ICE','Turkeys 2nd','UNICORN BASKETBALL CLUB',
+  '神戸センターサークル2','Dpro Laluz','Turkeys','Three B U14',
+  'B-LION','神戸ストークスU14','cantera karter','Wild Wolves',
+  'ARMS','ZERO','EPIC BASKETBALL CLUB U14','VEARTH'
+]);
+
 const PARTICIPANTS=[
   ['Three B'],
-  ['All Blacks'],
+  ['All blacks',['All Blacks']],
   ['DREAM SEEKER'],
   ['V-WAVE'],
   ['FightingArts'],
@@ -88,40 +100,42 @@ const PARTICIPANTS=[
   ['KARTER']
 ];
 
-export const TEAMS_2026_CBG_HYOGO_MEN=PARTICIPANTS.map(([teamName,aliases=[]])=>{
+export const TEAMS_2026_CBG_HYOGO_MEN=PARTICIPANTS.map(([teamName,aliases=[]],index)=>{
   const top=TOP8.get(teamName);
-  const placementLabel=top?.[0]||'県大会出場';
-  const rank=top?.[1]||'E';
-  const numericPlacement=top?.[2]||null;
+  let placementLabel='ベスト64以下・県大会出場',rank='E',roundEliminated='preliminary',numericPlacement=null;
+  if(BEST32.has(teamName)){placementLabel='ベスト32';rank='D';roundEliminated='round_of_32'}
+  if(BEST16.has(teamName)){placementLabel='ベスト16';rank='C';roundEliminated='round_of_16'}
+  if(top){placementLabel=top[0];rank=top[1];numericPlacement=top[2];roundEliminated=numericPlacement<=4?'final_stage':'placement_stage'}
   return {
+    bracketSeed:index+1,
     teamName,
     aliases,
     placementLabel,
     placement:placementLabel,
     numericPlacement,
     rank,
+    roundEliminated,
     ageGroup:/U14/i.test(teamName)?'U14':'U15',
     teamType:'クラブチーム',
     teamPowerEligible:true
   };
 });
 
-const match=(matchNumber,round,teamA,teamAScore,teamB,teamBScore,winner)=>({
-  matchNumber,
-  date:'2026-09-23',
-  round,
-  teamA,
-  teamAScore,
-  teamB,
-  teamBScore,
-  winner,
-  loser:winner===teamA?teamB:teamA,
-  result:'completed'
+const match=(matchNumber,round,teamA,teamAScore,teamB,teamBScore,winner,date='2026-09-23')=>({
+  matchNumber,date,round,teamA,teamAScore,teamB,teamBScore,winner,
+  loser:winner===teamA?teamB:teamA,result:'completed'
 });
+
+export const QUARTERFINALS_2026_CBG_HYOGO_MEN=[
+  match('QF1','準々決勝','Three B',45,'BRAVE BIRDS',74,'BRAVE BIRDS','2026-09-21'),
+  match('QF2','準々決勝','センターサークル',88,'HDC Academy Cranes',61,'センターサークル','2026-09-21'),
+  match('QF3','準々決勝','North Wave',80,'DunkGo Club',52,'North Wave','2026-09-21'),
+  match('QF4','準々決勝','BAY CROWN JUNIOR',59,'DIVE basketball academy',57,'BAY CROWN JUNIOR','2026-09-21')
+];
 
 export const MATCHES_2026_CBG_HYOGO_FINAL_MEN=[
   match(1,'決勝','BRAVE BIRDS',63,'North Wave',51,'BRAVE BIRDS'),
   match(2,'3位決定戦','センターサークル',58,'BAY CROWN JUNIOR',45,'センターサークル'),
-  match(3,'5位決定戦','V-WAVE',62,'DunkGo Club',58,'V-WAVE'),
+  match(3,'5位決定戦','Three B',62,'DunkGo Club',58,'Three B'),
   match(4,'7位決定戦','HDC Academy Cranes',68,'DIVE basketball academy',54,'HDC Academy Cranes')
 ];
