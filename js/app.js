@@ -39,6 +39,7 @@ import { TOURNAMENT_2026_NARA_U15_MEN, TEAMS_2026_NARA_U15_MEN, MATCHES_2026_NAR
 import { TOURNAMENT_2025_NARA_JHS_CHAMPIONSHIP_MEN, TEAMS_2025_NARA_JHS_CHAMPIONSHIP_MEN, TOURNAMENT_2025_NARA_JHS_SOUTAI_MEN, TEAMS_2025_NARA_JHS_SOUTAI_MEN, TOURNAMENT_2025_NARA_JHS_ROOKIES_MEN, TEAMS_2025_NARA_JHS_ROOKIES_MEN, TOURNAMENT_2025_NARA_JR_WINTER_MEN, TEAMS_2025_NARA_JR_WINTER_MEN, TOURNAMENT_2025_NARA_CLUB_CHAMPIONSHIP_MEN, TEAMS_2025_NARA_CLUB_CHAMPIONSHIP_MEN, TOURNAMENT_2026_NARA_JHS_SOUTAI_MEN, TEAMS_2026_NARA_JHS_SOUTAI_MEN } from "./data/2025-2026-nara-history-men.js?v=20260916-nara-history-v1";
 import { TOURNAMENT_2025_HYOGO_JR_WINTER_MEN, TEAMS_2025_HYOGO_JR_WINTER_MEN, HYOGO_OPPONENT_TEAM_MERGES, HYOGO_IMPORT_CANONICAL_NAMES } from "./data/2025-hyogo-jr-winter-men.js?v=20260819-u14-merge-v1";
 import { TOURNAMENT_2025_CBG_HYOGO_MEN, TEAMS_2025_CBG_HYOGO_MEN, MATCHES_2025_CBG_HYOGO_MEN, CBG_CANONICAL_NAMES, normalizeCbgTeamIdentity } from "./data/2025-cbg-hyogo-men.js?v=20260819-v2";
+import { TOURNAMENT_2026_CBG_HYOGO_MEN, TEAMS_2026_CBG_HYOGO_MEN, QUARTERFINALS_2026_CBG_HYOGO_MEN, MATCHES_2026_CBG_HYOGO_FINAL_MEN } from "./data/2026-cbg-hyogo-men.js?v=20260930-cbg-final-v2";
 import { TOURNAMENT_2026_WAKAYAMA_U15_MEN, TEAMS_2026_WAKAYAMA_U15_MEN, MATCHES_2026_WAKAYAMA_U15_MEN } from "./data/2026-wakayama-u15-men.js";
 import { TOURNAMENT_2025_WAKAYAMA_JHS_CHAMPIONSHIP_MEN, TEAMS_2025_WAKAYAMA_JHS_CHAMPIONSHIP_MEN, TOURNAMENT_2025_WAKAYAMA_JHS_SOUTAI_MEN, TEAMS_2025_WAKAYAMA_JHS_SOUTAI_MEN, TOURNAMENT_2025_WAKAYAMA_JHS_ROOKIES_MEN, TEAMS_2025_WAKAYAMA_JHS_ROOKIES_MEN, TOURNAMENT_2025_WAKAYAMA_JR_WINTER_MEN, TEAMS_2025_WAKAYAMA_JR_WINTER_MEN, TOURNAMENT_2025_WAKAYAMA_JUNIOR_CLUB_MEN, TEAMS_2025_WAKAYAMA_JUNIOR_CLUB_MEN, TOURNAMENT_2026_WAKAYAMA_JHS_CHAMPIONSHIP_MEN, TEAMS_2026_WAKAYAMA_JHS_CHAMPIONSHIP_MEN, TOURNAMENT_2026_WAKAYAMA_JHS_SOUTAI_MEN, TEAMS_2026_WAKAYAMA_JHS_SOUTAI_MEN } from "./data/2025-2026-wakayama-history-men.js?v=20260915-wakayama-history-v3";
 import { TOURNAMENT_2026_SHIGA_U15_MEN, TEAMS_2026_SHIGA_U15_MEN, MATCHES_2026_SHIGA_U15_MEN } from "./data/2026-shiga-u15-men.js";
@@ -146,7 +147,7 @@ async function openPendingOperationManager(){
   updatePendingManagerProgress();
 }
 window.addEventListener('r32-sync-status',event=>renderSyncStatus(event.detail));
-onAuthStateChanged(auth,async u=>{state.user=u; $('#pcLoginBtn').textContent=u?'ログアウト':'管理者としてログイン';await firestorePersistenceReady;await restoreLocalHistory(u).catch(error=>console.warn('Local history restore failed',error));syncOnce();if(u&&gamesSnapshotAuthoritative)await reconcileLoadedAuthoritativeGames(subscribedSeasonId||state.selectedSeasonId||state.activeSeasonId||DEFAULT_SEASON_ID);await initializeOfflineSync(u);ensureDataForView();render();if(u)ensureAuditConsistencyMigration().catch(error=>console.warn('Audit consistency migration failed',error))});let did=false;function syncOnce(){if(!did){did=true;sync()}}
+onAuthStateChanged(auth,async u=>{state.user=u; $('#pcLoginBtn').textContent=u?'ログアウト':'管理者としてログイン';await firestorePersistenceReady;await restoreLocalHistory(u).catch(error=>console.warn('Local history restore failed',error));syncOnce();if(u&&gamesSnapshotAuthoritative)await reconcileLoadedAuthoritativeGames(subscribedSeasonId||state.selectedSeasonId||state.activeSeasonId||DEFAULT_SEASON_ID);await initializeOfflineSync(u);ensureDataForView();render();if(u)ensureAuditConsistencyMigration().catch(error=>console.warn('Audit consistency migration failed',error)).then(()=>ensure2026CbgHyogoFinalImport()).catch(error=>console.warn('2026 CBG Hyogo import failed',error))});let did=false;function syncOnce(){if(!did){did=true;sync()}}
 for(const id of ['cloudStatus','syncStatus'])$('#'+id)?.addEventListener('click',()=>latestSyncStatus.pending?openPendingOperationManager():synchronizeOfflineOperations());
 $('#pcLoginBtn').onclick=()=>state.user?logout():loginModal();
 function loginModal(){modal(`<h2>ログイン</h2><div class="grid"><label>メール<input id="loginEmail" autocomplete="username" type="email"></label><label>パスワード<input id="loginPass" autocomplete="current-password" type="password"></label><button class="btn" id="doLogin">ログイン</button><button class="btn ghost" id="closeModal">閉じる</button></div>`);$('#doLogin').onclick=async()=>{try{await signInWithEmailAndPassword(auth,$('#loginEmail').value,$('#loginPass').value);closeModal();toast('ログインしました')}catch(e){toast('ログイン失敗')}};$('#closeModal').onclick=closeModal}
@@ -1285,6 +1286,57 @@ async function import2025HyogoJrWinterMen(){
 
   await recalculatePersistedTeamRankAndPower('2026-27',[tournament.prefecture]);
 }
+
+const CBG_HYOGO_2026_IMPORT_VERSION='2026-09-30-final-v2';
+function cbg2026CandidateNames(team={}){return [team.teamName,team.normalizedTeamName,...(Array.isArray(team.aliases)?team.aliases:[])].filter(Boolean).map(normalizeTeamNameForMatching)}
+function findCbg2026ExistingTeam(imported,teams=[]){
+  const importedNames=new Set([imported.teamName,...(Array.isArray(imported.aliases)?imported.aliases:[])].filter(Boolean).map(normalizeTeamNameForMatching));
+  const matches=teams.filter(team=>{
+    if(team.prefecture&&team.prefecture!=='兵庫県')return false;
+    if(imported.ageGroup&&team.ageGroup&&String(imported.ageGroup).toUpperCase()!==String(team.ageGroup).toUpperCase())return false;
+    return cbg2026CandidateNames(team).some(name=>importedNames.has(name));
+  });
+  if(matches.length===1)return matches[0];
+  const canonical=normalizeTeamNameForMatching(imported.teamName),exact=matches.filter(team=>normalizeTeamNameForMatching(team.teamName)===canonical);
+  if(exact.length===1)return exact[0];
+  const preferred=matches.filter(team=>team.sourceTournamentId===TOURNAMENT_2026_HYOGO_U15_MEN.id||opponentPlacements(team).some(item=>item.tournamentId===TOURNAMENT_2026_HYOGO_U15_MEN.id));
+  return preferred.length===1?preferred[0]:null;
+}
+async function ensure2026CbgHyogoFinalImport(){
+  if(!state.user)return {skipped:true,reason:'not-authenticated'};
+  const settingsRef=doc(db,'settings','app'),settingsSnapshot=await getDoc(settingsRef);
+  if(settingsSnapshot.data()?.cbgHyogo2026ImportVersion===CBG_HYOGO_2026_IMPORT_VERSION)return {skipped:true,reason:'already-imported'};
+  const tournament=TOURNAMENT_2026_CBG_HYOGO_MEN;
+  const teamSnapshot=await getDocs(collection(db,'opponentTeams')),workingTeams=teamSnapshot.docs.map(item=>({id:item.id,...item.data()})),savedByImportedName=new Map();
+  let created=0,updated=0,placementsCreated=0,placementsUpdated=0;
+  await setDoc(doc(db,'tournaments',tournament.id),{...tournament,seasonId:seasonIdForLabel(tournament.season),updatedAt:serverTimestamp(),createdAt:serverTimestamp()},{merge:true});
+  for(let index=0;index<TEAMS_2026_CBG_HYOGO_MEN.length;index++){
+    const imported=TEAMS_2026_CBG_HYOGO_MEN[index],existing=findCbg2026ExistingTeam(imported,workingTeams),id=existing?.id||`${tournament.id}-${String(index+1).padStart(2,'0')}`;
+    const current=opponentPlacements(existing),previousIndex=current.findIndex(item=>item.tournamentId===tournament.id),rankValue=placementLabelToRank(imported.placementLabel);
+    const placement={id:`${id}-${tournament.id}`,tournamentId:tournament.id,tournamentName:tournament.name,tournamentType:tournament.type,tournamentLevel:'prefecture',season:tournament.season,seasonId:seasonIdForLabel(tournament.season),generation:tournament.generation,year:tournament.year,prefecture:tournament.prefecture,gender:tournament.gender,category:tournament.category,placement:imported.placementLabel,placementLabel:imported.placementLabel,numericPlacement:imported.numericPlacement??null,placementRank:rankValue,seasonRank:rankValue,rankValue,teamPowerEligible:true,resultConfirmed:true,bracketSeed:imported.bracketSeed,roundEliminated:imported.roundEliminated,source:tournament.source,sourceType:tournament.sourceType,updatedAt:new Date().toISOString()};
+    let placements;
+    if(previousIndex>=0){placements=current.map((item,itemIndex)=>itemIndex===previousIndex?{...item,...placement}:item);placementsUpdated++}
+    else{placements=[...current,{...placement,createdAt:new Date().toISOString()}];placementsCreated++}
+    const calculated=calculateSeasonalTeamRank(placements,{currentSeason:'2026-27'}),aliases=[...new Set([...(Array.isArray(existing?.aliases)?existing.aliases:[]),...(Array.isArray(imported.aliases)?imported.aliases:[])])];
+    const teamName=existing?.teamName||imported.teamName,data={teamName,normalizedTeamName:normalizeTeamNameForMatching(teamName),aliases,prefecture:existing?.prefecture||tournament.prefecture,region:existing?.region||tournament.prefecture,category:existing?.category||tournament.category,gender:existing?.gender||tournament.gender,teamType:existing?.teamType||imported.teamType||'クラブチーム',ageGroup:existing?.ageGroup||imported.ageGroup||'U15',season:tournament.season,tournamentPlacements:placements,seasonRanks:calculated.seasonRanks,overallRank:calculated.overallRank,overallRankScore:calculated.overallScore,overallRankStatus:calculated.overallRankStatus,calculatedRank:calculated.rank,calculatedRankScore:calculated.score,rankCalculatedAt:serverTimestamp(),sourceTournamentId:tournament.id,updatedAt:serverTimestamp()};
+    if(existing)updated++;else{created++;data.createdAt=serverTimestamp()}
+    await setDoc(doc(db,'opponentTeams',id),data,{merge:true});
+    const saved={id,...existing,...data};const existingIndex=workingTeams.findIndex(team=>team.id===id);if(existingIndex>=0)workingTeams[existingIndex]=saved;else workingTeams.push(saved);
+    savedByImportedName.set(normalizeTeamNameForMatching(imported.teamName),saved);
+  }
+  const tournamentMatches=[...QUARTERFINALS_2026_CBG_HYOGO_MEN,...MATCHES_2026_CBG_HYOGO_FINAL_MEN];
+  for(const item of tournamentMatches){
+    const teamA=savedByImportedName.get(normalizeTeamNameForMatching(item.teamA)),teamB=savedByImportedName.get(normalizeTeamNameForMatching(item.teamB)),winner=savedByImportedName.get(normalizeTeamNameForMatching(item.winner)),loser=savedByImportedName.get(normalizeTeamNameForMatching(item.loser));
+    const id=`${tournament.id}-${String(item.matchNumber).toLowerCase().replace(/[^a-z0-9]+/g,'-')}`,ref=doc(db,'tournamentGames',id),existingMatch=await getDoc(ref);
+    await setDoc(ref,{...item,id,tournamentId:tournament.id,tournamentName:tournament.name,teamAId:teamA?.id||null,teamBId:teamB?.id||null,winnerTeamId:winner?.id||null,loserTeamId:loser?.id||null,updatedAt:serverTimestamp(),createdAt:existingMatch.exists()?existingMatch.data().createdAt||serverTimestamp():serverTimestamp()},{merge:true});
+  }
+  const recalculated=await recalculatePersistedTeamRankAndPower('2026-27',['兵庫県']);
+  await setDoc(settingsRef,{cbgHyogo2026ImportVersion:CBG_HYOGO_2026_IMPORT_VERSION,cbgHyogo2026ImportedAt:serverTimestamp(),cbgHyogo2026TournamentId:tournament.id,cbgHyogo2026TeamCount:TEAMS_2026_CBG_HYOGO_MEN.length,updatedAt:serverTimestamp()},{merge:true});
+  toast('2026 CBG兵庫県予選の最終結果を反映しました');
+  return {created,updated,placementsCreated,placementsUpdated,matches:tournamentMatches.length,recalculated};
+}
+window.ensure2026CbgHyogoFinalImport=ensure2026CbgHyogoFinalImport;
+
 async function consolidateCbgDuplicates(){
   const teamSnapshot=await getDocs(collection(db,'opponentTeams')),teams=teamSnapshot.docs.map(item=>({id:item.id,...item.data()})),gameSnapshot=await getDocs(collection(db,'games')),games=gameSnapshot.docs.map(item=>({id:item.id,...item.data()})),tournamentSnapshot=await getDocs(collection(db,'tournamentGames')),tournamentGames=tournamentSnapshot.docs.map(item=>({id:item.id,...item.data()})),groups=[{targetName:'BRAVE BIRDS u14',keys:['bravebirdsu14'],ageGroup:'U14'},{targetName:'DIVE basketball academy',keys:['dive','divebasketballacademy'],ageGroup:'U15'},{targetName:'SAKURA PRESS',keys:['sakurapress男子','sakurapress'],ageGroup:'U15'},{targetName:'Wild Wolves',keys:['wildwolvesu-15','wildwolves'],ageGroup:'U15'},{targetName:'Westrick',keys:['westricku15','westricku15basketballclub','westrick'],ageGroup:'U15'}];let removed=0;
   for(const group of groups){const duplicates=teams.filter(team=>team.prefecture==='兵庫県'&&group.keys.includes(normalizeCbgTeamIdentity(team.teamName)));if(duplicates.length<2)continue;const target=duplicates.find(team=>team.teamName===group.targetName&&!team.id.startsWith(TOURNAMENT_2025_CBG_HYOGO_MEN.id))||duplicates.find(team=>!team.id.startsWith(TOURNAMENT_2025_CBG_HYOGO_MEN.id))||duplicates[0],sources=duplicates.filter(team=>team.id!==target.id);let combined=target;for(const source of sources)combined=mergeOpponentTeamRecords(combined,source);const rank=calculateSeasonalTeamRank(combined.tournamentPlacements);delete combined.id;await setDoc(doc(db,'opponentTeams',target.id),{...combined,teamName:group.targetName,normalizedTeamName:normalizeCbgTeamIdentity(group.targetName),ageGroup:group.ageGroup,seasonRanks:rank.seasonRanks,overallRank:rank.overallRank,overallRankScore:rank.overallScore,overallRankStatus:rank.overallRankStatus,calculatedRank:rank.rank,calculatedRankScore:rank.score,rankCalculatedAt:serverTimestamp(),updatedAt:serverTimestamp()},{merge:true});for(const source of sources){for(const game of games){const patch=opponentReferencePatch(game,source,target);if(Object.keys(patch).length)await setDoc(doc(db,'games',game.id),{...patch,updatedAt:serverTimestamp()},{merge:true})}for(const game of tournamentGames){const patch=opponentReferencePatch(game,source,target);if(Object.keys(patch).length)await setDoc(doc(db,'tournamentGames',game.id),{...patch,updatedAt:serverTimestamp()},{merge:true})}await deleteDoc(doc(db,'opponentTeams',source.id));removed++}}
