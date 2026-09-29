@@ -39,7 +39,7 @@ import { TOURNAMENT_2026_NARA_U15_MEN, TEAMS_2026_NARA_U15_MEN, MATCHES_2026_NAR
 import { TOURNAMENT_2025_NARA_JHS_CHAMPIONSHIP_MEN, TEAMS_2025_NARA_JHS_CHAMPIONSHIP_MEN, TOURNAMENT_2025_NARA_JHS_SOUTAI_MEN, TEAMS_2025_NARA_JHS_SOUTAI_MEN, TOURNAMENT_2025_NARA_JHS_ROOKIES_MEN, TEAMS_2025_NARA_JHS_ROOKIES_MEN, TOURNAMENT_2025_NARA_JR_WINTER_MEN, TEAMS_2025_NARA_JR_WINTER_MEN, TOURNAMENT_2025_NARA_CLUB_CHAMPIONSHIP_MEN, TEAMS_2025_NARA_CLUB_CHAMPIONSHIP_MEN, TOURNAMENT_2026_NARA_JHS_SOUTAI_MEN, TEAMS_2026_NARA_JHS_SOUTAI_MEN } from "./data/2025-2026-nara-history-men.js?v=20260916-nara-history-v1";
 import { TOURNAMENT_2025_HYOGO_JR_WINTER_MEN, TEAMS_2025_HYOGO_JR_WINTER_MEN, HYOGO_OPPONENT_TEAM_MERGES, HYOGO_IMPORT_CANONICAL_NAMES } from "./data/2025-hyogo-jr-winter-men.js?v=20260819-u14-merge-v1";
 import { TOURNAMENT_2025_CBG_HYOGO_MEN, TEAMS_2025_CBG_HYOGO_MEN, MATCHES_2025_CBG_HYOGO_MEN, CBG_CANONICAL_NAMES, normalizeCbgTeamIdentity } from "./data/2025-cbg-hyogo-men.js?v=20260819-v2";
-import { TOURNAMENT_2026_CBG_HYOGO_MEN, TEAMS_2026_CBG_HYOGO_MEN, QUARTERFINALS_2026_CBG_HYOGO_MEN, MATCHES_2026_CBG_HYOGO_FINAL_MEN } from "./data/2026-cbg-hyogo-men.js?v=20260930-cbg-final-v3";
+import { TOURNAMENT_2026_CBG_HYOGO_MEN, TEAMS_2026_CBG_HYOGO_MEN, QUARTERFINALS_2026_CBG_HYOGO_MEN, MATCHES_2026_CBG_HYOGO_FINAL_MEN } from "./data/2026-cbg-hyogo-men.js?v=20260930-cbg-final-v4";
 import { TOURNAMENT_2026_WAKAYAMA_U15_MEN, TEAMS_2026_WAKAYAMA_U15_MEN, MATCHES_2026_WAKAYAMA_U15_MEN } from "./data/2026-wakayama-u15-men.js";
 import { TOURNAMENT_2025_WAKAYAMA_JHS_CHAMPIONSHIP_MEN, TEAMS_2025_WAKAYAMA_JHS_CHAMPIONSHIP_MEN, TOURNAMENT_2025_WAKAYAMA_JHS_SOUTAI_MEN, TEAMS_2025_WAKAYAMA_JHS_SOUTAI_MEN, TOURNAMENT_2025_WAKAYAMA_JHS_ROOKIES_MEN, TEAMS_2025_WAKAYAMA_JHS_ROOKIES_MEN, TOURNAMENT_2025_WAKAYAMA_JR_WINTER_MEN, TEAMS_2025_WAKAYAMA_JR_WINTER_MEN, TOURNAMENT_2025_WAKAYAMA_JUNIOR_CLUB_MEN, TEAMS_2025_WAKAYAMA_JUNIOR_CLUB_MEN, TOURNAMENT_2026_WAKAYAMA_JHS_CHAMPIONSHIP_MEN, TEAMS_2026_WAKAYAMA_JHS_CHAMPIONSHIP_MEN, TOURNAMENT_2026_WAKAYAMA_JHS_SOUTAI_MEN, TEAMS_2026_WAKAYAMA_JHS_SOUTAI_MEN } from "./data/2025-2026-wakayama-history-men.js?v=20260915-wakayama-history-v3";
 import { TOURNAMENT_2026_SHIGA_U15_MEN, TEAMS_2026_SHIGA_U15_MEN, MATCHES_2026_SHIGA_U15_MEN } from "./data/2026-shiga-u15-men.js";
@@ -1287,7 +1287,7 @@ async function import2025HyogoJrWinterMen(){
   await recalculatePersistedTeamRankAndPower('2026-27',[tournament.prefecture]);
 }
 
-const CBG_HYOGO_2026_IMPORT_VERSION='2026-09-30-final-v3';
+const CBG_HYOGO_2026_IMPORT_VERSION='2026-09-30-final-v4';
 function cbg2026CandidateNames(team={}){return [team.teamName,team.normalizedTeamName,...(Array.isArray(team.aliases)?team.aliases:[])].filter(Boolean).map(normalizeTeamNameForMatching)}
 function findCbg2026ExistingTeam(imported,teams=[]){
   const importedNames=new Set([imported.teamName,...(Array.isArray(imported.aliases)?imported.aliases:[])].filter(Boolean).map(normalizeTeamNameForMatching));
@@ -1307,6 +1307,8 @@ async function ensure2026CbgHyogoFinalImport(){
   const settingsRef=doc(db,'settings','app'),settingsSnapshot=await getDoc(settingsRef);
   if(settingsSnapshot.data()?.cbgHyogo2026ImportVersion===CBG_HYOGO_2026_IMPORT_VERSION)return {skipped:true,reason:'already-imported'};
   const tournament=TOURNAMENT_2026_CBG_HYOGO_MEN;
+  const legacyBadRef=doc(db,'opponentTeams','2026-27-cbg-hyogo-men-18'),legacyBadSnapshot=await getDoc(legacyBadRef);
+  if(legacyBadSnapshot.exists()&&normalizeTeamNameForMatching(legacyBadSnapshot.data()?.teamName)==='yukawabasketballclubu15男子')await deleteDoc(legacyBadRef);
   const teamSnapshot=await getDocs(collection(db,'opponentTeams')),workingTeams=teamSnapshot.docs.map(item=>({id:item.id,...item.data()})),savedByImportedName=new Map();
   let created=0,updated=0,placementsCreated=0,placementsUpdated=0;
   await setDoc(doc(db,'tournaments',tournament.id),{...tournament,seasonId:seasonIdForLabel(tournament.season),updatedAt:serverTimestamp(),createdAt:serverTimestamp()},{merge:true});
