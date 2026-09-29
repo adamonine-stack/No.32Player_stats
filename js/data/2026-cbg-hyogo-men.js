@@ -65,7 +65,7 @@ const PARTICIPANTS=[
   ['神戸センターサークル2',['Kobe Center Circle 2','神戸センターサークル２']],
   ['OCTOPUS'],
   ['Dpro Laluz',['Dpro Lakuz']],
-  ['Yukawa Basketball Club U15 男子'],
+  ['VLakers Basketball Club U15 男子'],
   ['Turkeys',['TURKEYS']],
   ['B.P.F ACADEMY'],
   ['HYOGO KOREA'],
