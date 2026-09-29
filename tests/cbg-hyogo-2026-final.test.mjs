@@ -22,8 +22,8 @@ test('2026 CBG兵庫県予選の最終結果データ',()=>{
   assert.equal(TEAMS_2026_CBG_HYOGO_MEN.filter(team=>team.placementLabel==='ベスト32').length,16);
   assert.equal(TEAMS_2026_CBG_HYOGO_MEN.filter(team=>team.placementLabel==='ベスト64以下・県大会出場').length,18);
   assert.equal(TEAMS_2026_CBG_HYOGO_MEN.find(team=>team.bracketSeed===18)?.teamName,'VLakers Basketball Club U15 男子');
-  assert.equal(TEAMS_2026_CBG_HYOGO_MEN.find(team=>team.teamName==='Turkeys 2nd')?.placementLabel,'ベスト64以下・県大会出場');
-  assert.equal(TEAMS_2026_CBG_HYOGO_MEN.find(team=>team.teamName==='U14 ゴッドドア')?.placementLabel,'ベスト32');
+  assert.equal(TEAMS_2026_CBG_HYOGO_MEN.find(team=>team.teamName==='Turkeys 2nd')?.placementLabel,'ベスト32');
+  assert.equal(TEAMS_2026_CBG_HYOGO_MEN.find(team=>team.teamName==='U14 ゴッドドア')?.placementLabel,'ベスト64以下・県大会出場');
   assert.equal(MATCHES_2026_CBG_HYOGO_FINAL_MEN.length,4);
   assert.deepEqual(MATCHES_2026_CBG_HYOGO_FINAL_MEN.map(match=>match.winner),['BRAVE BIRDS','センターサークル','Three B','HDC Academy Cranes']);
 });
