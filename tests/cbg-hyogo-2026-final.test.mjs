@@ -12,12 +12,16 @@ test('2026 CBG兵庫県予選の最終結果データ',()=>{
       [2,'North Wave','準優勝'],
       [3,'センターサークル','3位'],
       [4,'BAY CROWN JUNIOR','4位'],
-      [5,'V-WAVE','5位'],
+      [5,'Three B','5位'],
       [6,'DunkGo Club','6位'],
       [7,'HDC Academy Cranes','7位'],
       [8,'DIVE basketball academy','8位']
     ]
   );
+  assert.equal(TEAMS_2026_CBG_HYOGO_MEN.filter(team=>team.placementLabel==='ベスト16').length,8);
+  assert.equal(TEAMS_2026_CBG_HYOGO_MEN.filter(team=>team.placementLabel==='ベスト32').length,16);
+  assert.equal(TEAMS_2026_CBG_HYOGO_MEN.filter(team=>team.placementLabel==='ベスト64以下・県大会出場').length,18);
+  assert.equal(TEAMS_2026_CBG_HYOGO_MEN.find(team=>team.bracketSeed===18)?.teamName,'VLakers Basketball Club U15 男子');
   assert.equal(MATCHES_2026_CBG_HYOGO_FINAL_MEN.length,4);
-  assert.deepEqual(MATCHES_2026_CBG_HYOGO_FINAL_MEN.map(match=>match.winner),['BRAVE BIRDS','センターサークル','V-WAVE','HDC Academy Cranes']);
+  assert.deepEqual(MATCHES_2026_CBG_HYOGO_FINAL_MEN.map(match=>match.winner),['BRAVE BIRDS','センターサークル','Three B','HDC Academy Cranes']);
 });
