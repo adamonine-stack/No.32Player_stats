@@ -84,7 +84,7 @@ const PARTICIPANTS=[
   ['team DENY'],
   ['Improve Basketball Club'],
   ['Wild Wolves',['Wild wolves']],
-  ['EPIC BASKETBALL CLUB U15',['EPG BASKETBALL CLUB U15']],
+  ['EPIC BASKETBALL CLUB U15',['EPIC BASKETBALL CLUB','EPG BASKETBALL CLUB U15']],
   ['ARMS'],
   ['BAY CROWN JUNIOR'],
   ['神戸センターサークル',['Kobe Center Circle']],
@@ -121,21 +121,21 @@ export const TEAMS_2026_CBG_HYOGO_MEN=PARTICIPANTS.map(([teamName,aliases=[]],in
   };
 });
 
-const match=(matchNumber,round,teamA,teamAScore,teamB,teamBScore,winner,date='2026-09-23')=>({
+const match=(matchNumber,round,teamA,teamAScore,teamB,teamBScore,winner,date=null)=>({
   matchNumber,date,round,teamA,teamAScore,teamB,teamBScore,winner,
   loser:winner===teamA?teamB:teamA,result:'completed'
 });
 
 export const QUARTERFINALS_2026_CBG_HYOGO_MEN=[
-  match('QF1','準々決勝','Three B',45,'BRAVE BIRDS',74,'BRAVE BIRDS','2026-09-21'),
-  match('QF2','準々決勝','センターサークル',88,'HDC Academy Cranes',61,'センターサークル','2026-09-21'),
-  match('QF3','準々決勝','North Wave',80,'DunkGo Club',52,'North Wave','2026-09-21'),
-  match('QF4','準々決勝','BAY CROWN JUNIOR',59,'DIVE basketball academy',57,'BAY CROWN JUNIOR','2026-09-21')
+  match('QF1','準々決勝','Three B',45,'BRAVE BIRDS',74,'BRAVE BIRDS'),
+  match('QF2','準々決勝','センターサークル',88,'HDC Academy Cranes',61,'センターサークル'),
+  match('QF3','準々決勝','North Wave',80,'DunkGo Club',52,'North Wave'),
+  match('QF4','準々決勝','BAY CROWN JUNIOR',59,'DIVE basketball academy',57,'BAY CROWN JUNIOR')
 ];
 
 export const MATCHES_2026_CBG_HYOGO_FINAL_MEN=[
-  match(1,'決勝','BRAVE BIRDS',63,'North Wave',51,'BRAVE BIRDS'),
-  match(2,'3位決定戦','センターサークル',58,'BAY CROWN JUNIOR',45,'センターサークル'),
-  match(3,'5位決定戦','Three B',62,'DunkGo Club',58,'Three B'),
-  match(4,'7位決定戦','HDC Academy Cranes',68,'DIVE basketball academy',54,'HDC Academy Cranes')
+  match(1,'決勝','BRAVE BIRDS',63,'North Wave',51,'BRAVE BIRDS','2026-09-23'),
+  match(2,'3位決定戦','センターサークル',58,'BAY CROWN JUNIOR',45,'センターサークル','2026-09-23'),
+  match(3,'5位決定戦','Three B',62,'DunkGo Club',58,'Three B','2026-09-23'),
+  match(4,'7位決定戦','HDC Academy Cranes',68,'DIVE basketball academy',54,'HDC Academy Cranes','2026-09-23')
 ];
