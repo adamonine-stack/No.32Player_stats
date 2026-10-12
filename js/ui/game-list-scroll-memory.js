@@ -15,8 +15,10 @@ function jumpTo(direction) {
   window.scrollTo({ top: target, behavior: "smooth" });
 }
 
-function gameRegistrationOpen() {
-  return Boolean(document.querySelector("#modalRoot #saveGame"));
+function isModalOpen() {
+  // The game list remains mounted behind shot, history, and edit dialogs.
+  // Hide its navigation for every modal, not just the new-game form.
+  return Boolean(document.querySelector("#modalRoot > .modal"));
 }
 
 function ensureFixedNavigation() {
@@ -41,7 +43,7 @@ function ensureFixedNavigation() {
   }
 
   const visible = isGamesTab()
-    && !gameRegistrationOpen()
+    && !isModalOpen()
     && Boolean(document.querySelector("#view .game-sort-item, #view .game-sort-control"));
   nav.classList.toggle("is-visible", visible);
   document.body.classList.toggle("has-game-list-fixed-nav", visible);
@@ -67,6 +69,8 @@ style.textContent = `
   -webkit-backdrop-filter:blur(12px);
 }
 .game-list-fixed-nav.is-visible{display:flex}
+/* Avoid one-frame overlap while the modal mutation observer updates visibility. */
+body:has(#modalRoot > .modal) #gameListFixedNav{display:none!important}
 .game-list-fixed-nav-btn{
   appearance:none;
   border:0;
