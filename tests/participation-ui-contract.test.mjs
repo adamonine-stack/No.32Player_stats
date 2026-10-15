@@ -31,5 +31,5 @@ assert.ok(!app.includes('id="subSeconds"'));
 assert.match(participationCss, /\.participation-sub-form input,\.participation-sub-form select\{font-size:16px\}/);
 assert.match(app,/participationForm\(id,1,'',\{newGameEntry:true\}\)/);
 assert.match(app,/options\.newGameEntry&&ready\)quickReturnToTop\(game,1\)/);
-assert.match(app,/options\.newGameEntry&&quarter===1&&validation\.valid\)\{quickReturnToTop\(game,1\);return\}/);
+  assert.ok(app.includes("if((options.newGameEntry||options.statsEntry)&&validation.valid){statsEntryForm(gameId,quarter,options.preferredMode||'');return}"));
 console.log("participation UI contract: ok");
