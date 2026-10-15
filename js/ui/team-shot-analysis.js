@@ -176,7 +176,7 @@ ${areaOverlaySvg(selectedAreas)}<g class="shot-markers">${markers.map(point => `
       const made = shots.filter(shot => shot.result === 'made').length;
       const rate = shots.length ? `${(made / shots.length * 100).toFixed(1)}%` : '-';
       root.querySelector('#teamAnalysisShotCourt').innerHTML = shotCourtSvg(shots, [...selectedAreas]);
-      root.querySelector('[data-team-totals]').innerHTML = `<div><span>全体のシュート数</span><b>${allShots.length}</b></div><div><span>対象のシュート本数</span><b>${shots.length}</b></div><div><span>成功数</span><b>${made}</b></div><div class="rate"><span>成功率</span><b>${rate}</b></div>`;
+      root.querySelector('[data-team-totals]').innerHTML = `<div><span>全体シュート数</span><b>${allShots.length}</b></div><div><span>対象シュート数</span><b>${shots.length}</b></div><div><span>成功数</span><b>${made}</b></div><div class="rate"><span>成功率</span><b>${rate}</b></div>`;
       root.querySelector('[data-team-ranges]').innerHTML = chips(rangeOptions, id => range === id, 'range');
       root.querySelector('[data-team-angles]').innerHTML = chips(angleOptions, id => angle === id, 'angle');
       root.querySelector('[data-team-types]').innerHTML = chips(SHOT_TYPE_ORDER.map(id => [id,shotTypeButtonLabel(id)]), id => selectedTypes.has(id), 'type');

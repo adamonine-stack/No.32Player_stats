@@ -921,7 +921,7 @@ function openShotAnalysis(){
     const all=allShots(),shots=filterCourtShots(all,{areaIds:[...selectedAreas],range:selectedRange,angle:selectedAngle,typeIds:[...selectedTypes],results:[...selectedResults]});
     const made=shots.filter(shot=>shot.result==='made').length,rate=shots.length?`${(made/shots.length*100).toFixed(1)}%`:'-';
     $('#analysisShotCourt').innerHTML=shotCourtSvg(shots,null,'',[...selectedAreas]);
-    $('#analysisSelectionTotals').innerHTML=`<div><span>全体のシュート数</span><b>${all.length}</b></div><div><span>対象のシュート本数</span><b>${shots.length}</b></div><div><span>成功数</span><b>${made}</b></div><div class="rate"><span>成功率</span><b>${rate}</b></div>`;
+    $('#analysisSelectionTotals').innerHTML=`<div><span>全体シュート数</span><b>${all.length}</b></div><div><span>対象シュート数</span><b>${shots.length}</b></div><div><span>成功数</span><b>${made}</b></div><div class="rate"><span>成功率</span><b>${rate}</b></div>`;
     $('#analysisRangeFilters').innerHTML=rangeOptions.map(([id,label])=>chip(id,label,selectedRange===id,'data-analysis-range')).join('');
     $('#analysisAngleFilters').innerHTML=angleOptions.map(([id,label])=>chip(id,label,selectedAngle===id,'data-analysis-angle')).join('');
     $('#analysisTypeFilters').innerHTML=SHOT_TYPE_ORDER.map(id=>chip(id,shotTypeButtonLabel(id),selectedTypes.has(id),'data-analysis-type')).join('');

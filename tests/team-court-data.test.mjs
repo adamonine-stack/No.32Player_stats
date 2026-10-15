@@ -31,13 +31,13 @@ test('team court displays shared game data, selected Q and empty games',async()=
  let source=team.replace(/^import .*;\n/gm,'');source=source.slice(0,source.indexOf('  function injectButton()'))+'globalThis.openTeamCourt=openModal;})();';
  vm.runInContext(source,context);
  context.openTeamCourt();
- assert.match(nodes.get('[data-team-totals]').innerHTML,/全体のシュート数<\/span><b>2/);
+ assert.match(nodes.get('[data-team-totals]').innerHTML,/全体シュート数<\/span><b>2/);
  assert.match(nodes.get('[data-team-totals]').innerHTML,/50.0%/);
  assert.match(nodes.get('#teamAnalysisShotCourt').innerHTML,/shot-marker made/);
  assert.match(nodes.get('#teamAnalysisShotCourt').innerHTML,/shot-marker missed/);
  state.detailStatsViews.g='q1';context.openTeamCourt();
- assert.match(nodes.get('[data-team-totals]').innerHTML,/全体のシュート数<\/span><b>1/);
+ assert.match(nodes.get('[data-team-totals]').innerHTML,/全体シュート数<\/span><b>1/);
  assert.match(nodes.get('[data-team-totals]').innerHTML,/100.0%/);
  state.stats=[];context.openTeamCourt();
- assert.match(nodes.get('[data-team-totals]').innerHTML,/全体のシュート数<\/span><b>0/);
+ assert.match(nodes.get('[data-team-totals]').innerHTML,/全体シュート数<\/span><b>0/);
 });
