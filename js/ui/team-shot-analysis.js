@@ -1,9 +1,9 @@
-import { state } from '../core/state.js';
+import { state } from '../core/state.js?v=20260915-settings-stable-v1';
 import { statHasRegisteredData, getGameStatsRegistrationType, quarterKey } from '../calculations/stats-calculations.js';
 import { OPPONENT_RANKS } from '../calculations/opponent-team-calculations.js';
 import { filterByOpponentFilterRange, filterByRegisteredGameCategory, filterByAggregationCondition } from '../calculations/game-filter-calculations.js';
 import { SHOT_AREAS, SHOT_AREA_ORDER, SHOT_TYPES, SHOT_TYPE_ORDER, SHOT_COURT_SIZE, aggregateShots, collectShots, countsAsFieldGoalAttempt, detectShotArea, filterShots, normalizedShotType, normalizeShot, shotAreaForRecord } from '../calculations/shot-calculations.js?v=20260810-under-basket-v20';
-import { filterCourtShots } from '../calculations/shot-analysis-calculations.js?v=20260810-under-basket-v3';
+import { filterCourtShots } from '../calculations/shot-analysis-calculations.js?v=20261015-team-court-state-v2';
 
 (() => {
   const style = document.createElement('style');
