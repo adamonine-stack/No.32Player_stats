@@ -3,7 +3,7 @@ import { statHasRegisteredData, getGameStatsRegistrationType, quarterKey } from 
 import { OPPONENT_RANKS } from '../calculations/opponent-team-calculations.js';
 import { filterByOpponentFilterRange, filterByRegisteredGameCategory, filterByAggregationCondition } from '../calculations/game-filter-calculations.js';
 import { SHOT_AREAS, SHOT_AREA_ORDER, SHOT_TYPES, SHOT_TYPE_ORDER, SHOT_COURT_SIZE, aggregateShots, collectShots, countsAsFieldGoalAttempt, detectShotArea, filterShots, normalizedShotType, normalizeShot, shotAreaForRecord } from '../calculations/shot-calculations.js?v=20260810-under-basket-v20';
-import { SHOT_ANALYSIS_DISTANCE_OPTIONS, SHOT_ANALYSIS_SIDE_OPTIONS, aggregateShotAnalysis } from '../calculations/shot-analysis-calculations.js?v=20260810-under-basket-v3';
+import { filterCourtShots } from '../calculations/shot-analysis-calculations.js?v=20260810-under-basket-v3';
 
 (() => {
   const style = document.createElement('style');
@@ -141,152 +141,60 @@ ${areaOverlaySvg(selectedAreas)}<g class="shot-markers">${markers.map(point => `
   }
 
   function openModal() {
-    const games = targetGames();
-    const items = statsForGames(games);
-    const allShots = collectShots(items);
-    const selectedAreas = new Set();
-    let distance = 'all';
-    let side = 'all';
-    let selectedType = '';
-    let excludeBuzzerBeaters = false;
-    let filters = { value: '', result: '', type: '', foul: '' };
-
+    const games = targetGames(), allShots = collectShots(statsForGames(games));
+    const selectedAreas = new Set(), selectedTypes = new Set(), selectedResults = new Set();
+    let range = '', angle = '';
+    const rangeOptions = [['two','2P'],['three','3P'],['mid','ミドル'],['paint','ショート']];
+    const angleOptions = [['center','Center'],['right','Right'],['left','Left']];
+    const resultOptions = [['made','Made'],['missed','Miss'],['fouled','被ファウル']];
     scrollY = window.scrollY || 0;
     document.body.style.top = `-${scrollY}px`;
     document.body.classList.add('modal-open', 'bg-input');
     document.documentElement.classList.add('modal-open');
-
     const root = document.getElementById('modalRoot');
-    root.innerHTML = `<div class="modal shot-modal shot-analysis-modal team-shot-analysis-modal"><div class="card">
-      <div class="shot-modal-head"><div><h2>チーム シュートポイント分析</h2><div class="team-shot-analysis-meta"><span>${modeLabel()}</span><span>${targetLabel(games)}</span><span>対象試合：${games.length}試合</span><span>対象シュート：${allShots.length}本</span></div></div><button type="button" class="btn ghost shot-close" aria-label="閉じる">×</button></div>
-      <div id="teamAnalysisShotCourt"></div>
-      <div class="shot-marker-legend"><span><i class="made"></i>成功</span><span><i class="missed"></i>失敗</span><span><i class="fouled"></i>ファウルあり</span></div>
-      <div class="team-shot-analysis-panel">
-        <div class="tag-head"><div class="tag-title">複合エリア分析</div><div class="tag-current" data-team-tag-current></div></div>
-        <div class="tag-label">距離</div><div class="tag-buttons" data-team-distance></div>
-        <div class="tag-label">方向</div><div class="tag-buttons side" data-team-side></div>
-        <label class="buzzer-exclusion-toggle"><input type="checkbox" data-team-exclude-buzzer> 3P集計からブザービーターを除外</label><div class="team-shot-analysis-result"><div><span>登録</span><b data-team-registered>0</b></div><div><span>FG試投</span><b data-team-attempts>0</b></div><div><span>成功</span><b data-team-made>0</b></div><div class="rate"><span>成功率</span><b data-team-rate>-</b></div></div>
-      </div>
-      <div class="team-shot-analysis-filter-row" data-team-primary-filters></div>
-      <div class="team-shot-analysis-filter-row" data-team-type-filters></div>
-      <div class="team-analysis-shot-table-head"><span>エリア</span><span>登録</span><span>FG試投</span><span>成功</span><span>成功率</span><span>試投割合</span></div>
-      <div data-team-area-rows></div>
-      <div class="team-analysis-shot-type-detail" data-team-type-detail></div>
+    root.innerHTML = `<div class="modal shot-modal shot-analysis-modal team-shot-analysis-modal court-filter-redesign court-filter-compact"><div class="card">
+      <div class="shot-modal-head"><h2>チーム シュートポイント分析</h2><button type="button" class="btn ghost shot-close" aria-label="閉じる">×</button></div>
+      <section class="court-filter-section"><div class="court-filter-heading">エリア選択</div><p class="sub">コート上のエリアをタップして複数選択できます</p><div id="teamAnalysisShotCourt"></div><div class="shot-marker-legend"><span><i class="made"></i>Made</span><span><i class="missed"></i>Miss</span><span><i class="fouled"></i>被ファウル</span></div></section>
+      <section class="court-filter-section"><div class="court-filter-heading">シュートリザルト</div><div class="shot-analysis-tag-result" data-team-totals></div></section>
+      <section class="court-filter-section"><div class="court-filter-heading">レンジ選択</div><div class="court-filter-chips" data-team-ranges></div></section>
+      <section class="court-filter-section"><div class="court-filter-heading">アングル選択</div><div class="court-filter-chips" data-team-angles></div></section>
+      <section class="court-filter-section"><div class="court-filter-heading">シュート種類</div><div class="court-filter-chips types" data-team-types></div></section>
+      <section class="court-filter-section"><div class="court-filter-heading">シュート結果選択</div><div class="court-filter-chips result" data-team-results></div></section>
+      <div class="court-filter-all-actions court-clear-action"><button type="button" class="btn ghost" data-team-clear>全解除（全ポイント表示）</button></div>
     </div></div>`;
-
-    const close = () => {
+    root.querySelector('.shot-close').onclick = () => {
       root.innerHTML = '';
       document.body.classList.remove('modal-open', 'bg-input');
       document.documentElement.classList.remove('modal-open');
       document.body.style.top = '';
       window.scrollTo(0, scrollY);
     };
-
-    root.querySelector('.shot-close').onclick = close;
-
-    const filteredBase = () => filterShots(allShots, {
-      shotValueFilter: filters.value,
-      resultFilter: filters.result,
-      shotTypeFilter: filters.type,
-      foulFilter: filters.foul
-    });
-
-    const hasComposite = () => distance !== 'all' || side !== 'all';
-    const areaFiltered = shots => selectedAreas.size
-      ? shots.filter(shot => selectedAreas.has(shotAreaForRecord(shot)))
-      : (hasComposite() ? aggregateShotAnalysis(shots, { distance, side }).shots : shots);
-
-    const areaRows = (shots, visibleAreaIds = []) => {
-      const visible = new Set(visibleAreaIds);
-      const totals = aggregateShots(shots, 'shotArea', SHOT_AREA_ORDER);
-      const totalAttempts = shots.filter(countsAsFieldGoalAttempt).length;
-      return SHOT_AREA_ORDER.filter(id => (!visible.size || visible.has(id)) && totals[id].registered > 0).map(id => {
-        const value = totals[id];
-        const rate = value.attempts ? `${(value.made / value.attempts * 100).toFixed(1)}%` : '-';
-        const share = totalAttempts ? `${(value.attempts / totalAttempts * 100).toFixed(1)}%` : '0.0%';
-        return `<div class="team-analysis-shot-row" data-team-analysis-area="${id}"><span>${SHOT_AREAS[id].label}</span><b>${value.registered}</b><b>${value.attempts}</b><b>${value.made}</b><b>${rate}</b><b>${share}</b></div>`;
-      }).join('') || '<p class="sub">シュート明細はありません</p>';
-    };
-
-    const typeRows = (shots, areaIds = []) => {
-      const selected = new Set(areaIds);
-      if (!selected.size) return '<p class="sub">コートから確認するエリアを選択してください</p>';
-      const areaShots = shots.filter(shot => selected.has(shotAreaForRecord(shot)));
-      const totals = aggregateShots(areaShots, 'shotType', SHOT_TYPE_ORDER);
-      const title = [...selected].map(id => SHOT_AREAS[id]?.label).filter(Boolean).join('＋');
-      const rows = SHOT_TYPE_ORDER.filter(id => totals[id].registered > 0).map(id => {
-        const value = totals[id];
-        const rate = value.attempts ? `${(value.made / value.attempts * 100).toFixed(1)}%` : '-';
-        return `<button type="button" class="team-analysis-shot-type-row type ${selectedType === id ? 'active' : ''}" data-team-analysis-type="${id}"><span>${shotTypeButtonLabel(id)}</span><b>${value.registered}</b><b>${value.attempts}</b><b>${value.made}</b><b>${rate}</b></button>`;
-      }).join('') || '<p class="sub">種類別明細はありません</p>';
-      return `<div class="section-title">${title}・シュート種類別</div><div class="team-analysis-shot-table-head type"><span>種類</span><span>登録</span><span>FG試投</span><span>成功</span><span>成功率</span></div>${rows}`;
-    };
-
-    const buttonSet = (options, current, field) => options.map(([value, label]) => `<button type="button" class="tag-button ${current === value ? 'active' : ''}" data-team-tag-field="${field}" data-value="${value}">${label}</button>`).join('');
-
+    const toggle = (set, id) => set.has(id) ? set.delete(id) : set.add(id);
+    const chips = (options, selected, field) => options.map(([id,label]) => `<button type="button" class="court-filter-chip ${selected(id)?'active':''}" data-team-${field}="${id}" aria-pressed="${selected(id)}">${label}</button>`).join('');
     const render = () => {
-      const rawBase = filteredBase();
-      const base = excludeBuzzerBeaters ? rawBase.filter(shot => normalizedShotType(shot) !== 'buzzer_beater') : rawBase;
-      const modeShots = areaFiltered(base);
-      const displayShots = selectedType ? modeShots.filter(shot => normalizedShotType(shot) === selectedType) : modeShots;
-      const visibleAreas = selectedAreas.size ? [...selectedAreas] : [];
-      const aggregate = aggregateShotAnalysis(rawBase, { distance, side, excludeBuzzerBeaters });
-      root.querySelector('[data-team-distance]').innerHTML = buttonSet(SHOT_ANALYSIS_DISTANCE_OPTIONS, distance, 'distance');
-      root.querySelector('[data-team-side]').innerHTML = buttonSet(SHOT_ANALYSIS_SIDE_OPTIONS, side, 'side');
-      const distanceLabel = SHOT_ANALYSIS_DISTANCE_OPTIONS.find(([id]) => id === distance)?.[1] || distance;
-      const sideLabel = SHOT_ANALYSIS_SIDE_OPTIONS.find(([id]) => id === side)?.[1] || side;
-      const exclusionToggle = root.querySelector('[data-team-exclude-buzzer]');
-      exclusionToggle.checked = excludeBuzzerBeaters;
-      exclusionToggle.onchange = event => { excludeBuzzerBeaters = event.target.checked; render(); };
-      root.querySelector('[data-team-tag-current]').textContent = `${distanceLabel} × ${sideLabel}`;
-      root.querySelector('[data-team-registered]').textContent = aggregate.registered;
-      root.querySelector('[data-team-attempts]').textContent = aggregate.attempts;
-      root.querySelector('[data-team-made]').textContent = aggregate.made;
-      root.querySelector('[data-team-rate]').textContent = aggregate.rate;
-      root.querySelector('#teamAnalysisShotCourt').innerHTML = shotCourtSvg(displayShots, visibleAreas);
-
-      const primary = [['value','2','2P'],['value','3','3P'],['result','made','Made'],['result','missed','Miss'],['foul','yes','ファウル']];
-      const canSelect = (field, value) => filters[field] === value || areaFiltered(filterShots(allShots, { shotValueFilter: field === 'value' ? value : filters.value, resultFilter: field === 'result' ? value : filters.result, shotTypeFilter: field === 'type' ? value : filters.type, foulFilter: field === 'foul' ? value : filters.foul })).length > 0;
-      root.querySelector('[data-team-primary-filters]').innerHTML = primary.map(([field,value,label]) => `<button type="button" class="btn small ghost ${filters[field] === value ? 'active' : ''}" data-team-filter="${field}" data-value="${value}" aria-pressed="${filters[field] === value}" ${canSelect(field,value) ? '' : 'disabled'}>${label}</button>`).join('');
-      root.querySelector('[data-team-type-filters]').innerHTML = SHOT_TYPE_ORDER.map(id => `<button type="button" class="btn small ghost ${filters.type === id ? 'active' : ''}" data-team-filter="type" data-value="${id}" aria-pressed="${filters.type === id}" ${canSelect('type',id) ? '' : 'disabled'}>${shotTypeButtonLabel(id)}</button>`).join('');
-      root.querySelector('[data-team-area-rows]').innerHTML = areaRows(modeShots, visibleAreas);
-      root.querySelector('[data-team-type-detail]').innerHTML = typeRows(base, visibleAreas);
-
-      root.querySelectorAll('[data-team-tag-field]').forEach(button => button.onclick = () => {
-        selectedAreas.clear();
-        selectedType = '';
-        if (button.dataset.teamTagField === 'distance') distance = button.dataset.value;
-        else side = button.dataset.value;
-        render();
-      });
-      root.querySelectorAll('[data-team-filter]').forEach(button => button.onclick = () => {
-        if (button.disabled) return;
-        const field = button.dataset.teamFilter;
-        const value = button.dataset.value;
-        filters[field] = filters[field] === value ? '' : value;
-        selectedType = '';
-        render();
-      });
-      root.querySelectorAll('[data-team-analysis-type]').forEach(button => button.onclick = () => {
-        selectedType = selectedType === button.dataset.teamAnalysisType ? '' : button.dataset.teamAnalysisType;
-        render();
-      });
+      const shots = filterCourtShots(allShots, {areaIds:[...selectedAreas], range, angle, typeIds:[...selectedTypes], results:[...selectedResults]});
+      const made = shots.filter(shot => shot.result === 'made').length;
+      const rate = shots.length ? `${(made / shots.length * 100).toFixed(1)}%` : '-';
+      root.querySelector('#teamAnalysisShotCourt').innerHTML = shotCourtSvg(shots, [...selectedAreas]);
+      root.querySelector('[data-team-totals]').innerHTML = `<div><span>全体のシュート数</span><b>${allShots.length}</b></div><div><span>対象のシュート本数</span><b>${shots.length}</b></div><div><span>成功数</span><b>${made}</b></div><div class="rate"><span>成功率</span><b>${rate}</b></div>`;
+      root.querySelector('[data-team-ranges]').innerHTML = chips(rangeOptions, id => range === id, 'range');
+      root.querySelector('[data-team-angles]').innerHTML = chips(angleOptions, id => angle === id, 'angle');
+      root.querySelector('[data-team-types]').innerHTML = chips(SHOT_TYPE_ORDER.map(id => [id,shotTypeButtonLabel(id)]), id => selectedTypes.has(id), 'type');
+      root.querySelector('[data-team-results]').innerHTML = chips(resultOptions, id => selectedResults.has(id), 'result');
+      root.querySelectorAll('[data-team-range]').forEach(button => button.onclick = () => {const id=button.dataset.teamRange;range=range===id?'':id;render();});
+      root.querySelectorAll('[data-team-angle]').forEach(button => button.onclick = () => {const id=button.dataset.teamAngle;angle=angle===id?'':id;render();});
+      root.querySelectorAll('[data-team-type]').forEach(button => button.onclick = () => {toggle(selectedTypes,button.dataset.teamType);render();});
+      root.querySelectorAll('[data-team-result]').forEach(button => button.onclick = () => {toggle(selectedResults,button.dataset.teamResult);render();});
       const svg = root.querySelector('#teamAnalysisShotCourt .shot-court');
       if (svg) svg.onclick = event => {
         const rect = svg.getBoundingClientRect();
         const x = Math.max(0, Math.min(SHOT_COURT_SIZE.width, (event.clientX - rect.left) / rect.width * SHOT_COURT_SIZE.width));
         const y = Math.max(0, Math.min(SHOT_COURT_SIZE.height, (event.clientY - rect.top) / rect.height * SHOT_COURT_SIZE.height));
-        const areaId = detectShotArea(x, y);
-        if (!areaId) return;
-        distance = 'all';
-        side = 'all';
-        selectedType = '';
-        if (selectedAreas.has(areaId)) selectedAreas.delete(areaId);
-        else selectedAreas.add(areaId);
-        render();
+        const area = detectShotArea(x, y);
+        if (area) {toggle(selectedAreas,area);render();}
       };
     };
-
+    root.querySelector('[data-team-clear]').onclick = () => {selectedAreas.clear();selectedTypes.clear();selectedResults.clear();range='';angle='';render();};
     render();
   }
 
