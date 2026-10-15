@@ -213,3 +213,10 @@ body{font-family:"Inter","Noto Sans JP",system-ui,-apple-system,sans-serif}.mate
   .game-sort-item .game-line2>span:last-child{white-space:nowrap}
   .game-list-registration-status{font-size:11px;gap:4px 10px;margin-top:5px}
 }
+
+/* Three STL columns and two REB columns share equal item widths. */
+.analysis-break-grid.balanced-breakdowns{grid-template-columns:minmax(0,3fr) minmax(0,2fr)!important}
+.balanced-breakdowns>.analysis-break:not(.analysis-to-break){padding-left:0!important;padding-right:0!important}
+.balanced-breakdowns>.analysis-break:not(.analysis-to-break)>.analysis-break-values{column-gap:0!important}
+.balanced-breakdowns>.analysis-break:not(.analysis-to-break)>h3,.balanced-breakdowns>.analysis-break:not(.analysis-to-break)>.analysis-break-total{margin-left:8px;margin-right:8px}
+.balanced-breakdowns>.analysis-to-break{grid-column:1/-1}
