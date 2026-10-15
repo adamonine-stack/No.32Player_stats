@@ -124,3 +124,7 @@ body.modal-open { position:fixed; left:0; right:0; width:100%; }
     outline-offset: -2px;
   }
 }
+
+.court-filter-compact #analysisSelectionTotals{grid-template-columns:repeat(4,minmax(0,1fr))}
+.court-filter-compact #analysisSelectionTotals span{font-size:10px;overflow-wrap:anywhere}
+.court-filter-compact .court-clear-action{grid-template-columns:1fr}

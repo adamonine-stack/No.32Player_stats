@@ -1,16 +1,14 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-
 const app=fs.readFileSync(new URL('../js/app.js',import.meta.url),'utf8');
-const start=app.indexOf('function openShotAnalysis()');
-const end=app.indexOf('window.openShotAnalysis=openShotAnalysis',start);
-const analysis=app.slice(start,end);
-const playerChange=analysis.match(/const bindPlayerPicker=.*?const bindFilters=/s)?.[0]||'';
-
-assert.ok(start>=0&&end>start,'court analysis implementation exists');
-for(const marker of ["selectedAreas=new Set(SHOT_AREA_ORDER)","selectedTypes=new Set()","selectedResult=''","fouledOnly=false"])assert.ok(analysis.includes(marker),marker);
-assert.match(playerChange,/state\.lastPlayerId=nextId;setLastPlayerId\(nextId\);/);
-assert.match(playerChange,/renderAnalysis\(\)/);
-assert.doesNotMatch(playerChange,/selectedAreas\.clear\(\)|selectedResult=''|fouledOnly=false|selectedTypes\.clear\(\)/);
-assert.match(analysis,/const allShots=\(\)=>collectShots\(analysisShotItems\(\)\)/);
+const analysis=app.slice(app.indexOf('function openShotAnalysis(){'),app.indexOf('window.openShotAnalysis=openShotAnalysis;'));
+assert.ok(analysis.includes('selectedAreas=new Set(),selectedTypes=new Set(),selectedResults=new Set()'));
+assert.ok(analysis.includes("let selectedRange='',selectedAngle='';"));
+const playerChange=analysis.match(/\$\('#analysisPlayerSelect'\)\.onchange=.*?\n/)?.[0]||'';
+assert.match(playerChange,/state.lastPlayerId=event.target.value;setLastPlayerId\(state.lastPlayerId\);renderAnalysis\(\)/);
+assert.doesNotMatch(playerChange,/\.clear\(/);
+const sections=['analysisPlayerSelect','analysisShotCourt','analysisSelectionTotals','analysisRangeFilters','analysisAngleFilters','analysisTypeFilters','analysisResultFilters','analysisClearAll'];
+for(let i=1;i<sections.length;i++)assert.ok(analysis.indexOf(`id="${sections[i-1]}"`)<analysis.indexOf(`id="${sections[i]}"`));
+for(const removed of ['analysisAreaRows','analysisShotTypeDetail','analysisConditionsRoot','analysisSelectAll'])assert.ok(!analysis.includes(`id="${removed}"`));
+assert.match(analysis,/selectedAreas.clear\(\);selectedTypes.clear\(\);selectedResults.clear\(\);selectedRange='';selectedAngle=''/);
 console.log('court analysis player filter state: ok');

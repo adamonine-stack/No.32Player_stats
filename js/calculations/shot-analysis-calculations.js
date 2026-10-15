@@ -128,3 +128,18 @@ export function aggregateShotAnalysis(shots = [], filters = {}) {
     rate: attempts ? `${(made / attempts * 100).toFixed(1)}%` : '-'
   };
 }
+
+// Empty selections mean no restriction; selections within a group are ORed.
+export function filterCourtShots(shots = [], {areaIds = [], range = '', angle = '', typeIds = [], results = []} = {}) {
+  const areas = new Set(areaIds), types = new Set(typeIds), outcomes = new Set(results);
+  return shots.map(normalizeShot).filter(shot => {
+    const area = shotAreaForRecord(shot);
+    const side = SIDE_BY_AREA[area] || (area === 'under_basket' ? 'center'
+      : area === 'inside' && shot.shotX != null && shot.shotY != null ? insideAnalysisSide(shot.shotX) : null);
+    return (!areas.size || areas.has(area))
+      && (!range || shotAnalysisAreaIds(range).includes(area))
+      && (!angle || side === angle)
+      && (!types.size || types.has(normalizedShotType(shot)))
+      && (!outcomes.size || outcomes.has(shot.result) || (outcomes.has('fouled') && shot.wasFouled === true));
+  });
+}
