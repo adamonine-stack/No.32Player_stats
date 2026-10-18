@@ -1,3 +1,4 @@
+import { collectTeamAnalysisShots } from '../js/calculations/team-shot-list-calculations.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -27,7 +28,7 @@ test('team court displays shared game data, selected Q and empty games',async()=
  const nodes=new Map();const classes={add(){},remove(){}};
  const root={innerHTML:'',querySelector(selector){if(!nodes.has(selector))nodes.set(selector,{innerHTML:'',onclick:null});return nodes.get(selector)},querySelectorAll(){return []}};
  const document={createElement:()=>({}),head:{appendChild(){}},body:{style:{},classList:classes},documentElement:{classList:classes},getElementById:()=>root};
- const context=vm.createContext({...stats,...filters,...shots,filterCourtShots,OPPONENT_RANKS,state:shared,document,window:{scrollY:0,scrollTo(){}},console});
+ const context=vm.createContext({...stats,...filters,...shots,collectTeamAnalysisShots,filterCourtShots,OPPONENT_RANKS,state:shared,document,window:{scrollY:0,scrollTo(){}},console});
  let source=team.replace(/^import .*;\n/gm,'');source=source.slice(0,source.indexOf('  function injectButton()'))+'globalThis.openTeamCourt=openModal;})();';
  vm.runInContext(source,context);
  context.openTeamCourt();
@@ -35,9 +36,13 @@ test('team court displays shared game data, selected Q and empty games',async()=
  assert.match(nodes.get('[data-team-totals]').innerHTML,/50.0%/);
  assert.match(nodes.get('#teamAnalysisShotCourt').innerHTML,/shot-marker made/);
  assert.match(nodes.get('#teamAnalysisShotCourt').innerHTML,/shot-marker missed/);
+ assert.match(nodes.get('[data-team-shot-list]').innerHTML,/1Q/);
+ assert.match(nodes.get('[data-team-shot-list]').innerHTML,/2Q/);
  state.detailStatsViews.g='q1';context.openTeamCourt();
  assert.match(nodes.get('[data-team-totals]').innerHTML,/全体シュート数<\/span><b>1/);
  assert.match(nodes.get('[data-team-totals]').innerHTML,/100.0%/);
+ assert.match(nodes.get('[data-team-shot-list]').innerHTML,/1Q/);
+ assert.doesNotMatch(nodes.get('[data-team-shot-list]').innerHTML,/2Q/);
  state.stats=[];context.openTeamCourt();
  assert.match(nodes.get('[data-team-totals]').innerHTML,/全体シュート数<\/span><b>0/);
 });
