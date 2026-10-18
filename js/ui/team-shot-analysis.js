@@ -1,4 +1,4 @@
-import { collectTeamAnalysisShots } from '../calculations/team-shot-list-calculations.js?v=20261018-chronological-v1';
+import { collectTeamAnalysisShots } from '../calculations/team-shot-list-calculations.js?v=20261018-history-order-v2';
 import { state } from '../core/state.js?v=20260915-settings-stable-v1';
 import { statHasRegisteredData, getGameStatsRegistrationType, quarterKey } from '../calculations/stats-calculations.js';
 import { OPPONENT_RANKS } from '../calculations/opponent-team-calculations.js';
