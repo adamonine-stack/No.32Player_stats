@@ -114,13 +114,25 @@ export function playerPlayingTime(game = {}, playerId = "", quarter = null) {
   return { registered, seconds };
 }
 
+// Only positive, validated playing time establishes an appearance without stats.
+export function playerHasPlayingTime(game = {}, playerId = "") {
+  return Boolean(playerId) && playerPlayingTime(game, playerId).seconds > 0;
+}
+
 export function averagePlayerPlayingTime(games = [], playerId = "") {
-  const registered = games.map(game => playerPlayingTime(game, playerId)).filter(item => item.registered);
-  if (!registered.length) return { registered: false, seconds: 0, gameCount: 0 };
+  const appearances = games.flatMap(game => {
+    const value = playerPlayingTime(game, playerId);
+    if (!value.registered || value.seconds <= 0) return [];
+    const quarters = Math.max(1, integer(game.quarters || game.quarterCount || 4));
+    const duration = quarterDurationSeconds(game);
+    const participationRate = value.seconds / (quarters * duration);
+    return [participationRate * duration * 4];
+  });
+  if (!appearances.length) return { registered: false, seconds: 0, gameCount: 0 };
   return {
     registered: true,
-    seconds: Math.round(registered.reduce((total, item) => total + item.seconds, 0) / registered.length),
-    gameCount: registered.length
+    seconds: Math.round(appearances.reduce((total, seconds) => total + seconds, 0) / appearances.length),
+    gameCount: appearances.length
   };
 }
 

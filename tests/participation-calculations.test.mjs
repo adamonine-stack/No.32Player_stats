@@ -63,7 +63,7 @@ assert.deepEqual(playerPlayingTime(timedGame, "target"), { registered: true, sec
 assert.deepEqual(playerPlayingTime({}, "target"), { registered: false, seconds: 0 });
 assert.deepEqual(playerPlayingTime(timedGame, "bench"), { registered: true, seconds: 0 });
 const average = averagePlayerPlayingTime([timedGame, {}, { ...timedGame, quarterParticipation: { q1: { starters: ["target", "b", "c", "d", "e"], substitutions: [{ remainingSeconds: 225, playerOutId: "target", playerInId: "f" }] } } }], "target");
-assert.deepEqual(average, { registered: true, seconds: 255, gameCount: 2 });
+assert.deepEqual(average, { registered: true, seconds: 510, gameCount: 2 });
 assert.deepEqual(averagePlayerPlayingTime([{}], "target"), { registered: false, seconds: 0, gameCount: 0 });
 assert.equal(formatClock(3912), "65:12");
 
