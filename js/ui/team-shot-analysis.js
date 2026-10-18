@@ -1,3 +1,4 @@
+import { hasShotPoint, shotDescription, courtShotListHtml, shotHighlightSvg } from './court-shot-list.js?v=20261018-individual-list-v1';
 import { collectTeamAnalysisShots } from '../calculations/team-shot-list-calculations.js?v=20261018-history-order-v2';
 import { state } from '../core/state.js?v=20260915-settings-stable-v1';
 import { statHasRegisteredData, getGameStatsRegistrationType, quarterKey } from '../calculations/stats-calculations.js';
@@ -41,22 +42,8 @@ import { filterCourtShots } from '../calculations/shot-analysis-calculations.js?
     .team-analysis-shot-type-detail{margin-top:18px;padding:12px;background:#0b1530;border:1px solid #33436a;border-radius:12px}
     .team-analysis-shot-type-row{width:100%;min-height:42px;padding:7px 10px;border:0;border-bottom:1px solid #33436a;background:transparent;color:#fff;text-align:left}
     .team-analysis-shot-type-row.active{background:#35166b;box-shadow:inset 4px 0 #a78bfa}
-    .team-analysis-shot-list{display:grid;gap:6px;margin-top:10px}
-    .team-analysis-shot-list-head,.team-analysis-shot-entry{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.2fr) 48px;gap:6px;align-items:center;text-align:left}
-    .team-analysis-shot-list-head{padding:6px 10px;font-size:11px;color:#9ca3af}
-    .team-analysis-shot-entry{width:100%;min-height:48px;padding:10px;border:1px solid #33436a;border-radius:8px;background:#101827;color:#fff;font:inherit;font-size:12px;cursor:pointer;touch-action:manipulation}
-    .team-analysis-shot-entry>span{min-width:0;overflow-wrap:anywhere}
-    .team-analysis-shot-entry[aria-pressed="true"]{border-color:#ffd43b;box-shadow:inset 0 0 0 1px #ffd43b;background:#332a0c}
-    .team-analysis-shot-entry:focus-visible{outline:3px solid #ffd43b;outline-offset:2px}
-    .team-analysis-shot-entry .made{color:#60a5fa}.team-analysis-shot-entry .missed{color:#fb7185}
-    .team-analysis-shot-entry small{display:block;font-size:10px;color:#9ca3af;margin-top:3px}
-    .team-analysis-shot-focus{margin:8px 0;color:#ffd43b;font-size:12px;font-weight:800;overflow-wrap:anywhere}
-    .team-shot-analysis-modal .team-shot-selected-halo{fill:none;stroke:#ffd43b;stroke-width:1;pointer-events:none}
-    .team-shot-analysis-modal .team-shot-selected-core{stroke:#fff;stroke-width:.65;pointer-events:none}
-    .team-shot-analysis-modal .team-shot-selected-cross{fill:none;stroke:#ffd43b;stroke-width:.6;pointer-events:none}
     @media(max-width:600px){
       .team-shot-analysis-modal .card{max-width:100%}
-      .team-analysis-shot-list-head,.team-analysis-shot-entry{grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1.2fr) 40px;gap:4px;padding-left:6px;padding-right:6px;font-size:11px}
       .team-shot-analysis-panel{padding:9px}
       .team-shot-analysis-panel .tag-buttons{grid-template-columns:repeat(3,minmax(0,1fr))}
       .team-shot-analysis-panel .tag-buttons.side{grid-template-columns:repeat(4,minmax(0,1fr))}
@@ -141,31 +128,11 @@ import { filterCourtShots } from '../calculations/shot-analysis-calculations.js?
     return id === 'running_shot' ? 'ランニング/<br>ステップイン' : SHOT_TYPES[id];
   }
 
-  const escapeText = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
-
-  function hasShotPoint(shot) {
-    return shot.shotX != null && shot.shotY != null && shot.shotX !== '' && shot.shotY !== ''
-      && Number.isFinite(Number(shot.shotX)) && Number.isFinite(Number(shot.shotY))
-      && Number(shot.shotX) >= 0 && Number(shot.shotX) <= SHOT_COURT_SIZE.width
-      && Number(shot.shotY) >= 0 && Number(shot.shotY) <= SHOT_COURT_SIZE.height;
-  }
-
-  function shotDescription(shot) {
-    const player = state.players.find(player => player.id === shot.playerId);
-    const name = player ? `${player.number != null && player.number !== '' ? `#${player.number} ` : ''}${player.name || '選手名未登録'}` : '選手未登録';
-    const playerLabel = `${name} ${shot.quarter ? `${shot.quarter}Q` : 'Q不明'}`;
-    const type = SHOT_TYPES[shot.shotType] || shot.shotTypeLabel || '種類未登録';
-    const result = shot.result === 'made' ? '成功' : '失敗';
-    const area = SHOT_AREAS[shotAreaForRecord(shot)]?.label || shot.shotAreaLabel || 'エリア未登録';
-    return {playerLabel, area, type, result};
-  }
-
   function shotCourtSvg(shots = [], selectedAreas = [], selectedKey = '') {
     const markers = shots.map(normalizeShot).filter(hasShotPoint).map(shot => ({
       x: Number(shot.shotX), y: Number(shot.shotY), result: shot.result, wasFouled: shot.wasFouled === true, key: shot.teamAnalysisKey
     }));
-    const selected = markers.find(point => point.key === selectedKey);
-    const highlight = selected ? `<g class="team-shot-selected" aria-label="選択したシュート位置"><circle class="team-shot-selected-halo" cx="${selected.x}" cy="${selected.y}" r="4.2"/><path class="team-shot-selected-cross" d="M${selected.x-6} ${selected.y}h2M${selected.x+4} ${selected.y}h2M${selected.x} ${selected.y-6}v2M${selected.x} ${selected.y+4}v2"/><circle class="shot-marker ${selected.result} team-shot-selected-core" cx="${selected.x}" cy="${selected.y}" r="2.2"/></g>` : '';
+    const highlight = shotHighlightSvg(shots.find(shot => shot.teamAnalysisKey === selectedKey));
     return `<svg class="shot-court" viewBox="0 0 100 108" role="img" aria-label="バックコート3P領域付きFIBA規格シュート位置分析コート">
 <rect width="100" height="108" class="court-bg"/>
 <g class="court-zones"><path d="M6 0V19.934A45 45 0 0 0 94 19.934V0"/><rect x="33.667" y="0" width="32.666" height="38.667"/><path d="M38 38.667A12 12 0 0 0 62 38.667" stroke-dasharray="2 2"/><path d="M41.333 10.5A8.667 8.667 0 0 0 58.667 10.5M41.333 10.5V8M58.667 10.5V8"/></g>
@@ -216,11 +183,8 @@ ${areaOverlaySvg(selectedAreas)}<g class="shot-markers">${markers.map(point => `
       const rate = shots.length ? `${(made / shots.length * 100).toFixed(1)}%` : '-';
       root.querySelector('#teamAnalysisShotCourt').innerHTML = shotCourtSvg(shots, [...selectedAreas], selectedKey);
       root.querySelector('[data-team-totals]').innerHTML = `<div><span>全体シュート数</span><b>${allShots.length}</b></div><div><span>対象シュート数</span><b>${shots.length}</b></div><div><span>成功数</span><b>${made}</b></div><div class="rate"><span>成功率</span><b>${rate}</b></div>`;
-      root.querySelector('[data-team-shot-focus]').textContent = selectedShot ? (() => {const info = shotDescription(selectedShot);return `${info.playerLabel} ／ ${info.area} ／ ${info.type} ／ ${info.result}${hasShotPoint(selectedShot) ? '：黄色のリングで表示中' : '：シュート位置未登録'}`;})() : '';
-      root.querySelector('[data-team-shot-list]').innerHTML = shots.map(shot => {
-        const info = shotDescription(shot);
-        return `<button type="button" class="team-analysis-shot-entry" data-team-shot="${shot.teamAnalysisKey}" aria-pressed="${shot.teamAnalysisKey === selectedKey}"><span>${escapeText(info.playerLabel)}</span><span>${escapeText(info.area)}</span><span>${escapeText(info.type)}${!hasShotPoint(shot) ? '<small>位置未登録</small>' : ''}</span><span class="${shot.result === 'made' ? 'made' : 'missed'}">${info.result}${shot.wasFouled ? '<small>被ファウル</small>' : ''}</span></button>`;
-      }).join('') || '<p class="sub">該当するシュートはありません</p>';
+      root.querySelector('[data-team-shot-focus]').textContent = selectedShot ? (() => {const info = shotDescription(selectedShot, state.players);return `${info.playerLabel} ／ ${info.area} ／ ${info.type} ／ ${info.result}${hasShotPoint(selectedShot) ? '：黄色のリングで表示中' : '：シュート位置未登録'}`;})() : '';
+      root.querySelector('[data-team-shot-list]').innerHTML = courtShotListHtml(shots, state.players, selectedKey);
       root.querySelectorAll('[data-team-shot]').forEach(button => button.onclick = () => {
         selectedKey = button.dataset.teamShot;
         render();

@@ -5,7 +5,7 @@ const analysis=app.slice(app.indexOf('function openShotAnalysis(){'),app.indexOf
 assert.ok(analysis.includes('selectedAreas=new Set(),selectedTypes=new Set(),selectedResults=new Set()'));
 assert.ok(analysis.includes("let selectedRange='',selectedAngle='';"));
 const playerChange=analysis.match(/\$\('#analysisPlayerSelect'\)\.onchange=.*?\n/)?.[0]||'';
-assert.match(playerChange,/state.lastPlayerId=event.target.value;setLastPlayerId\(state.lastPlayerId\);renderAnalysis\(\)/);
+assert.match(playerChange,/state.lastPlayerId=event.target.value;setLastPlayerId\(state.lastPlayerId\);selectedKey='';renderAnalysis\(\)/);
 assert.doesNotMatch(playerChange,/\.clear\(/);
 const sections=['analysisPlayerSelect','analysisShotCourt','analysisSelectionTotals','analysisRangeFilters','analysisAngleFilters','analysisTypeFilters','analysisResultFilters','analysisClearAll'];
 for(let i=1;i<sections.length;i++)assert.ok(analysis.indexOf(`id="${sections[i-1]}"`)<analysis.indexOf(`id="${sections[i]}"`));

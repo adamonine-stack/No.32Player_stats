@@ -1,3 +1,4 @@
+import * as courtList from '../js/ui/court-shot-list.js';
 import { collectTeamAnalysisShots } from '../js/calculations/team-shot-list-calculations.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -28,7 +29,7 @@ test('team court displays shared game data, selected Q and empty games',async()=
  const nodes=new Map();const classes={add(){},remove(){}};
  const root={innerHTML:'',querySelector(selector){if(!nodes.has(selector))nodes.set(selector,{innerHTML:'',onclick:null});return nodes.get(selector)},querySelectorAll(){return []}};
  const document={createElement:()=>({}),head:{appendChild(){}},body:{style:{},classList:classes},documentElement:{classList:classes},getElementById:()=>root};
- const context=vm.createContext({...stats,...filters,...shots,collectTeamAnalysisShots,filterCourtShots,OPPONENT_RANKS,state:shared,document,window:{scrollY:0,scrollTo(){}},console});
+ const context=vm.createContext({...stats,...filters,...shots,...courtList,collectTeamAnalysisShots,filterCourtShots,OPPONENT_RANKS,state:shared,document,window:{scrollY:0,scrollTo(){}},console});
  let source=team.replace(/^import .*;\n/gm,'');source=source.slice(0,source.indexOf('  function injectButton()'))+'globalThis.openTeamCourt=openModal;})();';
  vm.runInContext(source,context);
  context.openTeamCourt();
