@@ -37,19 +37,22 @@ function fixture() {
 test('filtered list shows parent player, type, result and safely escaped names',()=>{
   const f=fixture(), html=f.nodes.get('[data-team-shot-list]').innerHTML;
   assert.match(html, /#32 &lt;KT&gt; 1Q/);assert.match(html, /#9 SOTA/);
+  assert.match(html, /左ミドル/);assert.match(html, /右45°3P/);assert.match(f.root.innerHTML, /シュートエリア/);
   assert.match(html, /ジャンプシュート/);assert.match(html, /成功/);assert.match(html, /失敗/);
   assert.equal(f.buttons.get('[data-team-shot]').length,3);
   assert.ok(f.root.innerHTML.indexOf('選択したシュート一覧') > f.root.innerHTML.indexOf('data-team-clear'));
   f.buttons.get('[data-team-range]').find(b=>b.dataset.teamRange==='three').onclick();
   assert.equal(f.buttons.get('[data-team-shot]').length,1);
   assert.doesNotMatch(f.nodes.get('[data-team-shot-list]').innerHTML, /#32/);
+  assert.match(f.nodes.get('[data-team-shot-list]').innerHTML, /右45°3P/);
+  assert.doesNotMatch(f.nodes.get('[data-team-shot-list]').innerHTML, /左ミドル/);
 });
 test('selecting a list row highlights only its point despite duplicate shot IDs, and scrolls to court',()=>{
   const f=fixture();f.buttons.get('[data-team-shot]')[1].onclick();
   const svg=f.nodes.get('#teamAnalysisShotCourt').innerHTML;
   assert.equal((svg.match(/class="team-shot-selected"/g)||[]).length,1);
   assert.match(svg, /team-shot-selected-halo" cx="80" cy="60"/);
-  assert.match(f.nodes.get('[data-team-shot-focus]').textContent, /#9 SOTA.*失敗/);
+  assert.match(f.nodes.get('[data-team-shot-focus]').textContent, /#9 SOTA.*右45°3P.*失敗/);
   assert.match(f.nodes.get('[data-team-shot-list]').innerHTML,/data-team-shot="1" aria-pressed="true"/);
   assert.equal(f.scrolls(),1);
   f.buttons.get('[data-team-range]').find(b=>b.dataset.teamRange==='two').onclick();
