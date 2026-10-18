@@ -1,3 +1,5 @@
+import { collectTeamAnalysisShots } from './calculations/team-shot-list-calculations.js?v=20261018-history-order-v2';
+import { hasShotPoint, shotDescription, courtShotListHtml, shotHighlightSvg } from './ui/court-shot-list.js?v=20261018-individual-list-v1';
 import { loadNormalStats,assertNormalStatsOnline } from './core/normal-stats-store.js?v=20260908-quarter-session-v2';
 import { LOAD_ERROR,CONFLICT_ERROR,assertStatsBaseline } from './core/normal-stats-guard.js';
 import { createHistoryOverlay, projectLocalHistory, receiveHistoryDocuments, restoreLocalHistory, reconcileAuthoritativeGames } from './core/local-history.js?v=20260919-orphan-prune-v1';
@@ -903,12 +905,13 @@ function shotAnalysisConditions(){const p=player(),game=state.statsMode==='game'
 function openShotAnalysis(){
   const selectedAreas=new Set(),selectedTypes=new Set(),selectedResults=new Set();
   let selectedRange='',selectedAngle='';
+  let selectedKey='';
   const rangeOptions=[['two','2P'],['three','3P'],['mid','ミドル'],['paint','ショート']];
   const angleOptions=[['center','Center'],['right','Right'],['left','Left']];
   const resultOptions=[['made','Made'],['missed','Miss'],['fouled','被ファウル']];
-  modal(`<div class="shot-modal-head"><h2>シュートポイント分析</h2><button type="button" class="btn ghost shot-close" aria-label="閉じる">×</button></div><section class="court-filter-section"><label>対象選手<select id="analysisPlayerSelect">${sortPlayersByCategoryAndNumber(state.players).map(item=>`<option value="${escapeHtml(item.id)}" ${item.id===player()?.id?'selected':''}>No.${escapeHtml(item.number||'-')} ${escapeHtml(item.name||'名称未登録')}</option>`).join('')}</select></label></section><section class="court-filter-section"><div class="court-filter-heading">エリア選択</div><p class="sub">コート上のエリアをタップして複数選択できます</p><div id="analysisShotCourt"></div><div class="shot-marker-legend"><span><i class="made"></i>Made</span><span><i class="missed"></i>Miss</span><span><i class="fouled"></i>被ファウル</span></div></section><section class="court-filter-section"><div class="court-filter-heading">シュートリザルト</div><div class="shot-analysis-tag-result" id="analysisSelectionTotals"></div></section><section class="court-filter-section"><div class="court-filter-heading">レンジ選択</div><div class="court-filter-chips" id="analysisRangeFilters"></div></section><section class="court-filter-section"><div class="court-filter-heading">アングル選択</div><div class="court-filter-chips" id="analysisAngleFilters"></div></section><section class="court-filter-section"><div class="court-filter-heading">シュート種類</div><div class="court-filter-chips types" id="analysisTypeFilters"></div></section><section class="court-filter-section"><div class="court-filter-heading">シュート結果選択</div><div class="court-filter-chips result" id="analysisResultFilters"></div></section><div class="court-filter-all-actions court-clear-action"><button type="button" class="btn ghost" id="analysisClearAll">全解除（全ポイント表示）</button></div>`);
+  modal(`<div class="shot-modal-head"><h2>シュートポイント分析</h2><button type="button" class="btn ghost shot-close" aria-label="閉じる">×</button></div><section class="court-filter-section"><label>対象選手<select id="analysisPlayerSelect">${sortPlayersByCategoryAndNumber(state.players).map(item=>`<option value="${escapeHtml(item.id)}" ${item.id===player()?.id?'selected':''}>No.${escapeHtml(item.number||'-')} ${escapeHtml(item.name||'名称未登録')}</option>`).join('')}</select></label></section><section class="court-filter-section"><div class="court-filter-heading">エリア選択</div><p class="sub">コート上のエリアをタップして複数選択できます</p><div id="analysisShotCourt"></div><div class="team-analysis-shot-focus" id="analysisShotFocus" role="status" aria-live="polite"></div><div class="shot-marker-legend"><span><i class="made"></i>Made</span><span><i class="missed"></i>Miss</span><span><i class="fouled"></i>被ファウル</span></div></section><section class="court-filter-section"><div class="court-filter-heading">シュートリザルト</div><div class="shot-analysis-tag-result" id="analysisSelectionTotals"></div></section><section class="court-filter-section"><div class="court-filter-heading">レンジ選択</div><div class="court-filter-chips" id="analysisRangeFilters"></div></section><section class="court-filter-section"><div class="court-filter-heading">アングル選択</div><div class="court-filter-chips" id="analysisAngleFilters"></div></section><section class="court-filter-section"><div class="court-filter-heading">シュート種類</div><div class="court-filter-chips types" id="analysisTypeFilters"></div></section><section class="court-filter-section"><div class="court-filter-heading">シュート結果選択</div><div class="court-filter-chips result" id="analysisResultFilters"></div></section><div class="court-filter-all-actions court-clear-action"><button type="button" class="btn ghost" id="analysisClearAll">全解除（全ポイント表示）</button></div><section class="court-filter-section"><div class="court-filter-heading">選択したシュート一覧</div><p class="sub">一覧をタップするとコート上の位置を強調します</p><div class="team-analysis-shot-list-head"><span>選手</span><span>シュートエリア</span><span>シュート種類</span><span>結果</span></div><div class="team-analysis-shot-list" id="analysisShotList"></div></section>`);
   document.querySelector('#modalRoot .modal')?.classList.add('shot-modal','shot-analysis-modal','court-filter-redesign','court-filter-compact');
-  const allShots=()=>collectShots(analysisShotItems()).map(normalizeShot);
+  const allShots=()=>collectTeamAnalysisShots(analysisShotItems(),targetGames());
   const chip=(value,label,selected,attribute)=>`<button type="button" class="court-filter-chip ${selected?'active':''}" ${attribute}="${value}" aria-pressed="${selected}">${label}</button>`;
   const toggle=(set,id)=>set.has(id)?set.delete(id):set.add(id);
   const bindFilters=()=>{
@@ -920,7 +923,12 @@ function openShotAnalysis(){
   function renderAnalysis(){
     const all=allShots(),shots=filterCourtShots(all,{areaIds:[...selectedAreas],range:selectedRange,angle:selectedAngle,typeIds:[...selectedTypes],results:[...selectedResults]});
     const made=shots.filter(shot=>shot.result==='made').length,rate=shots.length?`${(made/shots.length*100).toFixed(1)}%`:'-';
-    $('#analysisShotCourt').innerHTML=shotCourtSvg(shots,null,'',[...selectedAreas]);
+    if(!shots.some(shot=>shot.teamAnalysisKey===selectedKey))selectedKey='';
+    const selectedShot=shots.find(shot=>shot.teamAnalysisKey===selectedKey);
+    $('#analysisShotCourt').innerHTML=shotCourtSvg(shots.filter(hasShotPoint),null,'',[...selectedAreas]).replace('<rect class="court-tap-surface"',`${shotHighlightSvg(selectedShot)}<rect class="court-tap-surface"`);
+    $('#analysisShotFocus').textContent=selectedShot?(()=>{const info=shotDescription(selectedShot,state.players);return `${info.playerLabel} ／ ${info.area} ／ ${info.type} ／ ${info.result}${hasShotPoint(selectedShot)?'：黄色のリングで表示中':'：シュート位置未登録'}`;})():'';
+    $('#analysisShotList').innerHTML=courtShotListHtml(shots,state.players,selectedKey,'data-analysis-shot');
+    document.querySelectorAll('[data-analysis-shot]').forEach(button=>button.onclick=()=>{selectedKey=button.dataset.analysisShot;renderAnalysis();$('#analysisShotCourt').scrollIntoView?.({behavior:'smooth',block:'start'});});
     $('#analysisSelectionTotals').innerHTML=`<div><span>全体シュート数</span><b>${all.length}</b></div><div><span>対象シュート数</span><b>${shots.length}</b></div><div><span>成功数</span><b>${made}</b></div><div class="rate"><span>成功率</span><b>${rate}</b></div>`;
     $('#analysisRangeFilters').innerHTML=rangeOptions.map(([id,label])=>chip(id,label,selectedRange===id,'data-analysis-range')).join('');
     $('#analysisAngleFilters').innerHTML=angleOptions.map(([id,label])=>chip(id,label,selectedAngle===id,'data-analysis-angle')).join('');
@@ -929,8 +937,8 @@ function openShotAnalysis(){
     bindFilters();
     const svg=$('#analysisShotCourt .shot-court');if(svg)svg.onclick=event=>{const point=courtPoint(event,svg),areaId=detectShotArea(point.x,point.y);if(!areaId)return;toggle(selectedAreas,areaId);renderAnalysis()};
   }
-  $('#analysisPlayerSelect').onchange=event=>{state.lastPlayerId=event.target.value;setLastPlayerId(state.lastPlayerId);renderAnalysis()};
-  $('#analysisClearAll').onclick=()=>{selectedAreas.clear();selectedTypes.clear();selectedResults.clear();selectedRange='';selectedAngle='';renderAnalysis()};
+  $('#analysisPlayerSelect').onchange=event=>{state.lastPlayerId=event.target.value;setLastPlayerId(state.lastPlayerId);selectedKey='';renderAnalysis()};
+  $('#analysisClearAll').onclick=()=>{selectedAreas.clear();selectedTypes.clear();selectedResults.clear();selectedRange='';selectedAngle='';selectedKey='';renderAnalysis()};
   renderAnalysis();$('.shot-close').onclick=closeModal;
 }
 window.openShotAnalysis=openShotAnalysis;

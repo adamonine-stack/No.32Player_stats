@@ -1,3 +1,4 @@
+import * as courtList from '../js/ui/court-shot-list.js';
 import { collectTeamAnalysisShots } from '../js/calculations/team-shot-list-calculations.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -27,7 +28,7 @@ function fixture() {
   root.querySelectorAll = selector => {const result=findAll(selector);buttons.set(selector,result);return result;};
   const classes = {add(){},remove(){}};
   const document = {createElement:()=>({}),head:{appendChild(){}},body:{style:{},classList:classes},documentElement:{classList:classes},getElementById:()=>root};
-  const context=vm.createContext({...stats,...filters,...shots,collectTeamAnalysisShots,filterCourtShots,OPPONENT_RANKS,state,document,window:{scrollY:0,scrollTo(){}}});
+  const context=vm.createContext({...stats,...filters,...shots,...courtList,collectTeamAnalysisShots,filterCourtShots,OPPONENT_RANKS,state,document,window:{scrollY:0,scrollTo(){}}});
   let source=fs.readFileSync(new URL('../js/ui/team-shot-analysis.js',import.meta.url),'utf8').replace(/^import .*;\n/gm,'');
   source=source.slice(0,source.indexOf('  function injectButton()'))+'globalThis.openTeamCourt=openModal;})();';
   vm.runInContext(source,context);context.openTeamCourt();
