@@ -40,6 +40,19 @@ import { filterCourtShots } from '../calculations/shot-analysis-calculations.js?
     .team-analysis-shot-type-detail{margin-top:18px;padding:12px;background:#0b1530;border:1px solid #33436a;border-radius:12px}
     .team-analysis-shot-type-row{width:100%;min-height:42px;padding:7px 10px;border:0;border-bottom:1px solid #33436a;background:transparent;color:#fff;text-align:left}
     .team-analysis-shot-type-row.active{background:#35166b;box-shadow:inset 4px 0 #a78bfa}
+    .team-analysis-shot-list{display:grid;gap:6px;margin-top:10px}
+    .team-analysis-shot-list-head,.team-analysis-shot-entry{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) 64px;gap:8px;align-items:center;text-align:left}
+    .team-analysis-shot-list-head{padding:6px 10px;font-size:11px;color:#9ca3af}
+    .team-analysis-shot-entry{width:100%;min-height:48px;padding:10px;border:1px solid #33436a;border-radius:8px;background:#101827;color:#fff;font:inherit;font-size:12px;cursor:pointer;touch-action:manipulation}
+    .team-analysis-shot-entry>span{min-width:0;overflow-wrap:anywhere}
+    .team-analysis-shot-entry[aria-pressed="true"]{border-color:#ffd43b;box-shadow:inset 0 0 0 1px #ffd43b;background:#332a0c}
+    .team-analysis-shot-entry:focus-visible{outline:3px solid #ffd43b;outline-offset:2px}
+    .team-analysis-shot-entry .made{color:#60a5fa}.team-analysis-shot-entry .missed{color:#fb7185}
+    .team-analysis-shot-entry small{display:block;font-size:10px;color:#9ca3af;margin-top:3px}
+    .team-analysis-shot-focus{margin:8px 0;color:#ffd43b;font-size:12px;font-weight:800;overflow-wrap:anywhere}
+    .team-shot-analysis-modal .team-shot-selected-halo{fill:none;stroke:#ffd43b;stroke-width:1;pointer-events:none}
+    .team-shot-analysis-modal .team-shot-selected-core{stroke:#fff;stroke-width:.65;pointer-events:none}
+    .team-shot-analysis-modal .team-shot-selected-cross{fill:none;stroke:#ffd43b;stroke-width:.6;pointer-events:none}
     @media(max-width:600px){
       .team-shot-analysis-modal .card{max-width:100%}
       .team-shot-analysis-panel{padding:9px}
@@ -126,24 +139,43 @@ import { filterCourtShots } from '../calculations/shot-analysis-calculations.js?
     return id === 'running_shot' ? 'ランニング/<br>ステップイン' : SHOT_TYPES[id];
   }
 
-  function shotCourtSvg(shots = [], selectedAreas = []) {
-    const markers = shots.map(normalizeShot).filter(shot => Number.isFinite(Number(shot.shotX)) && Number.isFinite(Number(shot.shotY))).map(shot => ({
-      x: Number(shot.shotX), y: Number(shot.shotY), result: shot.result, wasFouled: shot.wasFouled === true
+  const escapeText = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+
+  function hasShotPoint(shot) {
+    return shot.shotX != null && shot.shotY != null && shot.shotX !== '' && shot.shotY !== ''
+      && Number.isFinite(Number(shot.shotX)) && Number.isFinite(Number(shot.shotY))
+      && Number(shot.shotX) >= 0 && Number(shot.shotX) <= SHOT_COURT_SIZE.width
+      && Number(shot.shotY) >= 0 && Number(shot.shotY) <= SHOT_COURT_SIZE.height;
+  }
+
+  function shotDescription(shot) {
+    const player = state.players.find(player => player.id === shot.playerId);
+    const playerLabel = player ? `${player.number != null && player.number !== '' ? `#${player.number} ` : ''}${player.name || '選手名未登録'}` : '選手未登録';
+    const type = SHOT_TYPES[shot.shotType] || shot.shotTypeLabel || '種類未登録';
+    const result = shot.result === 'made' ? '成功' : '失敗';
+    return {playerLabel, type, result};
+  }
+
+  function shotCourtSvg(shots = [], selectedAreas = [], selectedKey = '') {
+    const markers = shots.map(normalizeShot).filter(hasShotPoint).map(shot => ({
+      x: Number(shot.shotX), y: Number(shot.shotY), result: shot.result, wasFouled: shot.wasFouled === true, key: shot.teamAnalysisKey
     }));
+    const selected = markers.find(point => point.key === selectedKey);
+    const highlight = selected ? `<g class="team-shot-selected" aria-label="選択したシュート位置"><circle class="team-shot-selected-halo" cx="${selected.x}" cy="${selected.y}" r="4.2"/><path class="team-shot-selected-cross" d="M${selected.x-6} ${selected.y}h2M${selected.x+4} ${selected.y}h2M${selected.x} ${selected.y-6}v2M${selected.x} ${selected.y+4}v2"/><circle class="shot-marker ${selected.result} team-shot-selected-core" cx="${selected.x}" cy="${selected.y}" r="2.2"/></g>` : '';
     return `<svg class="shot-court" viewBox="0 0 100 108" role="img" aria-label="バックコート3P領域付きFIBA規格シュート位置分析コート">
 <rect width="100" height="108" class="court-bg"/>
 <g class="court-zones"><path d="M6 0V19.934A45 45 0 0 0 94 19.934V0"/><rect x="33.667" y="0" width="32.666" height="38.667"/><path d="M38 38.667A12 12 0 0 0 62 38.667" stroke-dasharray="2 2"/><path d="M41.333 10.5A8.667 8.667 0 0 0 58.667 10.5M41.333 10.5V8M58.667 10.5V8"/></g>
 <g class="court-zone-guides"><path d="M0 24H33.667M66.333 24H100M33.667 38.667V93.333M66.333 38.667V93.333"/></g>
 <g class="court-lines"><rect x=".4" y=".4" width="99.2" height="107.2"/><path d="M44 8V4.5H56V8M42.5 7H57.5M50 8v2.5"/><circle cx="50" cy="10.5" r="1.2"/><path d="M38 93.333A12 12 0 0 1 62 93.333M50 90V93.333"/><path d="M.4 93.333H99.6"/></g>
 <g class="shot-area-label"><text x="9" y="11">左コーナー3P</text><text x="91" y="11">右コーナー3P</text><text x="17" y="55">左45°3P</text><text x="83" y="55">右45°3P</text><text x="50" y="76">正面3P</text><text x="23" y="15">左0°ミドル</text><text x="77" y="15">右0°ミドル</text><text x="23" y="36">左ミドル</text><text x="77" y="36">右ミドル</text><text x="50" y="47">正面ミドル</text><text x="50" y="30">インサイド</text><text x="50" y="17">ゴール下</text><text x="50" y="102">バックコート3P</text></g>
-${areaOverlaySvg(selectedAreas)}<g class="shot-markers">${markers.map(point => `${point.wasFouled ? `<circle class="shot-foul-ring" cx="${point.x.toFixed(3)}" cy="${point.y.toFixed(3)}" r="2.25"/>` : ''}<circle class="shot-marker ${point.result}" cx="${point.x.toFixed(3)}" cy="${point.y.toFixed(3)}" r="1.5"/>`).join('')}</g>
+${areaOverlaySvg(selectedAreas)}<g class="shot-markers">${markers.map(point => `${point.wasFouled ? `<circle class="shot-foul-ring" cx="${point.x.toFixed(3)}" cy="${point.y.toFixed(3)}" r="2.25"/>` : ''}<circle class="shot-marker ${point.result}" cx="${point.x.toFixed(3)}" cy="${point.y.toFixed(3)}" r="1.5"/>`).join('')}</g>${highlight}
 <rect class="court-tap-surface" width="100" height="${SHOT_COURT_SIZE.height}"/></svg>`;
   }
 
   function openModal() {
-    const games = targetGames(), allShots = collectShots(statsForGames(games));
+    const games = targetGames(), allShots = statsForGames(games).flatMap(stat => collectShots([stat]).map(shot => ({...shot, playerId: shot.playerId || stat.playerId, gameId: shot.gameId || stat.gameId}))).map((shot, index) => ({...shot, teamAnalysisKey: String(index)}));
     const selectedAreas = new Set(), selectedTypes = new Set(), selectedResults = new Set();
-    let range = '', angle = '';
+    let range = '', angle = '', selectedKey = '';
     const rangeOptions = [['two','2P'],['three','3P'],['mid','ミドル'],['paint','ショート']];
     const angleOptions = [['center','Center'],['right','Right'],['left','Left']];
     const resultOptions = [['made','Made'],['missed','Miss'],['fouled','被ファウル']];
@@ -154,13 +186,14 @@ ${areaOverlaySvg(selectedAreas)}<g class="shot-markers">${markers.map(point => `
     const root = document.getElementById('modalRoot');
     root.innerHTML = `<div class="modal shot-modal shot-analysis-modal team-shot-analysis-modal court-filter-redesign court-filter-compact"><div class="card">
       <div class="shot-modal-head"><h2>チーム シュートポイント分析</h2><button type="button" class="btn ghost shot-close" aria-label="閉じる">×</button></div>
-      <section class="court-filter-section"><div class="court-filter-heading">エリア選択</div><p class="sub">コート上のエリアをタップして複数選択できます</p><div id="teamAnalysisShotCourt"></div><div class="shot-marker-legend"><span><i class="made"></i>Made</span><span><i class="missed"></i>Miss</span><span><i class="fouled"></i>被ファウル</span></div></section>
+      <section class="court-filter-section"><div class="court-filter-heading">エリア選択</div><p class="sub">コート上のエリアをタップして複数選択できます</p><div id="teamAnalysisShotCourt"></div><div class="team-analysis-shot-focus" data-team-shot-focus role="status" aria-live="polite"></div><div class="shot-marker-legend"><span><i class="made"></i>Made</span><span><i class="missed"></i>Miss</span><span><i class="fouled"></i>被ファウル</span></div></section>
       <section class="court-filter-section"><div class="court-filter-heading">シュートリザルト</div><div class="shot-analysis-tag-result" data-team-totals></div></section>
       <section class="court-filter-section"><div class="court-filter-heading">レンジ選択</div><div class="court-filter-chips" data-team-ranges></div></section>
       <section class="court-filter-section"><div class="court-filter-heading">アングル選択</div><div class="court-filter-chips" data-team-angles></div></section>
       <section class="court-filter-section"><div class="court-filter-heading">シュート種類</div><div class="court-filter-chips types" data-team-types></div></section>
       <section class="court-filter-section"><div class="court-filter-heading">シュート結果選択</div><div class="court-filter-chips result" data-team-results></div></section>
       <div class="court-filter-all-actions court-clear-action"><button type="button" class="btn ghost" data-team-clear>全解除（全ポイント表示）</button></div>
+      <section class="court-filter-section"><div class="court-filter-heading">選択したシュート一覧</div><p class="sub">一覧をタップするとコート上の位置を強調します</p><div class="team-analysis-shot-list-head"><span>選手</span><span>シュート種類</span><span>結果</span></div><div class="team-analysis-shot-list" data-team-shot-list></div></section>
     </div></div>`;
     root.querySelector('.shot-close').onclick = () => {
       root.innerHTML = '';
@@ -173,10 +206,22 @@ ${areaOverlaySvg(selectedAreas)}<g class="shot-markers">${markers.map(point => `
     const chips = (options, selected, field) => options.map(([id,label]) => `<button type="button" class="court-filter-chip ${selected(id)?'active':''}" data-team-${field}="${id}" aria-pressed="${selected(id)}">${label}</button>`).join('');
     const render = () => {
       const shots = filterCourtShots(allShots, {areaIds:[...selectedAreas], range, angle, typeIds:[...selectedTypes], results:[...selectedResults]});
+      if (!shots.some(shot => shot.teamAnalysisKey === selectedKey)) selectedKey = '';
+      const selectedShot = shots.find(shot => shot.teamAnalysisKey === selectedKey);
       const made = shots.filter(shot => shot.result === 'made').length;
       const rate = shots.length ? `${(made / shots.length * 100).toFixed(1)}%` : '-';
-      root.querySelector('#teamAnalysisShotCourt').innerHTML = shotCourtSvg(shots, [...selectedAreas]);
+      root.querySelector('#teamAnalysisShotCourt').innerHTML = shotCourtSvg(shots, [...selectedAreas], selectedKey);
       root.querySelector('[data-team-totals]').innerHTML = `<div><span>全体シュート数</span><b>${allShots.length}</b></div><div><span>対象シュート数</span><b>${shots.length}</b></div><div><span>成功数</span><b>${made}</b></div><div class="rate"><span>成功率</span><b>${rate}</b></div>`;
+      root.querySelector('[data-team-shot-focus]').textContent = selectedShot ? (() => {const info = shotDescription(selectedShot);return `${info.playerLabel} ／ ${info.type} ／ ${info.result}${hasShotPoint(selectedShot) ? '：黄色のリングで表示中' : '：シュート位置未登録'}`;})() : '';
+      root.querySelector('[data-team-shot-list]').innerHTML = shots.map(shot => {
+        const info = shotDescription(shot);
+        return `<button type="button" class="team-analysis-shot-entry" data-team-shot="${shot.teamAnalysisKey}" aria-pressed="${shot.teamAnalysisKey === selectedKey}"><span>${escapeText(info.playerLabel)}</span><span>${escapeText(info.type)}${!hasShotPoint(shot) ? '<small>位置未登録</small>' : ''}</span><span class="${shot.result === 'made' ? 'made' : 'missed'}">${info.result}${shot.wasFouled ? '<small>被ファウル</small>' : ''}</span></button>`;
+      }).join('') || '<p class="sub">該当するシュートはありません</p>';
+      root.querySelectorAll('[data-team-shot]').forEach(button => button.onclick = () => {
+        selectedKey = button.dataset.teamShot;
+        render();
+        root.querySelector('#teamAnalysisShotCourt').scrollIntoView?.({behavior:'smooth', block:'start'});
+      });
       root.querySelector('[data-team-ranges]').innerHTML = chips(rangeOptions, id => range === id, 'range');
       root.querySelector('[data-team-angles]').innerHTML = chips(angleOptions, id => angle === id, 'angle');
       root.querySelector('[data-team-types]').innerHTML = chips(SHOT_TYPE_ORDER.map(id => [id,shotTypeButtonLabel(id)]), id => selectedTypes.has(id), 'type');
@@ -194,7 +239,7 @@ ${areaOverlaySvg(selectedAreas)}<g class="shot-markers">${markers.map(point => `
         if (area) {toggle(selectedAreas,area);render();}
       };
     };
-    root.querySelector('[data-team-clear]').onclick = () => {selectedAreas.clear();selectedTypes.clear();selectedResults.clear();range='';angle='';render();};
+    root.querySelector('[data-team-clear]').onclick = () => {selectedAreas.clear();selectedTypes.clear();selectedResults.clear();range='';angle='';selectedKey='';render();};
     render();
   }
 
