@@ -1,3 +1,4 @@
+import { collectTeamAnalysisShots } from '../calculations/team-shot-list-calculations.js?v=20261018-chronological-v1';
 import { state } from '../core/state.js?v=20260915-settings-stable-v1';
 import { statHasRegisteredData, getGameStatsRegistrationType, quarterKey } from '../calculations/stats-calculations.js';
 import { OPPONENT_RANKS } from '../calculations/opponent-team-calculations.js';
@@ -106,7 +107,7 @@ import { filterCourtShots } from '../calculations/shot-analysis-calculations.js?
     const qk = quarterKey(q);
     return raw.map(stat => {
       const source = stat.quarters?.[qk];
-      return source && typeof source === 'object' ? { ...source, id: stat.id, gameId: stat.gameId, playerId: stat.playerId } : null;
+      return source && typeof source === 'object' ? { ...source, id: stat.id, gameId: stat.gameId, playerId: stat.playerId, quarter: q } : null;
     }).filter(Boolean);
   }
 
@@ -150,7 +151,8 @@ import { filterCourtShots } from '../calculations/shot-analysis-calculations.js?
 
   function shotDescription(shot) {
     const player = state.players.find(player => player.id === shot.playerId);
-    const playerLabel = player ? `${player.number != null && player.number !== '' ? `#${player.number} ` : ''}${player.name || '選手名未登録'}` : '選手未登録';
+    const name = player ? `${player.number != null && player.number !== '' ? `#${player.number} ` : ''}${player.name || '選手名未登録'}` : '選手未登録';
+    const playerLabel = `${name} ${shot.quarter ? `${shot.quarter}Q` : 'Q不明'}`;
     const type = SHOT_TYPES[shot.shotType] || shot.shotTypeLabel || '種類未登録';
     const result = shot.result === 'made' ? '成功' : '失敗';
     return {playerLabel, type, result};
@@ -173,7 +175,7 @@ ${areaOverlaySvg(selectedAreas)}<g class="shot-markers">${markers.map(point => `
   }
 
   function openModal() {
-    const games = targetGames(), allShots = statsForGames(games).flatMap(stat => collectShots([stat]).map(shot => ({...shot, playerId: shot.playerId || stat.playerId, gameId: shot.gameId || stat.gameId}))).map((shot, index) => ({...shot, teamAnalysisKey: String(index)}));
+    const games = targetGames(), allShots = collectTeamAnalysisShots(statsForGames(games), games);
     const selectedAreas = new Set(), selectedTypes = new Set(), selectedResults = new Set();
     let range = '', angle = '', selectedKey = '';
     const rangeOptions = [['two','2P'],['three','3P'],['mid','ミドル'],['paint','ショート']];
