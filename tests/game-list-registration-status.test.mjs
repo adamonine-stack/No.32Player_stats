@@ -26,3 +26,18 @@ test('shot point registration is detected for game and quarter shot collections'
   const stats = [{ gameId: 'g1', quarters: { q1: { registered: true, shots: [{ id: 'shot1' }] } } }];
   assert.equal(gameListRegistrationStatus(game, stats).hasShotPoints, true);
 });
+
+
+import { foulRegistrationQuarterCount } from '../js/calculations/game-list-status-calculations.js';
+
+test('foul Q count includes explicit zeros, deduplicates players and excludes incomplete or unregistered Qs', () => {
+  const game = { id: 'g1', quarters: 4, statsRegistrationType: 'quarter' };
+  const stats = [
+    { gameId: 'g1', quarters: { q1: { pf: 0, fouled: 0 }, q2: { pf: 1 }, q3: { pf: 2, fouled: 3 }, q4: { registered: false, pf: 0, fouled: 0 }, q5: { pf: 1, fouled: 1 } } },
+    { gameId: 'g1', quarters: { q1: { pf: 2, fouled: 0 }, q2: { pf: 0, fouled: 0 } } },
+    { gameId: 'other', quarters: { q4: { pf: 1, fouled: 1 } } }
+  ];
+  assert.equal(foulRegistrationQuarterCount(game, stats), 3);
+  assert.equal(foulRegistrationQuarterCount(game, []), 0);
+  assert.equal(foulRegistrationQuarterCount({ ...game, statsRegistrationType: 'game' }, stats), 0);
+});

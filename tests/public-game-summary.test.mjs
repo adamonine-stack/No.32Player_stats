@@ -20,7 +20,7 @@ test('public game summary preserves game-list registration state',()=>{
  assert.equal(summary.hasShotPoints,true);
  assert.equal(summary.participationRegisteredQuarters,1);
  assert.equal(summary.participationTotalQuarters,4);
- assert.equal(summary.schemaVersion,1);
+ assert.equal(summary.schemaVersion,2);
 });
 
 test('participation summary counts only quarters with five starters',()=>{
@@ -32,4 +32,11 @@ test('anonymous light mode requires summary coverage for every listed game',()=>
  assert.equal(hasCompletePublicGameSummaryCoverage([game],[summary]),true);
  assert.equal(hasCompletePublicGameSummaryCoverage([game,{id:'g2'}],[summary]),false);
  assert.equal(hasCompletePublicGameSummaryCoverage([],[summary]),true);
+});
+
+
+test('foul coverage is preserved and legacy summaries fall back to source data', () => {
+ const summary=buildPublicGameSummary(game,[{gameId:'g1',quarters:{q1:{pf:0,fouled:0},q2:{pf:1,fouled:0}}}]);
+ assert.equal(summary.foulRegisteredQuarters,2);
+ assert.equal(hasCompletePublicGameSummaryCoverage([game],[{...summary,schemaVersion:1}]),false);
 });

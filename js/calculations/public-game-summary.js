@@ -1,6 +1,6 @@
-import { gameListRegistrationStatus } from './game-list-status-calculations.js';
+import { gameListRegistrationStatus, foulRegistrationQuarterCount } from './game-list-status-calculations.js';
 
-export const PUBLIC_GAME_SUMMARY_SCHEMA_VERSION = 1;
+export const PUBLIC_GAME_SUMMARY_SCHEMA_VERSION = 2;
 
 export function participationRegistrationStatus(game = {}) {
   const totalQuarters = Math.max(0, Number(game.quarters || game.quarterCount || 0));
@@ -20,6 +20,7 @@ export function buildPublicGameSummary(game = {}, stats = []) {
     seasonId: game.seasonId || '',
     totalQuarters: status.totalQuarters,
     registeredQuarters: status.registeredQuarters,
+    foulRegisteredQuarters: foulRegistrationQuarterCount(game, stats),
     hasShotPoints: Boolean(status.hasShotPoints),
     participationRegisteredQuarters: participation.registeredQuarters,
     participationTotalQuarters: participation.totalQuarters,
@@ -35,3 +36,4 @@ export function hasCompletePublicGameSummaryCoverage(games = [], summaries = [])
     return Boolean(summary && Number(summary.schemaVersion) >= PUBLIC_GAME_SUMMARY_SCHEMA_VERSION);
   });
 }
+
