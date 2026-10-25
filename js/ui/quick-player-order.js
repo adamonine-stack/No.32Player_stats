@@ -1,4 +1,4 @@
-import { state } from "../core/state.js";
+import { state } from "../core/state.js?v=20260915-settings-stable-v1";
 
 function reorderQuickPlayers() {
   const grid = document.querySelector("#modalRoot .quick-player-grid");

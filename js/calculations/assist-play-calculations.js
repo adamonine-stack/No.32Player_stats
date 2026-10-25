@@ -1,5 +1,5 @@
 import { buildGameHistory, createPlayEvent, reconcileStatEvents } from './game-event-calculations.js?v=20260908-quarter-session-v2';
-import { currentPlayersAt, quarterParticipation, quarterDurationSeconds, validateQuarterParticipation } from './participation-calculations.js?v=20260824-compact-sub-time-v3';
+import { currentPlayersAt, quarterParticipation, quarterDurationSeconds, validateQuarterParticipation } from './participation-calculations.js?v=20260916-substitution-dedupe-v1';
 import { detailedShotTotals, shotReceivedFoulCount } from './shot-calculations.js?v=20260822-foul-stats-v2';
 
 export const isAssistEvent = item => item?.type === 'stat' && item.statKey === 'ast';

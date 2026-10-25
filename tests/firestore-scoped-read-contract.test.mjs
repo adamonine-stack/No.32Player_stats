@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "node:test";
+import {viewDataHarness} from "./helpers/view-data-harness.mjs";
 
 const app=readFileSync(new URL("../js/app.js",import.meta.url),"utf8");
 test("startup scopes growing collections and defers opponent teams",()=>{
@@ -16,8 +17,9 @@ test("startup scopes growing collections and defers opponent teams",()=>{
 
 test("home reads one player-season summary and defers stats",()=>{
   assert.match(app,/doc\(db,'playerSeasonSummaries',key\)/);
-  assert.match(app,/if\(state\.tab==='home'\)\{ensureHomeSummarySync\(\);return\}/);
-  assert.match(app,/snapshot\.exists\(\)\)\{state\.homeSummary=.*ensureStatsSync\(\[\],seasonId\)/);
+  const calls=viewDataHarness({tab:'home',selectedSeasonId:'season',allGames:[{id:'g'}]});
+  assert.deepEqual(calls,[['releasePublic'],['homeSummary']]);
+  assert.match(app,/snapshot\.exists\(\)&&snapshot\.data\(\)\.schemaVersion===PLAYER_SEASON_SUMMARY_SCHEMA_VERSION\)\{state\.homeSummary=.*ensureStatsSync\(\[\],seasonId\)/);
   assert.match(app,/window\.rebuildHomeSummaries=async/);
   assert.match(app,/queueHomeSummaryRefresh\(changed\)/);
 });

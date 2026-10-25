@@ -12,7 +12,7 @@ const expected=new Map([
   ['GENESIS',['ベスト8',null,'B',0,1]],['B-BOYZ',['ベスト8',null,'B',0,1]],['TBA PHEONIX',['ベスト8',null,'B',0,1]],
   ['滋賀レイクスU15Next',['ベスト16',null,'C',0,1]],['JUMP',['ベスト16',null,'C',0,1]],['B-Braves.JBC',['ベスト16',null,'C',0,1]],['REDNEX.Jr',['ベスト16',null,'C',0,1]]
 ]);
-for(const team of TEAMS_2026_SHIGA_U15_MEN){assert.deepEqual([team.placementLabel,team.placement,team.rank,team.wins,team.losses],expected.get(team.teamName),team.teamName);assert.equal(calculateOpponentTeamRank([{placementRank:team.rank}]).rank,team.rank)}
+for(const team of TEAMS_2026_SHIGA_U15_MEN){assert.deepEqual([team.placementLabel,team.placement,team.rank,team.wins,team.losses],expected.get(team.teamName),team.teamName);assert.equal(calculateOpponentTeamRank([{...team,placementRank:team.rank,tournamentName:TOURNAMENT_2026_SHIGA_U15_MEN.name,year:2026,tournamentLevel:'prefecture'}]).rank,team.rank)}
 assert.equal(TEAMS_2026_SHIGA_U15_MEN.filter(team=>team.placement===3).length,2);
 assert.ok(TEAMS_2026_SHIGA_U15_MEN.filter(team=>team.rank==='B').every(team=>team.notes.includes('準々決勝敗退')));
 assert.ok(TEAMS_2026_SHIGA_U15_MEN.filter(team=>team.rank==='C').every(team=>team.notes.includes('1回戦敗退')));

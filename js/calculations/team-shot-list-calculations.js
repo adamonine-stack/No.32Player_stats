@@ -1,5 +1,5 @@
 import { compareHistoryItems } from './history-order.js?v=20260908-quarter-session-v2';
-import { normalizeShot } from './shot-calculations.js';
+import { normalizeShot } from './shot-calculations.js?v=20260822-foul-stats-v2';
 
 function timestamp(value) {
   if (value && typeof value === 'object' && Number.isFinite(Number(value.seconds))) return Number(value.seconds) * 1000 + (Number(value.nanoseconds) || 0) / 1e6;

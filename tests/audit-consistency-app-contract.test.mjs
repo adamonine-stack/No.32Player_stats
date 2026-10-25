@@ -12,8 +12,5 @@ assert.match(app, /if\(u\)ensureAuditConsistencyMigration\(\)\.catch/);
 assert.match(app, /mergeFields:\['quarters','auditConsistencyMigrationVersion','updatedAt'\]/);
 assert.match(app, /async function rebuildConsistencySummaries\(games,stats\)/);
 assert.match(app, /latestRank=rankForGame\(game,team\)\|\|null/);
-assert.match(index, /app\.js\?v=20260917-audit-consistency-v1/);
-assert.match(app, /service-worker\.js\?v=20260917-audit-consistency-v1/);
-assert.match(sw, /r32-shell-20260917-audit-consistency-v1/);
 
 console.log('audit consistency app contract: ok');

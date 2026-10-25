@@ -1,5 +1,5 @@
 import { getGameStatsRegistrationType, registeredQuarterNumbers } from "./stats-calculations.js";
-import { playerPlayingTime, quarterDurationSeconds, quarterParticipation, validateQuarterParticipation } from './participation-calculations.js';
+import { playerPlayingTime, quarterDurationSeconds, quarterParticipation, validateQuarterParticipation } from './participation-calculations.js?v=20260916-substitution-dedupe-v1';
 
 export function targetQuarterNumbers(game = {}, stats = [], playerId = '', selectedView = 'game') {
   const total = Math.max(0, Number(game.quarters || game.quarterCount || 0));

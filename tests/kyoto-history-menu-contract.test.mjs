@@ -1,12 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import {prefectureRankForPlacement,calculateTeamPower} from '../js/calculations/opponent-team-calculations.js';
 
 const app=fs.readFileSync(new URL('../js/app.js',import.meta.url),'utf8');
 const power=fs.readFileSync(new URL('../js/calculations/opponent-team-calculations.js',import.meta.url),'utf8');
 
-test('Kyoto historical import menu is wired into settings',()=>{
-  assert.match(app,/openKyotoHistoryImportMenu\(\).*京都府 2025・2026大会を登録/);
+test('Kyoto historical import remains callable without a settings button',()=>{
+  assert.match(app,/window\.openKyotoHistoryImportMenu=async/);
   assert.match(app,/const KYOTO_HISTORY_IMPORTS=\[/);
   assert.match(app,/TOURNAMENT_2026_KYOTO_U15_MEN/);
   assert.match(app,/TOURNAMENT_2026_KYOTO_JHS_SOUTAI_MEN/);
@@ -23,6 +24,7 @@ test('Kyoto imports preserve explicit similar-name decisions and qualifier separ
 });
 
 test('team power calculations ignore qualifier-only achievements',()=>{
-  assert.match(power,/item\.teamPowerEligible===false\)return null/);
+  assert.equal(prefectureRankForPlacement({season:'2026-27',tournamentName:'予選',placementLabel:'優勝',teamPowerEligible:false}),null);
+  assert.equal(calculateTeamPower([{season:'2026-27',tournamentName:'予選',placementLabel:'優勝',teamPowerEligible:false}],{season:'2026-27'}).power,0);
   assert.match(power,/item\?\.teamPowerEligible!==false&&isValidTournamentAchievement\(item\)/);
 });

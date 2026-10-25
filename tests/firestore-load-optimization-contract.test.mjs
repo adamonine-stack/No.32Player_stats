@@ -1,12 +1,14 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import {viewDataHarness} from './helpers/view-data-harness.mjs';
 
 const app=fs.readFileSync(new URL('../js/app.js',import.meta.url),'utf8');
 
 test('settings view does not start or tear down stats subscriptions',()=>{
-  assert.match(app,/if\(\['games','stats','team'\]\.includes\(state\.tab\)\)\{ensureStatsSync\(state\.allGames\.map\(game=>game\.id\),seasonId\);return\}if\(state\.tab==='settings'\)return;ensureStatsSync\(\[\],seasonId\)/);
-  assert.doesNotMatch(app,/\['games','stats','team','settings'\]/);
+  const calls=viewDataHarness({tab:'settings',selectedSeasonId:'season',allGames:[{id:'g'}]});
+  assert.equal(calls.some(([kind])=>kind==='stats'),false);
+  assert.equal(calls.some(([kind])=>kind==='publicSummary'),false);
 });
 
 test('admin maintenance loads source collections on demand',()=>{

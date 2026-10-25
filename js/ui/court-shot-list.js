@@ -1,4 +1,4 @@
-import { SHOT_COURT_SIZE, SHOT_TYPES, SHOT_AREAS, shotAreaForRecord } from '../calculations/shot-calculations.js';
+import { SHOT_COURT_SIZE, SHOT_TYPES, SHOT_AREAS, shotAreaForRecord } from '../calculations/shot-calculations.js?v=20260822-foul-stats-v2';
 
 const escapeText = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
 
