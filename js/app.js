@@ -3,7 +3,7 @@ import { collectTeamAnalysisShots } from './calculations/team-shot-list-calculat
 import { hasShotPoint, shotDescription, courtShotListHtml, shotHighlightSvg } from './ui/court-shot-list.js?v=20261018-individual-list-v1';
 import { loadNormalStats,assertNormalStatsOnline } from './core/normal-stats-store.js?v=20260908-quarter-session-v2';
 import { LOAD_ERROR,CONFLICT_ERROR,assertStatsBaseline } from './core/normal-stats-guard.js';
-import { createHistoryOverlay, projectLocalHistory, receiveHistoryDocuments, restoreLocalHistory, reconcileAuthoritativeGames } from './core/local-history.js?v=20260919-orphan-prune-v1';
+import { createHistoryOverlay, projectLocalHistory, receiveHistoryDocuments, restoreLocalHistory, reconcileAuthoritativeGames } from './core/local-history.js?v=20261025-test-repair-v1';
 import { assistCandidates, isAssistEvent, isMadeEvent, nearbyMadeShots, planAssistMutation } from './calculations/assist-play-calculations.js?v=20260908-quarter-session-v2';
 import { commitAssistMutation } from './core/assist-play-store.js?v=20260908-quarter-session-v2';
 import { commitQuickStatMutation, commitQuickFreeThrowMutation } from './core/quick-history-store.js?v=20260908-quarter-session-v2';
@@ -34,7 +34,7 @@ import { DEFAULT_QUARTER_DURATION_MINUTES, averagePlayerPlayingTime, createTempo
 import { ALL_FILTER_VALUE, UNSET_FILTER_VALUE, resolveOpponentTeam, opponentRankForGame, getOpponentCategoryOptions, getOpponentRankOptions, filterByOpponentFilterRange, filterByRegisteredGameCategory, filterByAggregationCondition } from "./calculations/game-filter-calculations.js?v=20260916-current-opponent-rank-v1";
 import { detailStatsActionBar, selectedStatsDeleteTarget, renderDetailAtTop, saveStatsAndReturnToTop } from "./ui/detail-stats-actions.js";
 import { SHOT_AREAS, SHOT_TYPES, SHOT_AREA_ORDER, SHOT_TYPE_ORDER, SHOT_COURT_SIZE, allowedShotTypes, createShot, shotTotals, shotReceivedFoulCount, detailedShotTotals, collectShots, filterShots, aggregateShots, legacyShotSlots, isLegacyShotBreakdownTarget, createLegacyBreakdownShots, detectShotArea, shotAreaForRecord, normalizedShotType, normalizeShot, countsAsFieldGoalAttempt, shotSequence } from "./calculations/shot-calculations.js?v=20260822-foul-stats-v2";
-import { SHOT_ANALYSIS_AREA_SHORTCUTS, filterShotsBySelections, shotAnalysisAreaIds, filterCourtShots } from "./calculations/shot-analysis-calculations.js?v=20260830-court-filter-v2";
+import { SHOT_ANALYSIS_AREA_SHORTCUTS, filterShotsBySelections, shotAnalysisAreaIds, filterCourtShots } from "./calculations/shot-analysis-calculations.js?v=20261015-team-court-state-v2";
 import { TOURNAMENT_2026_HYOGO_U15_MEN, TEAMS_2026_HYOGO_U15_MEN, normalizeImportedTeamName } from "./data/2026-hyogo-u15-men.js";
 import { TOURNAMENT_2026_OSAKA_U15_MEN, TEAMS_2026_OSAKA_U15_MEN, MATCHES_2026_OSAKA_U15_MEN } from "./data/2026-osaka-u15-men.js";
 import { TOURNAMENT_2026_OKAYAMA_U15_MEN, TEAMS_2026_OKAYAMA_U15_MEN } from "./data/2026-okayama-u15-men.js";
@@ -58,7 +58,7 @@ import { TOURNAMENT_2026_HYOGO_JHS_SOUTAI_MEN, TEAMS_2026_HYOGO_JHS_SOUTAI_MEN }
 import { findDuplicateHistoricalResultSet, findDuplicateHistoricalTournament, findExistingHistoricalPlacement, findSimilarHistoricalTeamCandidates } from "./calculations/historical-import-calculations.js?v=20260915-osaka-history-v3";
 import { findImportedTeamMatch, findExistingTournamentTeam, normalizeTeamNameForMatching, normalizeTournamentNameForMatching } from "./calculations/team-name-matching.js";
 const quickInputStyles=document.createElement('link');quickInputStyles.rel='stylesheet';quickInputStyles.href='./styles/quick-input.css?v=20260908-quarter-session-v1';document.head.appendChild(quickInputStyles);
-if('serviceWorker' in navigator && !location.pathname.includes('/tests/'))navigator.serviceWorker.register('./service-worker.js?v=20261015-court-filters-v1').catch(error=>console.warn('Service worker registration failed',error));
+if('serviceWorker' in navigator && !location.pathname.includes('/tests/'))navigator.serviceWorker.register('./service-worker.js?v=20261025-test-repair-v1').catch(error=>console.warn('Service worker registration failed',error));
 installOfflineSyncListeners();
 const nav=[['home','ホーム'],['players','選手'],['opponentTeams','対戦チーム'],['games','試合'],['stats','分析'],['team','チーム'],['settings','設定']];
 const navIcons={home:'home',players:'person',opponentTeams:'shield',games:'edit_note',stats:'bar_chart',team:'groups',settings:'settings'};

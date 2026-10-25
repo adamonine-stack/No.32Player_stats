@@ -1,4 +1,4 @@
-import { state } from '../core/state.js';
+import { state } from '../core/state.js?v=20260915-settings-stable-v1';
 import { gameListRegistrationStatus, foulRegistrationQuarterCount, gameListActionStatus } from '../calculations/game-list-status-calculations.js?v=20261025-action-status-v3';
 
 const STYLE_ID = 'game-list-registration-status-style';

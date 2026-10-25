@@ -1,5 +1,5 @@
 import { derived, getGameStatsRegistrationType, quarterKey, registeredQuarterNumbers, STAT_KEYS, sumStats } from "../calculations/stats-calculations.js";
-import { gamePlayingTime, quarterDurationSeconds, validateQuarterParticipation } from "../calculations/participation-calculations.js";
+import { gamePlayingTime, quarterDurationSeconds, validateQuarterParticipation } from "../calculations/participation-calculations.js?v=20260916-substitution-dedupe-v1";
 
 const integer=value=>Number.isFinite(Number(value))?Math.max(0,Math.trunc(Number(value))):0;
 const issue=(issues,code,collection,id,detail={})=>issues.push({code,collection,id,...detail});

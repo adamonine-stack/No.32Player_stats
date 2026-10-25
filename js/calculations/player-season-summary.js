@@ -1,5 +1,5 @@
 import { STAT_KEYS, derived, statHasRegisteredData, sumStats } from "./stats-calculations.js";
-import { averagePlayerPlayingTime, playerHasPlayingTime } from "./participation-calculations.js";
+import { averagePlayerPlayingTime, playerHasPlayingTime } from "./participation-calculations.js?v=20260916-substitution-dedupe-v1";
 
 export const PLAYER_SEASON_SUMMARY_SCHEMA_VERSION = 2;
 

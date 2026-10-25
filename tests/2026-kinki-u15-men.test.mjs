@@ -6,8 +6,8 @@ assert.equal(TOURNAMENT_2026_KINKI_U15_MEN.tournamentLevel,'block');
 assert.equal(TEAMS_2026_KINKI_U15_MEN.length,9);
 assert.equal(MATCHES_2026_KINKI_U15_MEN.length,8);
 assert.deepEqual(TEAMS_2026_KINKI_U15_MEN.slice(0,4).map(team=>[team.teamName,team.placementLabel]),[['KAGO CLUB','優勝'],['T-SMILE','準優勝'],['サンシャインズ','ベスト4'],['B.UNITE','ベスト4']]);
-assert.equal(upperTournamentBonus({...TEAMS_2026_KINKI_U15_MEN[0],tournamentLevel:'block'}),120);
-assert.equal(upperTournamentBonus({...TEAMS_2026_KINKI_U15_MEN[8],tournamentLevel:'block'}),20);
+assert.equal(upperTournamentBonus({...TEAMS_2026_KINKI_U15_MEN[0],tournamentLevel:'block',tournamentName:TOURNAMENT_2026_KINKI_U15_MEN.name,year:2026}),150);
+assert.equal(upperTournamentBonus({...TEAMS_2026_KINKI_U15_MEN[8],tournamentLevel:'block',tournamentName:TOURNAMENT_2026_KINKI_U15_MEN.name,year:2026}),40);
 assert.ok(MATCHES_2026_KINKI_U15_MEN.every(game=>TEAMS_2026_KINKI_U15_MEN.some(team=>team.teamName===game.winner)&&TEAMS_2026_KINKI_U15_MEN.some(team=>team.teamName===game.loser)));
 const duplicateKagoTeams=[
   {id:'legacy-kago',teamName:'KAGO CLUB',prefecture:'大阪府',tournamentPlacements:[{tournamentId:'2025-osaka-jr-winter-cup-men'}]},

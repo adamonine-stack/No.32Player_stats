@@ -4,8 +4,8 @@ import fs from 'node:fs';
 
 const app=fs.readFileSync(new URL('../js/app.js',import.meta.url),'utf8');
 
-test('Nara historical import menu is wired into settings',()=>{
-  assert.match(app,/openNaraHistoryImportMenu\(\).*奈良県 2025・2026大会を登録/);
+test('Nara historical import remains callable without a settings button',()=>{
+  assert.match(app,/window\.openNaraHistoryImportMenu=async/);
   assert.match(app,/const NARA_HISTORY_IMPORTS=\[/);
   assert.match(app,/TOURNAMENT_2026_NARA_U15_MEN/);
   assert.match(app,/findDuplicateHistoricalTournament\(entry\.tournament,registered\)/);

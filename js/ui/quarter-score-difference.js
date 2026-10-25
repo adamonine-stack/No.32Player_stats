@@ -1,4 +1,4 @@
-import { state } from "../core/state.js";
+import { state } from "../core/state.js?v=20260915-settings-stable-v1";
 
 function n(value){const x=Number(value||0);return Number.isFinite(x)?x:0}
 function qKey(q){return `q${q}`}

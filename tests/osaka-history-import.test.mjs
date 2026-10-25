@@ -12,8 +12,8 @@ test('official Osaka 2025 tournament datasets have expected counts and top resul
   assert.equal(TEAMS_2025_OSAKA_JUNIOR_CHAMPIONSHIP_MEN.find(x=>x.teamName==='T-SMILE BASKET BALL TEAM U15').placementLabel,'準優勝');
   assert.equal(TEAMS_2025_OSAKA_JUNIOR_CHAMPIONSHIP_MEN.find(x=>x.teamName==='REDFORCES').placementLabel,'ベスト8');
   assert.equal(TEAMS_2025_OSAKA_JUNIOR_CHAMPIONSHIP_MEN.find(x=>x.teamName==='Sparkle Basketball Club').placementLabel,'ベスト16');
-  assert.equal(TEAMS_2025_OSAKA_JUNIOR_CHAMPIONSHIP_MEN.find(x=>x.teamName==='Akans').placementLabel,'ベスト32');
-  assert.equal(TEAMS_2025_OSAKA_JUNIOR_CHAMPIONSHIP_MEN.find(x=>x.teamName==='TEAM GRIT').placementLabel,'県大会出場');
+  assert.equal(TEAMS_2025_OSAKA_JUNIOR_CHAMPIONSHIP_MEN.find(x=>x.teamName==='Akans').placementLabel,'2次予選敗退（ベスト32相当）');
+  assert.equal(TEAMS_2025_OSAKA_JUNIOR_CHAMPIONSHIP_MEN.find(x=>x.teamName==='TEAM GRIT').placementLabel,'1次予選敗退（ベスト64相当）');
   assert.equal(new Set(TEAMS_2025_OSAKA_JUNIOR_CHAMPIONSHIP_MEN.map(x=>x.teamName)).size,48);
 });
 

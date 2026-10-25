@@ -1,4 +1,4 @@
-import { buildGameHistory } from './game-event-calculations.js';
+import { buildGameHistory } from './game-event-calculations.js?v=20260908-quarter-session-v2';
 import { getGameStatsRegistrationType, num, registeredQuarterNumbers } from './stats-calculations.js';
 import { hasShotPointData } from './game-calculations.js';
 

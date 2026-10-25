@@ -1,6 +1,6 @@
 import { HistoryJournal, createHistoryOverlay, orphanedGameOperationIds } from './history-journal.js?v=20260919-orphan-prune-v1';
-import { state } from './state.js';
-import { listOfflineOperations, removeOfflineOperation } from './offline-operation-queue.js?v=20260908-quarter-session-v2';
+import { state } from './state.js?v=20260915-settings-stable-v1';
+import { listOfflineOperations, removeOfflineOperation } from './offline-operation-queue.js?v=20260920-pending-manager-v1';
 export { createHistoryOverlay };
 const journal=new HistoryJournal();
 let ownerUid='';

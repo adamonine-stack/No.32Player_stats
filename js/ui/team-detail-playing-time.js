@@ -1,6 +1,6 @@
-import { state } from '../core/state.js';
+import { state } from '../core/state.js?v=20260915-settings-stable-v1';
 import { statHasRegisteredData } from '../calculations/stats-calculations.js';
-import { playerPlayingTime, formatClock } from '../calculations/participation-calculations.js?v=20260824-compact-sub-time-v3';
+import { playerPlayingTime, formatClock } from '../calculations/participation-calculations.js?v=20260916-substitution-dedupe-v1';
 import { OPPONENT_RANKS } from '../calculations/opponent-team-calculations.js';
 import { filterByOpponentFilterRange, filterByRegisteredGameCategory, filterByAggregationCondition } from '../calculations/game-filter-calculations.js';
 
