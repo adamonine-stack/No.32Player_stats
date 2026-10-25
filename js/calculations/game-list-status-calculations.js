@@ -1,3 +1,4 @@
+import { buildGameHistory } from './game-event-calculations.js';
 import { getGameStatsRegistrationType, num, registeredQuarterNumbers } from './stats-calculations.js';
 import { hasShotPointData } from './game-calculations.js';
 
@@ -36,4 +37,14 @@ export function foulRegistrationQuarterCount(game = {}, stats = []) {
     }
   }
   return registered.size;
+}
+
+// Use the same reconciliation as the history list, including manual order overrides.
+export function gameListActionStatus(game = {}, stats = []) {
+  const history = buildGameHistory(game, stats);
+  const shootingKeys = new Set(['twoPa', 'twoPm', 'threePa', 'threePm']);
+  return {
+    hasUnorderedNonShotStats: history.some(item => item.sourceKind === 'legacyStat' && !shootingKeys.has(item.statKey) && !item.precise),
+    hasFoulRegistration: history.some(item => ['foul', 'foulReceived'].includes(item.type) || (item.type === 'shot' && item.content.includes('被FOUL')))
+  };
 }

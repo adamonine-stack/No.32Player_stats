@@ -41,3 +41,16 @@ test('foul Q count includes explicit zeros, deduplicates players and excludes in
   assert.equal(foulRegistrationQuarterCount(game, []), 0);
   assert.equal(foulRegistrationQuarterCount({ ...game, statsRegistrationType: 'game' }, stats), 0);
 });
+
+test('action status distinguishes unordered counters, ordered overrides, and actual fouls', async () => {
+  const { gameListActionStatus } = await import('../js/calculations/game-list-status-calculations.js');
+  const game = {id:'g',statsRegistrationType:'quarter',quarters:4};
+  const stats = [{id:'g_p',gameId:'g',playerId:'p',quarters:{q1:{registered:true,ast:1,twoPa:2,pf:0,fouled:0}}}];
+  assert.deepEqual(gameListActionStatus(game,stats), {hasUnorderedNonShotStats:true,hasFoulRegistration:false});
+  game.eventSequenceOverrides = {'legacy:g_p:1:ast:0':1};
+  assert.deepEqual(gameListActionStatus(game,stats), {hasUnorderedNonShotStats:false,hasFoulRegistration:false});
+  stats[0].quarters.q1.pf=1;
+  assert.equal(gameListActionStatus(game,stats).hasFoulRegistration,true);
+  game.playEvents=[{id:'f',playerId:'p',quarter:1,type:'foul',sequence:2}];
+  assert.equal(gameListActionStatus(game,stats).hasUnorderedNonShotStats,false);
+});

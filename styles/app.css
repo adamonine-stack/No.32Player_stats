@@ -207,7 +207,7 @@ body{font-family:"Inter","Noto Sans JP",system-ui,-apple-system,sans-serif}.mate
 .game-sort-item .game-line2>span:last-child{white-space:nowrap;text-align:right}
 .game-list-registration-status{display:flex;flex-wrap:nowrap;white-space:nowrap;overflow-x:auto;align-items:center;gap:6px;margin-top:6px;font-size:12px;font-weight:700;line-height:1.35;color:var(--muted,#9aa7bd)}
 .game-list-registration-status>span{flex:0 0 auto}
-.game-list-registration-status .shot-point-registered{color:#5ed6a7}
+.game-list-registration-status .stats-order-incomplete{color:#fb923c}
 .game-list-registration-status .playing-time-registered{color:#7dd3fc}
 @media(max-width:800px){
   .game-sort-item .game-line2{grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px}

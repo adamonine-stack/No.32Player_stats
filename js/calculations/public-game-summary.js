@@ -1,6 +1,6 @@
-import { gameListRegistrationStatus, foulRegistrationQuarterCount } from './game-list-status-calculations.js';
+import { gameListRegistrationStatus, foulRegistrationQuarterCount, gameListActionStatus } from './game-list-status-calculations.js';
 
-export const PUBLIC_GAME_SUMMARY_SCHEMA_VERSION = 2;
+export const PUBLIC_GAME_SUMMARY_SCHEMA_VERSION = 3;
 
 export function participationRegistrationStatus(game = {}) {
   const totalQuarters = Math.max(0, Number(game.quarters || game.quarterCount || 0));
@@ -16,6 +16,7 @@ export function buildPublicGameSummary(game = {}, stats = []) {
   const status = gameListRegistrationStatus(game, stats);
   const participation = participationRegistrationStatus(game);
   return {
+    ...gameListActionStatus(game, stats),
     gameId: game.id || '',
     seasonId: game.seasonId || '',
     totalQuarters: status.totalQuarters,

@@ -14,8 +14,8 @@ import { auditR32Data } from './diagnostics/data-integrity.js?v=20260901-scoped-
 import { AUDIT_CONSISTENCY_MIGRATION_VERSION, normalizeTournamentPlacementRanks, planSafeStatQuarterCleanup } from './diagnostics/audit-consistency-migration.js?v=20260917-audit-consistency-v1';
 import { PLAYER_SEASON_SUMMARY_SCHEMA_VERSION, buildPlayerSeasonSummary, comparePlayerSeasonSummary, playerSeasonSummaryId } from './calculations/player-season-summary.js?v=20260901-home-summary-v1';
 import { planHomeSummaryRefresh } from './calculations/home-summary-invalidation.js?v=20260916-firestore-load-v1';
-import { buildPublicGameSummary, hasCompletePublicGameSummaryCoverage } from './calculations/public-game-summary.js?v=20260916-public-read-fouls-v2';
-import { gameListRegistrationStatus, foulRegistrationQuarterCount } from './calculations/game-list-status-calculations.js?v=20260916-game-list-fouls-v2';
+import { buildPublicGameSummary, hasCompletePublicGameSummaryCoverage } from './calculations/public-game-summary.js?v=20261025-action-status-v3';
+import { gameListRegistrationStatus, foulRegistrationQuarterCount, gameListActionStatus } from './calculations/game-list-status-calculations.js?v=20261025-action-status-v3';
 import { state } from "./core/state.js?v=20260915-settings-stable-v1";
 import { setGameSortDirection, setLastPlayerId, setSelectedSeasonId } from "./core/storage.js";
 import { num, pct, one, sumStats as sumStatsBase, derived, STAT_KEYS, getGameStatsRegistrationType, quarterKey, registeredQuarterNumbers, statHasRegisteredData } from "./calculations/stats-calculations.js";
@@ -220,13 +220,13 @@ function gameListParticipationStatus(game){
   for(let quarter=1;quarter<=total;quarter++){const participation=game.quarterParticipation?.[`q${quarter}`];if(new Set((participation?.starters||[]).filter(Boolean)).size===5)registered++}
   return {registered,total};
 }
-function publicGameSummaryForList(game){const summary=(state.publicGameSummaries||[]).find(item=>(item.gameId||item.id)===game.id);return summary&&Number(summary.schemaVersion)>=2?summary:null}
+function publicGameSummaryForList(game){const summary=(state.publicGameSummaries||[]).find(item=>(item.gameId||item.id)===game.id);return summary&&Number(summary.schemaVersion)>=3?summary:null}
 function gameListRegistrationHtml(game){
   const summary=publicGameSummaryForList(game);
   const status=summary?{registeredQuarters:Number(summary.registeredQuarters)||0,totalQuarters:Number(summary.totalQuarters)||0,hasShotPoints:Boolean(summary.hasShotPoints)}:gameListRegistrationStatus(game,state.stats);
   const participation=summary?{registered:Number(summary.participationRegisteredQuarters)||0,total:Number(summary.participationTotalQuarters)||0}:gameListParticipationStatus(game);
-  const foulQuarters=summary?Number(summary.foulRegisteredQuarters)||0:foulRegistrationQuarterCount(game,state.stats);
-  return `<div class="game-list-registration-status"><span>スタッツ ${status.registeredQuarters}/${status.totalQuarters}Q</span>${status.hasShotPoints?'<span class="shot-point-registered">シュートポイント登録済</span>':''}${participation.registered?`<span class="playing-time-registered">出場時間 ${participation.registered}/${participation.total}Q</span>`:''}<span class="foul-registration-status" title="ファウル・被ファウル登録済みQ数／全Q数">F ${foulQuarters}/${status.totalQuarters}</span></div>`;
+  const actionStatus=summary||gameListActionStatus(game,state.stats);
+  return `<div class="game-list-registration-status"><span class="${actionStatus.hasUnorderedNonShotStats?'stats-order-incomplete':''}" title="${actionStatus.hasUnorderedNonShotStats?'シュート以外に順序未登録のスタッツがあります':''}">スタッツ ${status.registeredQuarters}/${status.totalQuarters}Q</span>${participation.registered?`<span class="playing-time-registered">出場時間 ${participation.registered}/${participation.total}Q</span>`:''}${actionStatus.hasFoulRegistration?'<span class="foul-registration-status">F 登録済</span>':''}</div>`;
 }
 function gameCard(g,cls='',draggable=false){const gameListCard=String(cls).split(/\s+/).includes('game-sort-item'),durationMinutes=Math.max(1,Math.round(quarterDurationSeconds(g)/60)),right=gameListCard?`${durationMinutes}分${g.quarters||0}Q　${resultMark(g)} ${scoreLine(g).replace(" - ","-")}`:`${g.quarters||0}Q${quarterStatusText(g)}　${resultMark(g)} ${scoreLine(g).replace(" - ","-")}`;return `<div class="list-item sortable-item ${cls}" draggable="false" data-game-id="${g.id}" onclick="openGameDetail('${g.id}')"><div class="game-line1"><span>${g.date||''}</span><span>${[g.tournament,g.category].filter(Boolean).join(' / ')}</span></div><div class="game-line2"><span>vs ${g.opponent||''}</span><span>${right}</span></div>${gameListCard?gameListRegistrationHtml(g):''}${draggable&&state.user?'<button type="button" class="sort-handle game-sort-handle" draggable="false" aria-label="並び替え">≡</button>':''}</div>`}
 function targetGameList(){if(!['game','tournament','day'].includes(state.statsMode))return '';const games=targetGames();return `<div class="card"><div class="section-title">集計対象試合一覧</div>${games.map(g=>gameCard(g)).join('')||'<p class="sub">対象試合なし</p>'}</div>`}

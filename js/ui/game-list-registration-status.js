@@ -1,5 +1,5 @@
 import { state } from '../core/state.js';
-import { gameListRegistrationStatus, foulRegistrationQuarterCount } from '../calculations/game-list-status-calculations.js?v=20260916-game-list-fouls-v2';
+import { gameListRegistrationStatus, foulRegistrationQuarterCount, gameListActionStatus } from '../calculations/game-list-status-calculations.js?v=20261025-action-status-v3';
 
 const STYLE_ID = 'game-list-registration-status-style';
 
@@ -20,7 +20,7 @@ function ensureStyles() {
   style.textContent = `
     .game-list-registration-status{display:flex;flex-wrap:nowrap;white-space:nowrap;overflow-x:auto;align-items:center;gap:6px;margin-top:6px;font-size:12px;font-weight:700;line-height:1.35;color:var(--muted,#9aa7bd)}
     .game-list-registration-status>span{flex:0 0 auto}
-.game-list-registration-status .shot-point-registered{color:#5ed6a7}
+.game-list-registration-status .stats-order-incomplete{color:#fb923c}
     .game-list-registration-status .playing-time-registered{color:#7dd3fc}
     .game-sort-item .game-line2>span:last-child{white-space:nowrap}
     @media(max-width:800px){
@@ -33,7 +33,7 @@ function ensureStyles() {
 
 function publicSummaryForGame(game) {
   const summary = (state.publicGameSummaries || []).find(item => (item.gameId || item.id) === game.id);
-  return summary && Number(summary.schemaVersion) >= 2 ? summary : null;
+  return summary && Number(summary.schemaVersion) >= 3 ? summary : null;
 }
 
 function statusHtml(game) {
@@ -50,8 +50,8 @@ function statusHtml(game) {
   const playingTime = participation.registered
     ? `<span class="playing-time-registered">出場時間 ${participation.registered}/${participation.total}Q</span>`
     : '';
-  const foulQuarters = summary ? Number(summary.foulRegisteredQuarters) || 0 : foulRegistrationQuarterCount(game, state.stats);
-  return `<span>スタッツ ${status.registeredQuarters}/${status.totalQuarters}Q</span>${status.hasShotPoints ? '<span class="shot-point-registered">シュートポイント登録済</span>' : ''}${playingTime}<span class="foul-registration-status" title="ファウル・被ファウル登録済みQ数／全Q数">F ${foulQuarters}/${status.totalQuarters}</span>`;
+  const actionStatus = summary || gameListActionStatus(game, state.stats);
+  return `<span class="${actionStatus.hasUnorderedNonShotStats ? 'stats-order-incomplete' : ''}" title="${actionStatus.hasUnorderedNonShotStats ? 'シュート以外に順序未登録のスタッツがあります' : ''}">スタッツ ${status.registeredQuarters}/${status.totalQuarters}Q</span>${playingTime}${actionStatus.hasFoulRegistration ? '<span class="foul-registration-status">F 登録済</span>' : ''}`;
 }
 
 function simplifyPrimaryLine(card, game) {
