@@ -20,23 +20,45 @@ export function filterTargetPickerItems(items, query='', month='') {
 }
 export function targetPickerHtml(prefix,games,mode,target) {
   const items=targetPickerItems(games,mode), selected=items.find(item=>item.id===target);
-  const months=[...new Set(items.flatMap(item=>item.months))].sort().reverse();
-  return `<div class="analysis-target-row"><div class="aggregation-picker" data-target-picker><span>対象選択</span><select id="${prefix}Target" hidden aria-hidden="true" tabindex="-1"><option value="">選択してください</option>${items.map(item=>`<option value="${escape(item.id)}" ${item.id===target?'selected':''}>${escape(item.label)}</option>`).join('')}</select><details><summary>${escape(selected?.label||'対象を選択してください')}<small>検索・年月で絞り込む</small></summary><div class="aggregation-picker-tools"><label>検索<input type="search" data-target-search placeholder="${mode==='game'?'対戦相手・大会名・日付':'大会名・日付'}" autocomplete="off"></label><label>年月<select data-target-month><option value="">すべての年月</option>${months.map(month=>`<option value="${escape(month)}">${escape(month)}</option>`).join('')}</select></label><button type="button" data-target-reset>条件クリア</button></div><p data-target-count role="status"></p><div class="aggregation-picker-results"></div></details></div></div>`;
+  return `<div class="analysis-target-row"><div class="aggregation-picker" data-target-picker><span>対象選択</span><select id="${prefix}Target" hidden aria-hidden="true" tabindex="-1"><option value="">選択してください</option>${items.map(item=>`<option value="${escape(item.id)}" ${item.id===target?'selected':''}>${escape(item.label)}</option>`).join('')}</select><button type="button" class="aggregation-picker-open" data-target-open><span>${escape(selected?.label||'対象を選択してください')}</span><span aria-hidden="true">›</span></button></div></div>`;
 }
+let closeActivePicker;
 export function bindTargetPickers(gamesByPrefix) {
+  closeActivePicker?.(false);
   document.querySelectorAll('[data-target-picker]').forEach(root=>{
     const select=root.querySelector('select[id]'), {games,mode}=gamesByPrefix[select.id]||{};
     if(!games) return;
-    const items=targetPickerItems(games,mode),search=root.querySelector('[data-target-search]'),month=root.querySelector('[data-target-month]'),results=root.querySelector('.aggregation-picker-results');
-    const update=()=>{
-      const filtered=filterTargetPickerItems(items,search.value,month.value);
-      root.querySelector('[data-target-count]').textContent=`${filtered.length}件 / 全${items.length}件（新しい順）`;
-      results.innerHTML=filtered.length?filtered.map(item=>`<button type="button" data-target-value="${escape(item.id)}" aria-pressed="${item.id===select.value}"><span>${item.id===select.value?'✓ ':''}${escape(item.label)}</span><small>${escape(item.detail)}</small></button>`).join(''):'<p>該当する対象がありません。検索条件を変更してください。</p>';
+    const items=targetPickerItems(games,mode), trigger=root.querySelector('[data-target-open]');
+    trigger.onclick=()=>{
+      const view=document.querySelector('#view'), scroll=window.scrollY;
+      if(!view) return;
+      const previous=[...view.children].map(element=>({element,hidden:element.hidden}));
+      previous.forEach(({element})=>element.hidden=true);
+      const page=document.createElement('section');
+      page.className='aggregation-target-page';
+      page.setAttribute('aria-label',mode==='game'?'試合を選択':'大会を選択');
+      const months=[...new Set(items.flatMap(item=>item.months))].sort().reverse();
+      page.innerHTML=`<header class="aggregation-target-head"><button type="button" class="btn ghost" data-target-back>‹ 戻る</button><h2>${mode==='game'?'試合を選択':'大会を選択'}</h2></header><div class="aggregation-target-filters"><label>キーワード検索<input type="search" data-target-search placeholder="${mode==='game'?'対戦相手・大会名・日付':'大会名・日付'}" autocomplete="off"></label><div class="aggregation-target-month-row"><label>年月<select data-target-month><option value="">すべての年月</option>${months.map(month=>`<option value="${escape(month)}">${escape(month)}</option>`).join('')}</select></label><button type="button" class="btn ghost" data-target-reset>条件クリア</button></div></div><p data-target-count role="status"></p><div class="aggregation-target-results"></div>`;
+      view.append(page);
+      const search=page.querySelector('[data-target-search]'),month=page.querySelector('[data-target-month]'),results=page.querySelector('.aggregation-target-results');
+      const close=(restore=true)=>{
+        document.removeEventListener('keydown',onKey);
+        page.remove();previous.forEach(({element,hidden})=>element.hidden=hidden);
+        closeActivePicker=null;
+        if(restore){window.scrollTo(0,scroll);trigger.focus({preventScroll:true})}
+      };
+      const onKey=event=>{if(event.key==='Escape')close()};
+      closeActivePicker=close;document.addEventListener('keydown',onKey);
+      const update=()=>{
+        const filtered=filterTargetPickerItems(items,search.value,month.value);
+        page.querySelector('[data-target-count]').textContent=`${filtered.length}件 / 全${items.length}件（新しい順）`;
+        results.innerHTML=filtered.length?filtered.map(item=>`<button type="button" class="aggregation-target-item" data-target-value="${escape(item.id)}" aria-pressed="${item.id===select.value}"><span class="aggregation-target-copy"><strong>${escape(item.label)}</strong><small>${escape(item.detail)}</small></span><span class="aggregation-target-check" aria-hidden="true">${item.id===select.value?'✓':'›'}</span></button>`).join(''):'<p class="aggregation-target-empty">該当する対象がありません。<br>検索条件を変更してください。</p>';
+      };
+      search.oninput=update;month.onchange=update;
+      page.querySelector('[data-target-back]').onclick=()=>close();
+      page.querySelector('[data-target-reset]').onclick=()=>{search.value='';month.value='';update()};
+      results.onclick=event=>{const button=event.target.closest('[data-target-value]');if(!button)return;select.value=button.dataset.targetValue;close();select.dispatchEvent(new Event('change',{bubbles:true}))};
+      update();window.scrollTo(0,0);page.querySelector('[data-target-back]').focus({preventScroll:true});
     };
-    search.oninput=update; month.onchange=update;
-    root.querySelector('[data-target-reset]').onclick=()=>{search.value='';month.value='';update();search.focus()};
-    results.onclick=event=>{const button=event.target.closest('[data-target-value]');if(!button)return;select.value=button.dataset.targetValue;select.dispatchEvent(new Event('change',{bubbles:true}))};
-    root.addEventListener('keydown',event=>{if(event.key==='Escape'){root.querySelector('details').open=false;root.querySelector('summary').focus()}});
-    update();
   });
 }

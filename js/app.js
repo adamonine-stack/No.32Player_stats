@@ -1,4 +1,4 @@
-import { targetPickerHtml, bindTargetPickers } from './ui/aggregation-target-picker.js?v=20261025-v1';
+import { targetPickerHtml, bindTargetPickers } from './ui/aggregation-target-picker.js?v=20261025-v2';
 import { collectTeamAnalysisShots } from './calculations/team-shot-list-calculations.js?v=20261018-history-order-v2';
 import { hasShotPoint, shotDescription, courtShotListHtml, shotHighlightSvg } from './ui/court-shot-list.js?v=20261018-individual-list-v1';
 import { loadNormalStats,assertNormalStatsOnline } from './core/normal-stats-store.js?v=20260908-quarter-session-v2';
