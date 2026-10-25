@@ -15,10 +15,10 @@ export function buildGameHistory(game={},stats=[],players=[]){const byPlayer=new
   const substitutions=[];for(let quarter=1;quarter<=Number(game.quarters||game.quarterCount||4);quarter++){for(const item of game.quarterParticipation?.[`q${quarter}`]?.substitutions||[]){const out=byPlayer.get(item.playerOutId)||game.temporaryPlayers?.find(player=>player.id===item.playerOutId)||{},inside=byPlayer.get(item.playerInId)||game.temporaryPlayers?.find(player=>player.id===item.playerInId)||{},id=`sub:${quarter}:${item.id}`;substitutions.push({deviceId:item.deviceId,clientCreatedAt:item.clientCreatedAt,localSequence:item.localSequence,operationId:item.operationId,sequence:item.sequence,id,eventId:id,gameId:game.id,quarter,type:'substitution',sourceKind:'substitution',sourceId:item.id,playerId:item.playerOutId,playerNumber:String(out.number||''),playerName:out.name||'',content:`#${out.number||'-'} ${out.name||''} OUT → #${inside.number||'-'} ${inside.name||''} IN`,remainingSeconds:integer(item.remainingSeconds),sortValue:orderedValue(game,id,Number(item.sequence)||0),precise:true})}}
   const precise=[...stored,...shots,...substitutions,...legacy.filter(item=>item.precise)].sort(compareHistoryItems),unknown=legacy.filter(item=>!item.precise).sort((a,b)=>(a.quarter||0)-(b.quarter||0)||String(a.playerNumber).localeCompare(String(b.playerNumber),undefined,{numeric:true})||a.content.localeCompare(b.content));return [...precise,...unknown]
 }
-// Aggregate-only placeholders have no independent action record to show.
-// Keep recorded shots and manually ordered legacy actions; never change counters.
+// buildGameHistory creates legacy rows from existing stat counters.
+// Missing order metadata does not mean a row is unlinked from stats.
 export function visibleGameHistory(items=[]){
-  return items.filter(item=>item.sourceKind!=='legacyStat'||item.precise);
+  return [...items];
 }
 // Presentation groups only. The independent source events and counters are untouched.
 export function groupGameHistory(items=[]){
