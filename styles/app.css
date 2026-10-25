@@ -222,3 +222,5 @@ body{font-family:"Inter","Noto Sans JP",system-ui,-apple-system,sans-serif}.mate
 .balanced-breakdowns>.analysis-break:not(.analysis-to-break)>h3,.balanced-breakdowns>.analysis-break:not(.analysis-to-break)>.analysis-break-total{margin-left:8px;margin-right:8px}
 .balanced-breakdowns>.analysis-to-break{grid-column:1/-1}
 
+
+.home-stats-mode button{min-width:0;line-height:1.35}.home-eight-minute-note{margin:0 0 12px;font-size:11px}
