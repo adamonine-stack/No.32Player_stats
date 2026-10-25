@@ -1,4 +1,4 @@
-const CACHE_NAME = 'r32-shell-20261025-test-repair-v1';
+const CACHE_NAME = 'r32-20261025-non-shot-foul-status-v4';
 const APP_SHELL = [
   "./",
   "./index.html",

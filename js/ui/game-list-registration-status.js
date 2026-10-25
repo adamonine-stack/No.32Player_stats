@@ -33,7 +33,7 @@ function ensureStyles() {
 
 function publicSummaryForGame(game) {
   const summary = (state.publicGameSummaries || []).find(item => (item.gameId || item.id) === game.id);
-  return summary && Number(summary.schemaVersion) >= 3 ? summary : null;
+  return summary && Number(summary.schemaVersion) >= 4 ? summary : null;
 }
 
 function statusHtml(game) {

@@ -220,7 +220,7 @@ function gameListParticipationStatus(game){
   for(let quarter=1;quarter<=total;quarter++){const participation=game.quarterParticipation?.[`q${quarter}`];if(new Set((participation?.starters||[]).filter(Boolean)).size===5)registered++}
   return {registered,total};
 }
-function publicGameSummaryForList(game){const summary=(state.publicGameSummaries||[]).find(item=>(item.gameId||item.id)===game.id);return summary&&Number(summary.schemaVersion)>=3?summary:null}
+function publicGameSummaryForList(game){const summary=(state.publicGameSummaries||[]).find(item=>(item.gameId||item.id)===game.id);return summary&&Number(summary.schemaVersion)>=4?summary:null}
 function gameListRegistrationHtml(game){
   const summary=publicGameSummaryForList(game);
   const status=summary?{registeredQuarters:Number(summary.registeredQuarters)||0,totalQuarters:Number(summary.totalQuarters)||0,hasShotPoints:Boolean(summary.hasShotPoints)}:gameListRegistrationStatus(game,state.stats);

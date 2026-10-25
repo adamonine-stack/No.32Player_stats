@@ -20,7 +20,7 @@ test('public game summary preserves game-list registration state',()=>{
  assert.equal(summary.hasShotPoints,true);
  assert.equal(summary.participationRegisteredQuarters,1);
  assert.equal(summary.participationTotalQuarters,4);
- assert.equal(summary.schemaVersion,3);
+ assert.equal(summary.schemaVersion,4);
 });
 
 test('participation summary counts only quarters with five starters',()=>{

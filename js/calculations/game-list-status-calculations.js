@@ -45,6 +45,6 @@ export function gameListActionStatus(game = {}, stats = []) {
   const shootingKeys = new Set(['twoPa', 'twoPm', 'threePa', 'threePm']);
   return {
     hasUnorderedNonShotStats: history.some(item => item.sourceKind === 'legacyStat' && !shootingKeys.has(item.statKey) && !item.precise),
-    hasFoulRegistration: history.some(item => ['foul', 'foulReceived'].includes(item.type) || (item.type === 'shot' && item.content.includes('被FOUL')))
+    hasFoulRegistration: history.some(item => ['foul', 'foulReceived'].includes(item.type))
   };
 }

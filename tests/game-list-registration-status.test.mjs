@@ -54,3 +54,21 @@ test('action status distinguishes unordered counters, ordered overrides, and act
   game.playEvents=[{id:'f',playerId:'p',quarter:1,type:'foul',sequence:2}];
   assert.equal(gameListActionStatus(game,stats).hasUnorderedNonShotStats,false);
 });
+
+test('foul registration excludes shot fouls for quarter and game registration', async () => {
+ const {gameListActionStatus} = await import('../js/calculations/game-list-status-calculations.js');
+ for (const mode of ['quarter','game']) {
+  const game={id:'g',statsRegistrationType:mode,quarters:4};
+  const source={registered:true,fouled:1,shotFouledCount:1,shots:[{id:'s',result:'made',wasFouled:true}]};
+  const stat={id:'g_p',gameId:'g',playerId:'p',...(mode==='quarter'?{quarters:{q1:source}}:source)};
+  assert.equal(gameListActionStatus(game,[stat]).hasFoulRegistration,false);
+  const current=mode==='quarter'?stat.quarters.q1:stat;
+  current.fouled=2;
+  assert.equal(gameListActionStatus(game,[stat]).hasFoulRegistration,true);
+  current.fouled=1;current.pf=1;
+  assert.equal(gameListActionStatus(game,[stat]).hasFoulRegistration,true);
+  current.pf=0;
+  game.playEvents=[{id:'f',playerId:'p',quarter:mode==='quarter'?1:null,type:'foulReceived',sequence:1}];
+  assert.equal(gameListActionStatus(game,[stat]).hasFoulRegistration,true);
+ }
+});

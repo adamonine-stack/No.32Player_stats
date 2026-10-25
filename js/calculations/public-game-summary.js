@@ -1,6 +1,6 @@
 import { gameListRegistrationStatus, foulRegistrationQuarterCount, gameListActionStatus } from './game-list-status-calculations.js';
 
-export const PUBLIC_GAME_SUMMARY_SCHEMA_VERSION = 3;
+export const PUBLIC_GAME_SUMMARY_SCHEMA_VERSION = 4;
 
 export function participationRegistrationStatus(game = {}) {
   const totalQuarters = Math.max(0, Number(game.quarters || game.quarterCount || 0));
