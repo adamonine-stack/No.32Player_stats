@@ -1,4 +1,4 @@
-const CACHE_NAME = 'r32-shell-20261029-opponent-rosters-v1';
+const CACHE_NAME = 'r32-shell-20261029-opponent-rosters-v2';
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -61,7 +61,7 @@ const APP_SHELL = [
   "./js/ui/mobile-modal-viewport-fit.js?v=20260912-mobile-only-v1",
   "./js/ui/game-history-view-mode.js?v=20260830-category-colors-v1",
   "./js/ui/assist-history-selection.js?v=20260901-v1",
-  "./js/app.js?v=20261029-opponent-rosters-v1",
+  "./js/app.js?v=20261029-opponent-rosters-v2",
   "./js/ui/team-detail-playing-time.js?v=20260908-quarter-min-v1",
   "./js/ui/quick-player-order.js?v=20260831-v1",
   "./js/ui/game-list-scroll-memory.js?v=20261013-modal-only-nav-v1",
