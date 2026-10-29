@@ -50,3 +50,14 @@
 @media(max-width:800px){.opponent-team-type-tabs{gap:5px}.opponent-team-type-tab{min-height:36px;padding:6px 4px;font-size:11px}.opponent-team-type-tab span{display:block;margin:2px 0 0;font-size:9px}}
 
 .team-detail-row>.team-detail-fg-summary,.team-detail-total>.team-detail-fg-summary{grid-column:1/-1;display:flex;justify-content:flex-end;flex-wrap:wrap;gap:4px 16px;border-right:0;border-top:1px solid var(--line);padding:6px 8px!important;font-size:12px;color:#d4d4d4;text-align:right}.team-detail-fg-summary span{display:inline;color:inherit;font-size:inherit;font-weight:600}.team-detail-fg-summary b{display:inline;margin:0;font-size:inherit;line-height:inherit;color:var(--orange)}.team-detail-total>.team-detail-fg-summary{justify-content:center;margin-top:10px}
+
+/* Opponent player roster: preserve 00 and accommodate elementary grades. */
+.opponent-roster-row{display:grid;grid-template-columns:64px minmax(130px,1fr) 88px 95px auto;gap:10px;align-items:end;margin:12px 0;padding:12px;border:1px solid var(--border,#334155);border-radius:12px}
+.opponent-roster-row label{display:flex;flex-direction:column;gap:6px;min-width:0}
+.opponent-roster-row input,.opponent-roster-row select{width:100%;min-width:0;box-sizing:border-box}
+.opponent-roster-table-wrap{overflow-x:auto}
+.opponent-roster-table{width:100%;border-collapse:collapse;text-align:left}
+.opponent-roster-table th,.opponent-roster-table td{padding:10px 8px;border-bottom:1px solid var(--border,#334155)}
+.opponent-roster-table th:first-child,.opponent-roster-table td:first-child{width:50px;font-variant-numeric:tabular-nums}
+.opponent-roster-table td:nth-child(3),.opponent-roster-table td:nth-child(4){white-space:nowrap}
+@media(max-width:600px){.opponent-roster-row{grid-template-columns:65px minmax(0,1fr);gap:10px}.opponent-roster-row .btn{grid-column:2;justify-self:end}.opponent-roster-table th,.opponent-roster-table td{padding:10px 5px}}

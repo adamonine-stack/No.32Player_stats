@@ -1,4 +1,4 @@
-const CACHE_NAME = 'r32-20261025-non-shot-foul-status-v4';
+const CACHE_NAME = 'r32-shell-20261029-opponent-rosters-v1';
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -36,7 +36,7 @@ const APP_SHELL = [
   "./styles/mobile-modal-viewport-fit.css?v=20260818-shot-entry-original-court-v3",
   "./styles/mobile-page-position.css?v=20260819-iphone-safe-top-v2",
   "./styles/offline-status.css?v=20260923-pending-resync-v2",
-  "./styles/opponent-teams.css?v=20261015-shot-points-v1",
+  "./styles/opponent-teams.css?v=20261029-rosters-v1",
   "./styles/participation.css?v=20260824-compact-sub-time-v3",
   "./styles/pc-optimization.css?v=20260819-pc-layout-v1",
   "./styles/period-calendar.css?v=20260811-v1",
@@ -61,7 +61,7 @@ const APP_SHELL = [
   "./js/ui/mobile-modal-viewport-fit.js?v=20260912-mobile-only-v1",
   "./js/ui/game-history-view-mode.js?v=20260830-category-colors-v1",
   "./js/ui/assist-history-selection.js?v=20260901-v1",
-  "./js/app.js?v=20261025-test-repair-v1",
+  "./js/app.js?v=20261029-opponent-rosters-v1",
   "./js/ui/team-detail-playing-time.js?v=20260908-quarter-min-v1",
   "./js/ui/quick-player-order.js?v=20260831-v1",
   "./js/ui/game-list-scroll-memory.js?v=20261013-modal-only-nav-v1",

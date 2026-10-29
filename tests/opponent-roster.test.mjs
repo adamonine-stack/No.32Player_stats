@@ -1,0 +1,13 @@
+import assert from 'node:assert/strict';
+import { opponentPlayers, normalizeOpponentPlayers, validateOpponentPlayers, mergeOpponentPlayers } from '../js/calculations/opponent-roster.js';
+assert.deepEqual(opponentPlayers({playerNumbers:['00','0','7']} ).map(p=>p.number),['0','00','7']);
+assert.equal(validateOpponentPlayers(normalizeOpponentPlayers([{number:'00',name:'テスト',grade:'小6',height:'145'}])), '');
+assert.match(validateOpponentPlayers([{number:'0'},{number:'0'}]), /重複/);
+assert.match(validateOpponentPlayers([{number:'7',grade:'中3',height:NaN}]), /身長/);
+assert.deepEqual(opponentPlayers({players:[{number:'7',name:'登録済',grade:'中3',height:170}],playerNumbers:['7','8']}).map(p=>p.number),['7','8']);
+const existing=[{number:'7',name:'修正済',grade:'中3',height:175}],incoming=[{number:'7',name:'修正済',grade:'中2',height:160},{number:'8',name:'追加',grade:'中1',height:150}];
+const merged=mergeOpponentPlayers(existing,incoming);
+assert.equal(merged[0].height,175);assert.equal(merged[0].grade,'中3');
+assert.deepEqual(mergeOpponentPlayers(merged,incoming),merged);
+assert.equal(mergeOpponentPlayers([{number:'7',name:'別選手',grade:'中3',height:175}],incoming).length,3);
+console.log('opponent roster preservation and validation: ok');

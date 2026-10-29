@@ -1,10 +1,11 @@
+import { opponentPlayers, mergeOpponentPlayers } from './opponent-roster.js?v=20261029-v1';
 const values=(...items)=>[...new Set(items.flat().filter(value=>value!==undefined&&value!==null&&value!==''))];
 const placementKey=item=>item.tournamentId||`${item.season||item.year||''}:${item.competitionName||item.tournamentName||''}`;
 
 export function mergeOpponentTeamRecords(target,source){
   const placements=[],seen=new Set();
   for(const item of [...(target.tournamentPlacements||[]),...(source.tournamentPlacements||[])]){const key=placementKey(item);if(!seen.has(key)){seen.add(key);placements.push(item)}}
-  return {...target,playerNumbers:values(target.playerNumbers||[],source.playerNumbers||[]),aliases:values(target.aliases||[],source.aliases||[],source.teamName),categories:values(target.categories||[],source.categories||[],target.category,source.category),years:values(target.years||[],source.years||[],target.year,source.year),tournamentPlacements:placements};
+  return {...target,players:mergeOpponentPlayers(opponentPlayers(target),opponentPlayers(source)),playerNumbers:values(target.playerNumbers||[],source.playerNumbers||[]),aliases:values(target.aliases||[],source.aliases||[],source.teamName),categories:values(target.categories||[],source.categories||[],target.category,source.category),years:values(target.years||[],source.years||[],target.year,source.year),tournamentPlacements:placements};
 }
 
 export function opponentReferencePatch(record,source,target){
