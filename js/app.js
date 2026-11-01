@@ -59,6 +59,7 @@ import { TOURNAMENT_2025_HYOGO_JHS_SOUTAI_MEN, TEAMS_2025_HYOGO_JHS_SOUTAI_MEN, 
 import { TOURNAMENT_2026_HYOGO_JHS_SOUTAI_MEN, TEAMS_2026_HYOGO_JHS_SOUTAI_MEN } from "./data/2026-hyogo-history-men.js?v=20260915-hyogo-2026-history-v1";
 import { findDuplicateHistoricalResultSet, findDuplicateHistoricalTournament, findExistingHistoricalPlacement, findSimilarHistoricalTeamCandidates } from "./calculations/historical-import-calculations.js?v=20260915-osaka-history-v3";
 import { findImportedTeamMatch, findExistingTournamentTeam, normalizeTeamNameForMatching, normalizeTournamentNameForMatching } from "./calculations/team-name-matching.js";
+import { registeredTournamentNames, officialGameSelection, officialGameStatus, selectedTournamentName } from "./calculations/game-registration-calculations.js?v=20261101-v1";
 const quickInputStyles=document.createElement('link');quickInputStyles.rel='stylesheet';quickInputStyles.href='./styles/quick-input.css?v=20260908-quarter-session-v1';document.head.appendChild(quickInputStyles);
 if('serviceWorker' in navigator && !location.pathname.includes('/tests/'))navigator.serviceWorker.register('./service-worker.js?v=20261029-opponent-rosters-v3').catch(error=>console.warn('Service worker registration failed',error));
 installOfflineSyncListeners();
@@ -828,6 +829,22 @@ async function deleteGameAndRelatedData(game){
   return {deletedStats:relatedStats.size};
 }
 
+let gameTournamentRecordsPromise = null;
+function loadGameTournamentRecords() {
+  if (!gameTournamentRecordsPromise) {
+    gameTournamentRecordsPromise = getDocs(collection(db, 'tournaments'))
+      .then(snapshot => snapshot.docs.map(item => ({ id: item.id, ...item.data() })))
+      .catch(error => {
+        console.warn('大会一覧の読み込みに失敗しました。試合登録済みの大会名は利用できます。', error);
+        gameTournamentRecordsPromise = null;
+        return [];
+      });
+  }
+  return gameTournamentRecordsPromise;
+}
+function gameTournamentOptions(names, selectedName = '') {
+  return `<option value="">新しい大会名を入力</option>${names.map(name => `<option value="${escapeHtml(name)}" ${name===selectedName?'selected':''}>${escapeHtml(name)}</option>`).join('')}`;
+}
 function gameForm(g={}){
   if(!requireLogin())return;
   const currentType=!g.id||hasQuarterScoreData(g)?'quarter':getGameStatsRegistrationType(g);
@@ -836,8 +853,25 @@ function gameForm(g={}){
   const selectedTeam=state.opponentTeams.find(team=>team.id===g.opponentTeamId),legacy=!selectedTeam&&(g.opponentTeamName||g.opponent||'');
   const opponentOptions=`<option value="">対戦チームを選択</option>${legacy?`<option value="legacy" selected>${escapeHtml(legacy)}（既存データ）</option>`:''}${sortOpponentTeamsForSelect(state.opponentTeams).map(team=>`<option value="${team.id}" ${team.id===selectedTeam?.id?'selected':''}>${escapeHtml(team.teamName)}</option>`).join('')}`;
   const initialRankVisible=opponentRankVisible(selectedTeam,g.category);
+  const availableTournamentNames=registeredTournamentNames(state.allGames,[],g.tournament);
+  const currentTournamentName=String(g.tournament||'').trim();
+  const tournamentSelectHtml=gameTournamentOptions(availableTournamentNames,currentTournamentName);
+  const officialGameValue=officialGameSelection(g);
   const totalScoreFields=registrationChoices.score&&!quarterScoresRegistered?`<label>自チーム得点${numInput('gOwn',g.ownScore||0)}</label><label>相手得点${numInput('gOppScore',g.oppScore||0)}</label>`:'';
-  modal(`<h2>${g.id?'試合修正':'試合登録'}</h2><div class="form-grid game-form-grid"><label>年月日<input type="date" id="gDate" value="${g.date||''}"></label><label>Q数${numInput('gQ',g.quarters||4)}</label><label>1Qの時間（分）<input type="number" min="1" max="60" id="gQuarterDuration" value="${num(g.quarterDurationMinutes)||DEFAULT_QUARTER_DURATION_MINUTES}"></label><label>カテゴリー<input id="gCategory" list="categoryList" value="${g.category||''}"><datalist id="categoryList"><option value="U15"><option value="U14"><option value="U13"><option value="中学"><option value="高校"><option value="練習"></datalist></label><label>大会名<input id="gTour" value="${g.tournament||''}"></label><label>対戦チーム検索<input type="search" id="gOpponentSearch" placeholder="チーム名・都道府県で検索" autocomplete="off"></label><label>対戦相手<select id="gOpponentTeam">${opponentOptions}</select></label><div class="opponent-game-info">対戦チーム：<b id="gOpponentName">${escapeHtml(selectedTeam?.teamName||legacy||'-')}</b><br>都道府県：<b id="gOpponentPrefecture">${selectedTeam?.prefecture||g.opponentPrefecture||'-'}</b><br><span id="gOpponentRankRow" class="${initialRankVisible?'':'hidden'}">チームランク：<b id="gOpponentRank">${initialRankVisible?selectedTeam.calculatedRank:''}</b></span></div>${totalScoreFields}</div><div class="card"><div class="section-title">Q別スコア（累積）</div><div id="quarterScoreFields">${gameQuarterScoreFields(g)}</div></div><div class="row game-form-actions"><button type="button" class="btn" id="saveGame">保存</button><button type="button" class="btn ghost" id="closeModal" data-game-form-close="1">閉じる</button>${g.id?'<button type="button" class="btn danger delete-right" id="deleteGameFromEdit">削除</button>':''}</div>`);
+  modal(`<h2>${g.id?'試合修正':'試合登録'}</h2><div class="form-grid game-form-grid"><label>年月日<input type="date" id="gDate" value="${g.date||''}"></label><label>Q数${numInput('gQ',g.quarters||4)}</label><label>1Qの時間（分）<input type="number" min="1" max="60" id="gQuarterDuration" value="${num(g.quarterDurationMinutes)||DEFAULT_QUARTER_DURATION_MINUTES}"></label><label>カテゴリー<input id="gCategory" list="categoryList" value="${g.category||''}"><datalist id="categoryList"><option value="U15"><option value="U14"><option value="U13"><option value="中学"><option value="高校"><option value="練習"></datalist></label><label>大会名（登録済みから選択）<select id="gTourSelect">${tournamentSelectHtml}</select></label><label id="gTourNewLabel" ${currentTournamentName?'hidden':''}>新しい大会名<input id="gTour" value=""></label><label>試合区分<select id="gOfficialGame"><option value="" ${officialGameValue===''?'selected':''}>未設定</option><option value="official" ${officialGameValue==='official'?'selected':''}>公式戦</option><option value="unofficial" ${officialGameValue==='unofficial'?'selected':''}>非公式戦（練習試合など）</option></select></label><label>対戦チーム検索<input type="search" id="gOpponentSearch" placeholder="チーム名・都道府県で検索" autocomplete="off"></label><label>対戦相手<select id="gOpponentTeam">${opponentOptions}</select></label><div class="opponent-game-info">対戦チーム：<b id="gOpponentName">${escapeHtml(selectedTeam?.teamName||legacy||'-')}</b><br>都道府県：<b id="gOpponentPrefecture">${selectedTeam?.prefecture||g.opponentPrefecture||'-'}</b><br><span id="gOpponentRankRow" class="${initialRankVisible?'':'hidden'}">チームランク：<b id="gOpponentRank">${initialRankVisible?selectedTeam.calculatedRank:''}</b></span></div>${totalScoreFields}</div><div class="card"><div class="section-title">Q別スコア（累積）</div><div id="quarterScoreFields">${gameQuarterScoreFields(g)}</div></div><div class="row game-form-actions"><button type="button" class="btn" id="saveGame">保存</button><button type="button" class="btn ghost" id="closeModal" data-game-form-close="1">閉じる</button>${g.id?'<button type="button" class="btn danger delete-right" id="deleteGameFromEdit">削除</button>':''}</div>`);
+  const tournamentSelect=$('#gTourSelect'),tournamentInput=$('#gTour'),tournamentNewLabel=$('#gTourNewLabel');
+  tournamentSelect.onchange=()=>{
+    tournamentInput.value='';
+    tournamentNewLabel.hidden=Boolean(tournamentSelect.value);
+  };
+  void loadGameTournamentRecords().then(records=>{
+    // Never alter a field that the user has already started editing.
+    if ($('#gTourSelect')!==tournamentSelect)return;
+    const currentSelection=tournamentSelect.value;
+    const names=registeredTournamentNames(state.allGames,records,g.tournament);
+    tournamentSelect.innerHTML=gameTournamentOptions(names,currentSelection);
+    tournamentSelect.value=currentSelection;
+  });
   const gameModal=$('#modalRoot > .modal'),gameCard=gameModal?.querySelector(':scope > .card'),gameActions=gameCard?.querySelector(':scope > .game-form-actions');
   if(gameModal){gameModal.classList.add('game-form-modal');if(gameActions)gameModal.append(gameActions)}
   if(g.id){
@@ -882,7 +916,7 @@ function gameForm(g={}){
     const finalScore=scoreData.finalScore||{team:num($('#gOwn')?.value??g.ownScore),opponent:num($('#gOppScore')?.value??g.oppScore)};
     const team=state.opponentTeams.find(item=>item.id===$('#gOpponentTeam').value),usingLegacy=$('#gOpponentTeam').value==='legacy';if(!team&&!usingLegacy){toast('対戦チームを選択してください');return}const opponentName=team?.teamName||legacy;
     const durationMinutes=Math.max(1,num($('#gQuarterDuration').value)||DEFAULT_QUARTER_DURATION_MINUTES);
-    const gameCategory=$('#gCategory').value,gameSeasonId=effectiveSeasonId(g,state.selectedSeasonId),data={seasonId:gameSeasonId,date:newDate,quarters:qCount,quarterCount:qCount,quarterDurationMinutes:durationMinutes,quarterDurationSeconds:durationMinutes*60,statsRegistrationType:selectedType,...(!g.id?{shotRegistrationMode:'detail',registrationDefaultsVersion:2,participationMode:'required'}:{}),category:gameCategory,tournament:$('#gTour').value,opponent:opponentName,opponentTeamId:team?.id||g.opponentTeamId||null,opponentTeamName:opponentName,opponentPrefecture:team?.prefecture||g.opponentPrefecture||null,opponentRankAtGame:rankForGame({seasonId:gameSeasonId},team)||team?.calculatedRank||null,ownScore:finalScore.team,oppScore:finalScore.opponent,finalScore:{team:finalScore.team,opponent:finalScore.opponent},sameDateOrder:shouldPromote?0:sameDateOrderValue(g),updatedAt:serverTimestamp()};
+    const gameCategory=$('#gCategory').value,gameSeasonId=effectiveSeasonId(g,state.selectedSeasonId),data={seasonId:gameSeasonId,date:newDate,quarters:qCount,quarterCount:qCount,quarterDurationMinutes:durationMinutes,quarterDurationSeconds:durationMinutes*60,statsRegistrationType:selectedType,...(!g.id?{shotRegistrationMode:'detail',registrationDefaultsVersion:2,participationMode:'required'}:{}),category:gameCategory,tournament:selectedTournamentName($('#gTourSelect').value,$('#gTour').value),isOfficialGame:officialGameStatus($('#gOfficialGame').value),opponent:opponentName,opponentTeamId:team?.id||g.opponentTeamId||null,opponentTeamName:opponentName,opponentPrefecture:team?.prefecture||g.opponentPrefecture||null,opponentRankAtGame:rankForGame({seasonId:gameSeasonId},team)||team?.calculatedRank||null,ownScore:finalScore.team,oppScore:finalScore.opponent,finalScore:{team:finalScore.team,opponent:finalScore.opponent},sameDateOrder:shouldPromote?0:sameDateOrderValue(g),updatedAt:serverTimestamp()};
     if(scoreData.quarterScores)data.quarterScores=scoreData.quarterScores;
     if(!g.id)data.createdAt=serverTimestamp();
     await setDoc(doc(db,'games',id),data,{merge:true});
