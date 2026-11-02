@@ -1,4 +1,4 @@
-const CACHE_NAME = 'r32-shell-20261102-analysis-total-layout-v1';
+const CACHE_NAME = 'r32-shell-20261102-analysis-date-inline-v2';
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -26,7 +26,7 @@ const APP_SHELL = [
   "./icons/icon-512.png",
   "./icons/icon.svg",
   "./styles/aggregation-filters.css?v=20260727-game-opponent-meta",
-  "./styles/app.css?v=20261102-analysis-total-layout-v1",
+  "./styles/app.css?v=20261102-analysis-date-inline-v2",
   "./styles/detail-stats-actions.css?v=20260821-game-edit-v1",
   "./styles/foul-layout-safe.css?v=20260823-safe-v1",
   "./styles/game-form-ios-focus.css?v=20260807-game-form-ios-focus-v1",
@@ -62,7 +62,7 @@ const APP_SHELL = [
   "./js/ui/mobile-modal-viewport-fit.js?v=20260912-mobile-only-v1",
   "./js/ui/game-history-view-mode.js?v=20260830-category-colors-v1",
   "./js/ui/assist-history-selection.js?v=20260901-v1",
-  "./js/app.js?v=20261102-analysis-total-layout-v1",
+  "./js/app.js?v=20261102-analysis-date-inline-v2",
   "./js/ui/team-detail-playing-time.js?v=20260908-quarter-min-v1",
   "./js/ui/quick-player-order.js?v=20260831-v1",
   "./js/ui/game-list-scroll-memory.js?v=20261013-modal-only-nav-v1",
