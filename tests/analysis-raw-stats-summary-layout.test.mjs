@@ -26,11 +26,12 @@ assert.match(header, /\$\{analysisBasic\(r,false\)\}/);
 assert.doesNotMatch(header, /基本スタッツ（1試合4Q換算）/);
 assert.match(app, /return homeTotalPlayingTime\(gamesWithStats\(targetGames\(\),p\.id\),p\.id\)/);
 
-// Tournament date range and counts have separate layout containers.
-assert.match(header, /class="analysis-date summary-meta">\$\{periodLabel\}<div class="summary-counts">/);
-assert.match(css, /\.analysis-screen \.analysis-summary-info \.analysis-date\.summary-meta\{[\s\S]*?flex-direction:column!important;/);
-assert.match(css, /\.analysis-screen \.analysis-summary-info \.summary-meta \.summary-counts\{[\s\S]*?flex-wrap:wrap!important;/);
-assert.match(css, /@media\(max-width:800px\)\{\s*\.analysis-screen \.analysis-summary-info \.summary-meta \.summary-counts\{[\s\S]*?flex-direction:column!important;/);
+// Tournament date and count share one row, with the count right aligned.
+// Total Q is intentionally omitted from this analysis summary.
+assert.match(header, /class="analysis-date summary-meta">\\$\\{periodLabel\\}<span class="summary-counts">対象試合数：\\$\\{enteredGames\\.length\\}試合<\\/span>/);
+assert.doesNotMatch(header, /総Q数/);
+assert.match(css, /\\.analysis-screen \\.analysis-summary-info \\.analysis-date\\.summary-meta\\{[\\s\\S]*?grid-column:1 \\/ -1!important;[\\s\\S]*?grid-template-columns:minmax\\(0,1fr\\) max-content!important;/);
+assert.match(css, /\\.analysis-screen \\.analysis-summary-info \\.summary-meta \\.summary-counts\\{[\\s\\S]*?justify-self:end!important;[\\s\\S]*?white-space:nowrap!important;/);
 
 // Home screen still offers its independent four-quarter average mode.
 assert.match(app, /1試合4Q換算平均/);
