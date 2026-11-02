@@ -222,38 +222,35 @@ body{font-family:"Inter","Noto Sans JP",system-ui,-apple-system,sans-serif}.mate
 .balanced-breakdowns>.analysis-break:not(.analysis-to-break)>h3,.balanced-breakdowns>.analysis-break:not(.analysis-to-break)>.analysis-break-total{margin-left:8px;margin-right:8px}
 .balanced-breakdowns>.analysis-to-break{grid-column:1/-1}
 
-/* Analysis summary: keep the date range and match/Q counts on separate rows. */
+/* Analysis summary: date range at left, game count at far right. */
 .analysis-screen .analysis-summary-info .analysis-date.summary-meta{
-  display:flex!important;
-  flex-direction:column!important;
-  align-items:flex-start!important;
-  gap:6px!important;
+  grid-column:1 / -1!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) max-content!important;
+  align-items:center!important;
+  gap:10px!important;
+  width:100%;
   min-width:0!important;
   max-width:100%!important;
+  margin-top:4px!important;
   line-height:1.5!important;
 }
-.analysis-screen .analysis-summary-info .summary-meta>span{
-  display:block;
+.analysis-screen .analysis-summary-info .summary-meta>span:first-child{
+  min-width:0;
   max-width:100%;
   overflow-wrap:anywhere;
 }
 .analysis-screen .analysis-summary-info .summary-meta .summary-counts{
-  display:flex!important;
-  flex-wrap:wrap!important;
-  align-items:flex-start!important;
-  gap:4px 14px!important;
-  min-width:0;
-  max-width:100%;
-}
-.analysis-screen .analysis-summary-info .summary-meta .summary-counts>span{
-  display:block;
-  white-space:normal;
-  overflow-wrap:anywhere;
+  display:block!important;
+  grid-column:2!important;
+  justify-self:end!important;
+  white-space:nowrap!important;
+  text-align:right!important;
+  min-width:max-content;
 }
 @media(max-width:800px){
-  .analysis-screen .analysis-summary-info .summary-meta .summary-counts{
-    flex-direction:column!important;
-    align-items:flex-start!important;
-    gap:2px!important;
+  .analysis-screen .analysis-summary-info .analysis-date.summary-meta{
+    grid-template-columns:minmax(0,1fr) max-content!important;
+    gap:6px!important;
   }
 }
