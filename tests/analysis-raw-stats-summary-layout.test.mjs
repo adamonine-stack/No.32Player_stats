@@ -37,8 +37,8 @@ assert.ok(css.includes("white-space:nowrap!important;"));
 
 // Home screen still offers its independent four-quarter average mode.
 assert.match(app, /1試合4Q換算平均/);
-assert.match(index, /styles\/app\.css\?v=20261102-analysis-total-layout-v1/);
-assert.match(index, /js\/app\.js\?v=20261102-analysis-total-layout-v1/);
-assert.match(worker, /r32-shell-20261102-analysis-total-layout-v1/);
+assert.match(index, /styles\/app\.css\?v=20261102-analysis-date-inline-v2/);
+assert.match(index, /js\/app\.js\?v=20261102-analysis-date-inline-v2/);
+assert.match(worker, /r32-shell-20261102-analysis-date-inline-v2/);
 
 console.log("analysis raw stats summary and responsive layout contract passed");
