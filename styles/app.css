@@ -222,3 +222,38 @@ body{font-family:"Inter","Noto Sans JP",system-ui,-apple-system,sans-serif}.mate
 .balanced-breakdowns>.analysis-break:not(.analysis-to-break)>h3,.balanced-breakdowns>.analysis-break:not(.analysis-to-break)>.analysis-break-total{margin-left:8px;margin-right:8px}
 .balanced-breakdowns>.analysis-to-break{grid-column:1/-1}
 
+/* Analysis summary: keep the date range and match/Q counts on separate rows. */
+.analysis-screen .analysis-summary-info .analysis-date.summary-meta{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:flex-start!important;
+  gap:6px!important;
+  min-width:0!important;
+  max-width:100%!important;
+  line-height:1.5!important;
+}
+.analysis-screen .analysis-summary-info .summary-meta>span{
+  display:block;
+  max-width:100%;
+  overflow-wrap:anywhere;
+}
+.analysis-screen .analysis-summary-info .summary-meta .summary-counts{
+  display:flex!important;
+  flex-wrap:wrap!important;
+  align-items:flex-start!important;
+  gap:4px 14px!important;
+  min-width:0;
+  max-width:100%;
+}
+.analysis-screen .analysis-summary-info .summary-meta .summary-counts>span{
+  display:block;
+  white-space:normal;
+  overflow-wrap:anywhere;
+}
+@media(max-width:800px){
+  .analysis-screen .analysis-summary-info .summary-meta .summary-counts{
+    flex-direction:column!important;
+    align-items:flex-start!important;
+    gap:2px!important;
+  }
+}
