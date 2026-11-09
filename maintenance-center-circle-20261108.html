@@ -20,7 +20,7 @@ a{color:#9ccafd}.warn{color:#ffcf86}.okay{color:#8be0b1}
 <body>
 <main>
 <div class="card">
-<p class="muted">R32 Basketball Stats / 管理者専用データ補正 v2</p>
+<p class="muted">R32 Basketball Stats / 管理者専用データ補正 v3</p>
 <h1>11/8 センターサークル（4Q制）</h1>
 <p>誤って2Qに入力したスタッツ、シュート履歴、アシスト関連付け、スタメンと交代履歴を3Qへ移します。</p>
 <p class="muted">対象はスコア40–42の試合です。別試合・1Q・4Qは変更しません。2Q終了時スコアは別管理のため変更しません。</p>
@@ -49,7 +49,7 @@ a{color:#9ccafd}.warn{color:#ffcf86}.okay{color:#8be0b1}
 </main>
 <script type="module">
 import {auth,db,signInWithEmailAndPassword,onAuthStateChanged,collection,doc,getDoc,getDocs,query,where,serverTimestamp} from './js/core/firebase.js?v=20260901-scoped-reads-v1';
-import {runTransaction} from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js';
+import {runTransaction,getDocFromServer,getDocsFromServer} from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js';
 const GAME='7f71bfd8-26cb-4bf4-88fc-bb6f4c4f2b64';
 const BACKUP='20261108_center_circle_4q_move_q2_to_q3_v1';
 const gameRef=doc(db,'games',GAME),backupRef=doc(db,'r32MaintenanceBackups',BACKUP);
@@ -130,12 +130,12 @@ function buildPlan(g,rows){
  };
 }
 async function loadPreview(){
- const gSnap=await getDoc(gameRef);
+ const gSnap=await getDocFromServer(gameRef);
  if(!gSnap.exists())throw Error('対象試合が見つかりません。');
- const ss=await getDocs(query(collection(db,'stats'),where('gameId','==',GAME)));
+ const ss=await getDocsFromServer(query(collection(db,'stats'),where('gameId','==',GAME)));
  const rows=ss.docs.map(s=>({id:s.id,data:s.data()})).sort((a,b)=>a.id.localeCompare(b.id));
  const g=gSnap.data(),plan=buildPlan(g,rows);
- const backup=await getDoc(backupRef);
+ const backup=await getDocFromServer(backupRef);
  if(backup.exists())throw Error('移動済みのバックアップが存在します。重複実行を中止しました。');
  preview={signature:signature(g,rows),ids:rows.map(r=>r.id),summary:plan.summary};
  el('previewText').textContent='対象：2026/11/08 センターサークル 4Q制（40–42）\n'+
@@ -207,7 +207,7 @@ el('applyButton').addEventListener('click',async()=>{
   preview=null;el('result').textContent='移動処理の書き込みが完了しました。\n'+
    '選手 '+s.players+'名 / シュート '+s.shots+'本 / アクション '+s.actions+'件 / 交代 '+s.substitutions+'件\n'+
    'バックアップ: r32MaintenanceBackups/'+BACKUP+'\n現在、読み戻して整合性を確認しています。';
-  const [after,ss]=await Promise.all([getDoc(gameRef),getDocs(query(collection(db,'stats'),where('gameId','==',GAME)))]);
+  const [after,ss]=await Promise.all([getDocFromServer(gameRef),getDocsFromServer(query(collection(db,'stats'),where('gameId','==',GAME)))]);
   const g=after.data(),rows=ss.docs.map(d=>d.data());
   const remaining=rows.filter(r=>r.quarters?.q2).length;
   const moved=rows.filter(r=>r.quarters?.q3).length;
