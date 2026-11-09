@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>R32 | 2026/11/08 センターサークル 2Q→3Q修正</title>
+<style>
+:root{color-scheme:dark;font-family:Inter,"Noto Sans JP",system-ui,sans-serif;background:#071126;color:#eaf1fc}
+*{box-sizing:border-box}body{margin:0;padding:16px;background:linear-gradient(150deg,#071126,#112344);min-height:100vh}
+main{max-width:680px;margin:22px auto 50px}.card{background:#142440;border:1px solid #354562;border-radius:16px;padding:22px;margin-bottom:16px;box-shadow:0 4px 18px #0002}
+h1{font-size:21px;margin:2px 0 12px}h2{font-size:17px;margin:0 0 12px}p{line-height:1.7}small,.muted{color:#a9bbd2}.button{display:inline-block;width:100%;border:0;border-radius:12px;padding:14px 18px;margin:7px 0;color:#fff;font-size:16px;font-weight:700;background:#227dd0;cursor:pointer;text-align:center}
+.button:disabled{opacity:.5;cursor:default}.button.secondary{background:#2d4767}.button.danger{background:#b74b37}
+input{padding:14px;width:100%;margin:6px 0 12px;border-radius:8px;border:1px solid #516584;background:#071b37;color:white;font-size:16px}
+pre{white-space:pre-wrap;overflow-wrap:anywhere;font-family:inherit;line-height:1.65;font-size:14px}
+.status{padding:10px 12px;border-left:3px solid #60a5fa;background:#0b1b33;border-radius:4px;line-height:1.6}
+a{color:#9ccafd}.warn{color:#ffcf86}.okay{color:#8be0b1}
+</style>
+</head>
+<body>
+<main>
+<div class="card">
+<p class="muted">R32 Basketball Stats / 管理者専用データ補正</p>
+<h1>11/8 センターサークル（4Q制）</h1>
+<p>誤って2Qに入力したスタッツ、シュート履歴、アシスト関連付け、スタメンと交代履歴を3Qへ移します。</p>
+<p class="muted">対象はスコア40–42の試合です。別試合・1Q・4Qは変更しません。2Q終了時スコアは別管理のため変更しません。</p>
+<div class="status" id="status">Firebaseのログイン状態を確認しています。</div>
+</div>
+<div class="card" id="loginPanel" hidden>
+<h2>R32 管理者ログイン</h2>
+<p>R32で使用している管理者アカウントを入力してください。ログイン情報はこのチャットには送られません。</p>
+<form id="loginForm">
+<label>メールアドレス<input id="email" type="email" autocomplete="username" required></label>
+<label>パスワード<input id="password" type="password" autocomplete="current-password" required></label>
+<button class="button" type="submit">ログイン</button>
+</form>
+</div>
+<div class="card" id="workPanel" hidden>
+<h2>① 移動前データの確認</h2>
+<button class="button secondary" id="previewButton" type="button">クラウドデータを再取得して確認</button>
+<pre id="previewText">未確認</pre>
+<h2>② 安全な一括修正</h2>
+<p class="warn">修正直前にバックアップを作成し、ゲーム・選手の変更を一つのFirestoreトランザクションで確定します。3Qにデータがある場合は実行しません。</p>
+<label>確認のため「3Qへ移動」と入力<input id="confirm" placeholder="3Qへ移動" autocomplete="off"></label>
+<button class="button danger" id="applyButton" type="button" disabled>バックアップを保存して2Q→3Q移動</button>
+<pre id="result"></pre>
+</div>
+<p class="muted">処理終了後は <a href="./">R32の試合詳細</a> で2Q・3Qを確認してください。入力端末に未同期の履歴が残っている場合は、修正実施前に同期してください。</p>
+</main>
+<script type="module">
+import {auth,db,signInWithEmailAndPassword,onAuthStateChanged,collection,doc,getDoc,getDocs,query,where,serverTimestamp} from './js/core/firebase.js?v=20260901-scoped-reads-v1';
+import {runTransaction} from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js';
+const GAME='7f71bfd8-26cb-4bf4-88fc-bb6f4c4f2b64';
+const BACKUP='20261108_center_circle_4q_move_q2_to_q3_v1';
+const gameRef=doc(db,'games',GAME),backupRef=doc(db,'r32MaintenanceBackups',BACKUP);
+const el=id=>document.getElementById(id);
+let preview=null,busy=false;
+function setStatus(text){el('status').textContent=text}
+function formatError(error){return (error&&error.message)||String(error)}
+const isObj=x=>x!==null&&typeof x==='object'&&!Array.isArray(x);
+const clone=x=>structuredClone(x);
+function movedId(id){
+ if(typeof id!=='string')return id;
+ if(id.startsWith('shot:'+GAME+'_')&&id.includes(':2:'))return id.replace(':2:',':3:');
+ if(id.startsWith('sub:2:'))return 'sub:3:'+id.slice(6);
+ if(id.startsWith('legacy:'+GAME+'_')&&id.includes(':2:'))return id.replace(':2:',':3:');
+ return id;
+}
+function moveQuarterContent(x){
+ if(Array.isArray(x))return x.map(moveQuarterContent);
+ if(!isObj(x))return x;
+ const obj={};
+ for(const [key,value] of Object.entries(x)){
+  if(key==='quarter'&&Number(value)===2)obj[key]=3;
+  else if(['shotEventId','eventId'].includes(key))obj[key]=movedId(value);
+  else obj[key]=moveQuarterContent(value);
+ }
+ return obj;
+}
+function remapOverrides(src={}){
+ const next={};
+ for(const [id,value] of Object.entries(src)){
+  const key=movedId(id);
+  if(Object.hasOwn(next,key))throw Error('履歴の並び替えキーが重複するため、安全のため中止しました。');
+  next[key]=value;
+ }
+ return next;
+}
+function signature(g,rows){
+ return JSON.stringify({
+  q2:g.quarterParticipation?.q2||null,
+  q3:g.quarterParticipation?.q3||null,
+  events:(g.playEvents||[]).filter(e=>e.quarter===2||e.quarter===3),
+  overrides:g.eventSequenceOverrides||{},
+  rows:rows.map(r=>({id:r.id,q2:r.data.quarters?.q2||null,q3:r.data.quarters?.q3||null})).sort((a,b)=>a.id.localeCompare(b.id))
+ });
+}
+function buildPlan(g,rows){
+ if(g.date!=='2026-11-08'||g.opponent!=='センターサークル'||Number(g.quarters||g.quarterCount)!==4||Number(g.ownScore)!==40||Number(g.oppScore)!==42)throw Error('指定した11/8の4Q制試合と一致しないため中止しました。');
+ if(!g.quarterParticipation?.q2||Object.keys(g.quarterParticipation?.q2||{}).length===0)throw Error('2Qの出場情報が見つかりません。');
+ if(g.quarterParticipation?.q3&&Object.keys(g.quarterParticipation.q3).length)throw Error('3Qに出場情報があるため、安全のため中止しました。');
+ if((g.playEvents||[]).some(e=>Number(e.quarter)===3))throw Error('3Qに既存のアクション履歴があるため中止しました。');
+ for(const r of rows){if(r.data.quarters?.q3&&Object.keys(r.data.quarters.q3).length)throw Error('3Qに既存の個人スタッツがあります。中止しました。');}
+ const moving=rows.filter(r=>isObj(r.data.quarters?.q2));
+ const oldEvents=(g.playEvents||[]).filter(e=>Number(e.quarter)===2);
+ if(moving.length===0||oldEvents.length===0)throw Error('移動する2Qのスタッツがありません。すでに処理済みの可能性があります。');
+ const qp={...(g.quarterParticipation||{})};qp.q3=moveQuarterContent(qp.q2);delete qp.q2;
+ const events=(g.playEvents||[]).map(e=>Number(e.quarter)===2?moveQuarterContent({...e,quarter:3}):e);
+ const overrides=remapOverrides(g.eventSequenceOverrides||{});
+ const nextRows=moving.map(r=>{
+  const quarters={...r.data.quarters};
+  quarters.q3=moveQuarterContent(quarters.q2);
+  delete quarters.q2;
+  return {id:r.id,quarters};
+ });
+ return {
+  gameUpdate:{quarterParticipation:qp,playEvents:events,eventSequenceOverrides:overrides},
+  rows:nextRows,
+  summary:{players:moving.length,actions:oldEvents.length,shots:moving.reduce((n,r)=>n+(r.data.quarters.q2.shots||[]).length,0),starters:(qp.q3.starters||[]).length,substitutions:(qp.q3.substitutions||[]).length,statDocuments:rows.length}
+ };
+}
+async function loadPreview(){
+ const gSnap=await getDoc(gameRef);
+ if(!gSnap.exists())throw Error('対象試合が見つかりません。');
+ const ss=await getDocs(query(collection(db,'stats'),where('gameId','==',GAME)));
+ const rows=ss.docs.map(s=>({id:s.id,data:s.data()})).sort((a,b)=>a.id.localeCompare(b.id));
+ const g=gSnap.data(),plan=buildPlan(g,rows);
+ const backup=await getDoc(backupRef);
+ if(backup.exists())throw Error('移動済みのバックアップが存在します。重複実行を中止しました。');
+ preview={signature:signature(g,rows),ids:rows.map(r=>r.id),summary:plan.summary};
+ el('previewText').textContent='対象：2026/11/08 センターサークル 4Q制（40–42）\n'+
+ '2Q → 3Q\n'+
+ 'スタッツ対象選手：'+plan.summary.players+'人\n'+
+ 'シュート詳細：'+plan.summary.shots+'本\n'+
+ 'アクション履歴：'+plan.summary.actions+'件\n'+
+ 'スターティング5：'+plan.summary.starters+'名\n'+
+ '交代記録：'+plan.summary.substitutions+'件\n'+
+ '既存3Q：空（上書きなし）\n'+
+ '1Q・4Q・スコア：変更なし';
+ setStatus('データ確認完了。3Qが空であることを確認しました。');
+ updateButton();
+}
+function updateButton(){el('applyButton').disabled=busy||!preview||el('confirm').value.trim()!=='3Qへ移動'}
+async function runMigration(){
+ if(!auth.currentUser)throw Error('ログインしてください。');
+ if(!preview)throw Error('先にデータを再取得してください。');
+ const accepted=confirm('11/8 センターサークル 4Q制の2Qデータを3Qへ移します。変更前データはクラウドに保存されます。実行しますか？');
+ if(!accepted)return;
+ const baseline=preview;
+ const returned=await runTransaction(db,async transaction=>{
+  const [gs,bs,...stats]=await Promise.all([
+   transaction.get(gameRef),transaction.get(backupRef),
+   ...baseline.ids.map(id=>transaction.get(doc(db,'stats',id)))
+  ]);
+  if(bs.exists())throw Error('すでにバックアップが存在します。再実行はできません。');
+  if(!gs.exists())throw Error('試合が存在しません。');
+  if(stats.some(s=>!s.exists()))throw Error('選手スタッツの一部が見つかりません。');
+  const rows=stats.map(s=>({id:s.id,data:s.data()}));
+  const game=gs.data();
+  if(signature(game,rows)!==baseline.signature)throw Error('確認後にクラウド上のデータが更新されました。再取得してからやり直してください。');
+  const plan=buildPlan(game,rows);
+  transaction.set(backupRef,{
+   gameId:GAME,kind:'move-quarter-2-to-3',date:'2026-11-08',
+   createdAt:serverTimestamp(),operatorUid:auth.currentUser.uid,
+   originalGame:game,originalStats:rows
+  });
+  transaction.update(gameRef,{...plan.gameUpdate,updatedAt:serverTimestamp()});
+  for(const r of plan.rows)transaction.update(doc(db,'stats',r.id),{quarters:r.quarters,updatedAt:serverTimestamp()});
+  return plan.summary;
+ });
+ return returned;
+}
+onAuthStateChanged(auth,user=>{
+ el('loginPanel').hidden=!!user;
+ el('workPanel').hidden=!user;
+ if(user){setStatus('R32アカウントにログイン済み。データ確認を実行してください。');}
+ else {setStatus('R32アカウントでログインしてください。');preview=null;}
+ updateButton();
+});
+el('loginForm').addEventListener('submit',async evt=>{
+ evt.preventDefault();setStatus('ログイン中…');
+ try{await signInWithEmailAndPassword(auth,el('email').value,el('password').value);el('password').value='';}
+ catch(error){setStatus('ログインできません：'+formatError(error));}
+});
+el('previewButton').addEventListener('click',async()=>{
+ if(busy)return;busy=true;preview=null;el('previewButton').disabled=true;updateButton();setStatus('最新データを取得しています…');
+ try{await loadPreview()}catch(error){el('previewText').textContent='確認できません：'+formatError(error);setStatus('確認できませんでした。データは変更していません。');}
+ finally{busy=false;el('previewButton').disabled=false;updateButton();}
+});
+el('confirm').addEventListener('input',updateButton);
+el('applyButton').addEventListener('click',async()=>{
+ if(busy||el('confirm').value.trim()!=='3Qへ移動')return;
+ busy=true;updateButton();el('previewButton').disabled=true;setStatus('移動処理を実行しています…画面を閉じないでください。');
+ try{
+  const s=await runMigration();
+  if(!s){setStatus('操作をキャンセルしました。');return;}
+  preview=null;el('result').textContent='移動処理の書き込みが完了しました。\n'+
+   '選手 '+s.players+'名 / シュート '+s.shots+'本 / アクション '+s.actions+'件 / 交代 '+s.substitutions+'件\n'+
+   'バックアップ: r32MaintenanceBackups/'+BACKUP+'\n現在、読み戻して整合性を確認しています。';
+  const [after,ss]=await Promise.all([getDoc(gameRef),getDocs(query(collection(db,'stats'),where('gameId','==',GAME)))]);
+  const g=after.data(),rows=ss.docs.map(d=>d.data());
+  const remaining=rows.filter(r=>r.quarters?.q2).length;
+  const moved=rows.filter(r=>r.quarters?.q3).length;
+  const e2=(g.playEvents||[]).filter(e=>Number(e.quarter)===2).length;
+  const e3=(g.playEvents||[]).filter(e=>Number(e.quarter)===3).length;
+  if(!g.quarterParticipation?.q2&&g.quarterParticipation?.q3&&remaining===0&&moved===s.players&&e2===0&&e3===s.actions){
+   setStatus('修正完了：2Qから3Qへの移動を確認しました。');
+   el('result').textContent='✅ 修正完了\n3Q: 選手'+moved+'名 / 履歴'+e3+'件\n2Q: スタッツ'+remaining+'件 / 履歴'+e2+'件\nスタメン・交代記録も3Qへ移動済みです。\n試合詳細を開いて表示を確認してください。';
+  }else{
+   setStatus('書き込みは完了しましたが、読み戻しの確認に差があります。追加操作せず、R32の画面を確認してください。');
+   el('result').textContent+=' \n要確認：2Q選手='+remaining+' / 3Q選手='+moved+' / 2Q履歴='+e2+' / 3Q履歴='+e3;
+  }
+ }catch(error){setStatus('修正は完了していません：'+formatError(error));el('result').textContent='移動処理エラー：'+formatError(error)+'\nデータを再取得し、エラー内容を確認してください。';}
+ finally{busy=false;el('previewButton').disabled=false;updateButton();}
+});
+</script>
+</body>
+</html>
