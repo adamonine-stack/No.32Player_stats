@@ -1,3 +1,4 @@
+import { getDocsFromServer, runTransaction } from 'https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js';
 import { OPPONENT_GRADES, normalizeOpponentPlayers, opponentPlayers, validateOpponentPlayers } from './calculations/opponent-roster.js?v=20261029-v1';
 import { ensurePhotoRosterImport } from './data/opponent-roster-import.js?v=20261029-v1';
 import { targetPickerHtml, bindTargetPickers } from './ui/aggregation-target-picker.js?v=20261025-v2';
@@ -10,7 +11,7 @@ import { assistCandidates, isAssistEvent, isMadeEvent, nearbyMadeShots, planAssi
 import { commitAssistMutation } from './core/assist-play-store.js?v=20260908-quarter-session-v2';
 import { commitQuickStatMutation, commitQuickFreeThrowMutation } from './core/quick-history-store.js?v=20260908-quarter-session-v2';
 import { initializeOfflineSync, installOfflineSyncListeners, submitOfflineCapable, synchronizeOfflineOperations, confirmQuarterSession, confirmAllPendingSessions, quarterSessionStatus, discardPendingOperationsForGame, listPendingOperations, retryPendingOperation, deletePendingOperation } from './core/offline-sync.js?v=20260920-pending-manager-v1';
-import { auth, db, firestorePersistenceReady, signInWithEmailAndPassword, signOut, onAuthStateChanged, collection, doc, getDoc, getDocs, getDocsFromServer, runTransaction, setDoc, deleteDoc, onSnapshot, query, where, serverTimestamp } from "./core/firebase.js?v=20260901-scoped-reads-v1";
+import { auth, db, firestorePersistenceReady, signInWithEmailAndPassword, signOut, onAuthStateChanged, collection, doc, getDoc, getDocs, setDoc, deleteDoc, onSnapshot, query, where, serverTimestamp } from "./core/firebase.js?v=20260901-scoped-reads-v1";
 import { createListenerRegistry } from './data/listener-registry.js?v=20260901-scoped-reads-v1';
 import { auditR32Data } from './diagnostics/data-integrity.js?v=20260901-scoped-reads-v1';
 import { AUDIT_CONSISTENCY_MIGRATION_VERSION, normalizeTournamentPlacementRanks, planSafeStatQuarterCleanup } from './diagnostics/audit-consistency-migration.js?v=20260917-audit-consistency-v1';
@@ -63,7 +64,7 @@ import { registeredTournamentNames, officialGameSelection, officialGameStatus, s
 import { buildStandaloneTournament, findDuplicateStandaloneTournament } from "./calculations/tournament-registration-calculations.js?v=20261117-v1";
 import { tournamentSeasonId, commitTournamentEdit } from "./calculations/tournament-edit-calculations.js?v=20261118-v1";
 const quickInputStyles=document.createElement('link');quickInputStyles.rel='stylesheet';quickInputStyles.href='./styles/quick-input.css?v=20260908-quarter-session-v1';document.head.appendChild(quickInputStyles);
-if('serviceWorker' in navigator && !location.pathname.includes('/tests/'))navigator.serviceWorker.register('./service-worker.js?v=20261118-tournament-edit-v1').catch(error=>console.warn('Service worker registration failed',error));
+if('serviceWorker' in navigator && !location.pathname.includes('/tests/'))navigator.serviceWorker.register('./service-worker.js?v=20261118-tournament-edit-v2').catch(error=>console.warn('Service worker registration failed',error));
 installOfflineSyncListeners();
 const nav=[['home','ホーム'],['players','選手'],['opponentTeams','対戦チーム'],['games','試合'],['stats','分析'],['team','チーム'],['settings','設定']];
 const navIcons={home:'home',players:'person',opponentTeams:'shield',games:'edit_note',stats:'bar_chart',team:'groups',settings:'settings'};

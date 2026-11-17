@@ -12,7 +12,7 @@ fs.writeFileSync(path.join(target,'index.html'),html);
 for(const name of ['assist-play-store.js','quick-history-store.js','quarter-session-store.js','normal-stats-store.js']){const p=path.join(target,'js/core',name);fs.writeFileSync(p,fs.readFileSync(p,'utf8').replace("'https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js'","'./firebase.js?v=20260901-scoped-reads-v1'"))}
 fs.writeFileSync(path.join(target,'js/core/firebase.js'),fs.readFileSync(new URL('./fixtures/local-history-firebase.js',import.meta.url),'utf8').replace('../../js/calculations/','../calculations/'));
 // No service worker on the fixture: keep transport stubs out of the live cache.
-const p=path.join(target,'js/app.js');fs.writeFileSync(p,fs.readFileSync(p,'utf8').replace("if('serviceWorker' in navigator && !location.pathname.includes('/tests/'))","if(false)"));
+const p=path.join(target,'js/app.js');fs.writeFileSync(p,fs.readFileSync(p,'utf8').replace("if('serviceWorker' in navigator && !location.pathname.includes('/tests/'))","if(false)").replace("'https://www.gstatic.com/firebasejs/12.15.0/firebase-firestore.js'","'./core/firebase.js?v=20260901-scoped-reads-v1'"));
 console.log(target);
 
 // A hosted QA entry uses import maps and a separate IndexedDB database. It cannot
