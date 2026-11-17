@@ -2,3 +2,15 @@
 
 /* Keep the new tournament field hidden after choosing a registered tournament. */
 #gTourNewLabel[hidden]{display:none!important}
+
+/* Keep game and standalone tournament registration on one row on both orientations. */
+.mobile-list-action.tournament-register-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px}
+.mobile-list-action.tournament-register-actions .btn{width:auto;min-width:0}
+.tournament-form-grid input,.tournament-form-grid select{min-width:0;width:100%}
+@media(max-width:800px){
+  .mobile-list-action.tournament-register-actions{display:flex;gap:8px}
+  .mobile-list-action.tournament-register-actions .btn{flex:1 1 0;min-width:0;width:auto}
+  .tournament-form-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+  .tournament-form-grid label{min-width:0}
+}
+@media(max-width:360px){.tournament-form-grid{grid-template-columns:minmax(0,1fr)}}
