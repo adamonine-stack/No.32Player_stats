@@ -1,0 +1,32 @@
+name: Tournament registration checks
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'js/app.js'
+      - 'js/calculations/game-registration-calculations.js'
+      - 'js/calculations/tournament-registration-calculations.js'
+      - 'tests/game-registration.test.mjs'
+      - 'tests/tournament-registration.test.mjs'
+  pull_request:
+    paths:
+      - 'js/app.js'
+      - 'js/calculations/game-registration-calculations.js'
+      - 'js/calculations/tournament-registration-calculations.js'
+      - 'tests/game-registration.test.mjs'
+      - 'tests/tournament-registration.test.mjs'
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check syntax
+        run: node --check js/app.js
+      - name: Test tournament and game registration
+        run: node --test tests/game-registration.test.mjs tests/tournament-registration.test.mjs
