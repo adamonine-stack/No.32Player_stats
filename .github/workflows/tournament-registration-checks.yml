@@ -9,6 +9,14 @@ on:
       - 'js/calculations/tournament-registration-calculations.js'
       - 'tests/game-registration.test.mjs'
       - 'tests/tournament-registration.test.mjs'
+      - 'tests/2026-kinki-official-results.test.mjs'
+      - 'js/data/2026-kinki-jwc-all-teams-men.js'
+      - 'js/data/2026-kinki-jwc-soutai-results-men.js'
+      - 'js/core/verified-kinki-import.js'
+      - 'js/data/2026-cbg-hyogo-men.js'
+      - 'js/data/2026-osaka-u15-men.js'
+      - 'js/data/2026-nara-u15-men.js'
+      - 'js/data/2025-2026-kyoto-history-men.js'
   pull_request:
     paths:
       - 'js/app.js'
@@ -16,6 +24,14 @@ on:
       - 'js/calculations/tournament-registration-calculations.js'
       - 'tests/game-registration.test.mjs'
       - 'tests/tournament-registration.test.mjs'
+      - 'tests/2026-kinki-official-results.test.mjs'
+      - 'js/data/2026-kinki-jwc-all-teams-men.js'
+      - 'js/data/2026-kinki-jwc-soutai-results-men.js'
+      - 'js/core/verified-kinki-import.js'
+      - 'js/data/2026-cbg-hyogo-men.js'
+      - 'js/data/2026-osaka-u15-men.js'
+      - 'js/data/2026-nara-u15-men.js'
+      - 'js/data/2025-2026-kyoto-history-men.js'
   workflow_dispatch:
 
 jobs:
@@ -27,6 +43,9 @@ jobs:
         with:
           node-version: '22'
       - name: Check syntax
-        run: node --check js/app.js
+        run: |
+          node --check js/app.js
+          node --check js/core/verified-kinki-import.js
+          node --check js/data/2026-kinki-jwc-all-teams-men.js
       - name: Test tournament and game registration
-        run: node --test tests/game-registration.test.mjs tests/tournament-registration.test.mjs
+        run: node --test tests/game-registration.test.mjs tests/tournament-registration.test.mjs tests/2026-kinki-official-results.test.mjs
