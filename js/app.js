@@ -63,6 +63,7 @@ import { findImportedTeamMatch, findExistingTournamentTeam, normalizeTeamNameFor
 import { registeredTournamentNames, officialGameSelection, officialGameStatus, selectedTournamentName } from "./calculations/game-registration-calculations.js?v=20261101-v1";
 import { buildStandaloneTournament, findDuplicateStandaloneTournament } from "./calculations/tournament-registration-calculations.js?v=20261117-v1";
 import { tournamentSeasonId, commitTournamentEdit } from "./calculations/tournament-edit-calculations.js?v=20261118-v1";
+import { planKinki2026Results, applyKinki2026Results } from './core/verified-kinki-import.js?v=20261118-v1';
 const quickInputStyles=document.createElement('link');quickInputStyles.rel='stylesheet';quickInputStyles.href='./styles/quick-input.css?v=20260908-quarter-session-v1';document.head.appendChild(quickInputStyles);
 if('serviceWorker' in navigator && !location.pathname.includes('/tests/'))navigator.serviceWorker.register('./service-worker.js?v=20261118-tournament-layout-v3').catch(error=>console.warn('Service worker registration failed',error));
 installOfflineSyncListeners();
@@ -537,10 +538,50 @@ async function consolidate2025OsakaOpponentTeams(){
     modal(`<h2>大阪府チーム統合完了</h2><p>統合：${merged}組 / 統合済み：${alreadyMerged}組</p><p>試合参照更新：${gamesUpdated}件</p><p>大会試合参照更新：${tournamentGamesUpdated}件</p><p>BC Alma枚方・EAST.O.ACADEMY・T-SMILEへの指定統合を含みます。</p><button class="btn" id="closeModal">閉じる</button>`);$('#closeModal').onclick=closeModal;
   }catch(error){console.error('OSAKA_TEAM_CONSOLIDATION_FAILED',error);modal(`<h2>大阪府チーム統合に失敗しました</h2><p>${escapeHtml(error?.message||String(error))}</p><p class="sub">完了済みの組は再実行時にスキップされます。</p><button class="btn" id="closeModal">閉じる</button>`);$('#closeModal').onclick=closeModal}
 }
+
+window.openKinki2026ImportMenu=async()=>{
+  if(!requireLogin())return;
+  modal('<h2>2026年度 近畿エリア大会</h2><p>既存登録状況とチーム名を照合しています…</p>');
+  try{
+    const plan=await planKinki2026Results();
+    const total=plan.eventSummary.reduce((sum,item)=>sum+item.changed,0);
+    const pending=plan.reviews;
+    const details=plan.eventSummary.map(item=>'<div class="season-admin-row"><b>'+escapeHtml(item.name)+'</b><span>'+item.total+'チーム / 登録済み照合 '+item.already+' / 追加・確認 '+item.changed+'</span></div>').join('');
+    const choices=pending.map((item,index)=>'<label style="display:block;margin:10px 0"><b>'+escapeHtml(item.teamName)+'</b><span class="sub"> / '+escapeHtml(item.placementLabel)+'</span><select data-kinki-choice="'+escapeHtml(item.key)+'" style="display:block;width:100%;margin-top:4px"><option value="">統合先を選択</option>'+item.candidates.map(candidate=>'<option value="'+escapeHtml(candidate.id)+'">既存チーム：'+escapeHtml(candidate.teamName)+'（'+escapeHtml(candidate.prefecture)+'）</option>').join('')+'<option value="__NEW__">別チームとして新規登録</option></select></label>').join('');
+    modal('<h2>2026年度 近畿エリア男子大会結果</h2><p class="sub">Jr.ウインターカップ府県予選（京都は決勝未終了につき除外）・中学校夏季総体の確認済み成績を対象にします。既存の試合・スタッツは変更しません。</p><p>対象 '+plan.eventSummary.length+'大会 / 要反映 '+total+'チーム分 / 類似名の確認 '+pending.length+'件</p><div class="grid">'+details+'</div>'+(pending.length?'<div class="card" style="margin-top:12px"><h3>同名・類似名の照合</h3><p class="sub">誤統合を防ぐため、次のチームは個別に判断してください。</p>'+choices+'</div>':'')+'<div class="row" style="margin-top:12px"><button class="btn" id="applyKinki2026Import">確認した内容で登録</button><button class="btn ghost" id="closeModal">閉じる</button></div>');
+    $('#closeModal').onclick=closeModal;
+    $('#applyKinki2026Import').onclick=async()=>{
+      const decisions={};
+      for(const item of pending){
+        const element=[...document.querySelectorAll('[data-kinki-choice]')].find(input=>input.getAttribute('data-kinki-choice')===item.key);
+        if(!element?.value){toast('類似チーム名の統合先をすべて選択してください');return}
+        decisions[item.key]=element.value;
+      }
+      modal('<h2>近畿エリア大会を登録中</h2><p id="kinkiImportProgress">0件を処理しました</p><p class="sub">処理中は画面を閉じず、操作を重複させないでください。</p>');
+      try{
+        const stats=await applyKinki2026Results(plan,decisions,(done,total)=>{
+          const progress=$('#kinkiImportProgress');if(progress)progress.textContent=done+' / '+total+' 件の大会成績を確認';
+        });
+        let powerMessage='Team Powerの再計算完了';
+        try{await recalculatePersistedTeamRankAndPower('2026-27',['兵庫県','大阪府','京都府','滋賀県','奈良県','和歌山県'])}
+        catch(e){console.warn('KINKI_2026_RECALCULATE_FAILED',e);powerMessage='Team Power再計算未完了（設定から再計算してください）'}
+        modal('<h2>2026年度近畿エリア結果の登録完了</h2><p>新規大会：'+stats.tournaments+' / 新規チーム：'+stats.newTeams+' / 既存チーム更新：'+stats.updatedTeams+'</p><p>大会実績追加：'+stats.newPlacements+' / 大会実績更新：'+stats.updatedPlacements+' / 登録済みのため変更なし：'+stats.unchanged+'</p><p>'+escapeHtml(powerMessage)+'</p><button class="btn" id="closeModal">閉じる</button>');
+        $('#closeModal').onclick=()=>{closeModal();location.reload()};
+      }catch(error){
+        console.error('KINKI_2026_IMPORT_FAILED',error);
+        modal('<h2>大会結果の一部登録に失敗しました</h2><p>'+escapeHtml(error?.message||String(error))+'</p><p class="sub">保存済みの結果は残ります。再実行時に大会・チーム単位で重複登録を防ぎます。</p><button class="btn" id="closeModal">閉じる</button>');$('#closeModal').onclick=closeModal;
+      }
+    };
+  }catch(error){
+    console.error('KINKI_2026_IMPORT_PLAN_FAILED',error);
+    modal('<h2>大会結果の照合に失敗しました</h2><p>'+escapeHtml(error?.message||String(error))+'</p><button class="btn" id="closeModal">閉じる</button>');$('#closeModal').onclick=closeModal;
+  }
+};
+
 function settingsView(){
   const rows=[...state.seasons].sort((a,b)=>b.sortOrder-a.sortOrder).map(item=>`<div class="season-admin-row"><b>${escapeHtml(item.name)}</b><span>${item.status}${item.id===state.activeSeasonId?' / 現在':''}</span>${state.user&&item.id!==state.activeSeasonId?`<button class="btn small ghost" onclick="setActiveSeason('${item.id}')">現在の世代に設定</button>`:''}</div>`).join('');
   const generationActions=state.user?'<div class="row"><button class="btn" onclick="openSeasonForm()">新しい世代を作成</button><button class="btn ghost" onclick="backupSeasonData()">migration前バックアップ</button><button class="btn ghost" onclick="migrateSeasonData()">Season migration</button></div>':'';
-  const adminActions=state.user?'<button class="btn" onclick="rebuildPublicGameSummaries()">公開試合Summaryを再構築</button><button class="btn" onclick="recalculateAllSeasonRanks()">全チームのランク・Power再計算</button>':'';
+  const adminActions=state.user?'<button class="btn" onclick="rebuildPublicGameSummaries()">公開試合Summaryを再構築</button><button class="btn" onclick="recalculateAllSeasonRanks()">全チームのランク・Power再計算</button><button class="btn ghost" onclick="openKinki2026ImportMenu()">2026近畿・JWC・夏季総体の結果を反映</button>':'';
   return `<div class="card"><h2>設定</h2><section class="season-admin"><div class="section-title">チーム世代</div>${rows}${generationActions}</section><p class="sub">表示世代の切替と「現在の世代に設定」は別の操作です。</p><div class="row"><button class="btn ghost" onclick="location.reload()">再読み込み</button>${adminActions}</div></div>`;
 }
 function bindUpperFilters(){
