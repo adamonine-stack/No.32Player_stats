@@ -89,11 +89,11 @@ const NARA=['BANZAI jr.','Rafioants','ARAN ARDENT','PIRATES'].map(teamName=>know
 }));
 // 和歌山は1予備戦・8二回戦・4準々決勝・2準決勝・決勝を確認済み。
 const WAKAYAMA=[
- ...['Gr’s','Jr御坊','有和中学校','GLÄNZ'].map(teamName=>known(teamName,'ベスト8',{
+ ...['Gr’ｓ','Jr御坊','有和中学校','GLÄNZ'].map(teamName=>known(teamName,'ベスト8',{
    sourceUrl:'https://wakayama.pba-japanbasketball.jp/u15/game/5412/',
    teamType:/中学校/.test(teamName)?'中学校':'クラブチーム'
  })),
- ...['JOKER','高雄中学校','adorare second','ブランリオン','Laissez Faire Jr.','W','GLÄNZ ZWEI','ONELYS wakayama'].map(teamName=>known(teamName,'ベスト16',{
+ ...['JOKER','高雄中学校','adorare second','ブランリオン','LaissezFaireJr.','W','GLÄNZZWEI','ONELYSwakayama'].map(teamName=>known(teamName,'ベスト16',{
    sourceUrl:'https://wakayama.pba-japanbasketball.jp/u15/game/5412/',
    teamType:/中学校/.test(teamName)?'中学校':'クラブチーム'
  })),
