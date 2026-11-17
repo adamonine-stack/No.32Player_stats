@@ -71,7 +71,7 @@ const OSAKA_NAMES=[
  '摂津市立第四中学校','大東市立谷川中学校','枚方市立枚方中学校',
  'EL.DRAGON U-15','大阪市立茨田北中学校','なみはやバスケットボールクラブ',
  '大阪市立新豊崎中学校','大阪市立美津島中学校',
- 'HOS IBARAKI BASKETBALL CLUB','大阪市立南中学校','TEAM GRIT',
+ 'HOS','IBARAKI BASKETBALL CLUB','大阪市立南中学校','TEAM GRIT',
  'CLUB SPIRITS','HOOPERS','大阪市立大正西中学校','高槻市立第十中学校',
  'RAW STONES','東大阪市立金岡中学校','Sw!tch U15','大阪市立巽中学校'
 ];
