@@ -12,7 +12,7 @@ const jwcEvents=VERIFIED_2026_KINKI_RESULT_EVENTS.filter(e=>e.tournament.id.incl
 const combined=e=>[...e.teams,...JWC_2026_ALL_TEAM_SUPPLEMENTS[e.tournament.id]];
 
 test('five completed 2026 Kinki JWC prefectures have separate, non-duplicated male-team entries',()=>{
-  const totals={'兵庫県':76,'大阪府':90,'滋賀県':11,'奈良県':8,'和歌山県':17};
+  const totals={'兵庫県':76,'大阪府':91,'滋賀県':11,'奈良県':8,'和歌山県':17};
   assert.equal(jwcEvents.length,5);
   for(const e of jwcEvents){
     const teams=combined(e);
