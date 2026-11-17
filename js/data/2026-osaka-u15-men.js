@@ -2,7 +2,7 @@ import { normalizeImportedTeamName } from './2026-hyogo-u15-men.js';
 
 export const TOURNAMENT_2026_OSAKA_U15_MEN={id:'2026-osaka-u15-club-men',year:2026,name:'大阪府U15クラブバスケットボール選手権（近畿サマー予選）男子',shortName:'2026年度 大阪府U15クラブ選手権',prefecture:'大阪府',category:'U15男子',type:'都道府県大会',startDate:'2026-07-04',endDate:'2026-07-25',participantCount:24,resultConfirmed:true,resultStatus:'completed',sourceType:'officialTournamentPdf'};
 
-const TOP=[['KAGO CLUB','優勝',1],['REDFORCES','準優勝',2],['SUN HEARTS','3位',3],['T-SMILE','4位',4]];
+const TOP=[['KAGO CLUB','優勝',1],['T-SMILE','準優勝',2],['SUN HEARTS','ベスト4',null],['REDFORCES','ベスト4',null]];
 const BEST8=['RGS','ANGRY OWLS','AIR','RED FROGS'];
 const BEST16=['ENERGY','大阪GOLDEN EGG','HOOPERS','CLUB SPIRITS','FRONTIER SPIRITS','B☆MAX','EAST.O.ACADEMY','Secret Base'];
 const ALL=['KAGO CLUB','ENERGY','ディノニクスU15','sHow time','RGS','大阪GOLDEN EGG','ANGRY OWLS','HOOPERS','HOSOGO GIBSONS','NEXTEST','CLUB SPIRITS','SUN HEARTS','REDFORCES','FRONTIER SPIRITS','BLACK UNICORN','B☆MAX','BC Alma','AIR','RED FROGS','EAST.O.ACADEMY','Switch! U15','Secret Base','IBBC','T-SMILE'];
@@ -31,7 +31,7 @@ export const MATCHES_2026_OSAKA_U15_MEN=[
   match('2026-07-18','A',4,'準々決勝','REDFORCES',52,'AIR',47,'REDFORCES'),
   match('2026-07-18','B',4,'準々決勝','RED FROGS',40,'T-SMILE',61,'T-SMILE'),
   match('2026-07-25','A',2,'準決勝','KAGO CLUB',66,'SUN HEARTS',47,'KAGO CLUB'),
-  match('2026-07-25','B',2,'準決勝','REDFORCES',null,'T-SMILE',null,'REDFORCES',{winnerConfirmed:true,scoreConfirmed:false,requiresManualReview:true,sourcePrintedScore:'61-61',reviewReason:'PDFの得点が同点表記だが、勝ち上がり線ではREDFORCESが決勝進出'}),
-  match('2026-07-25','B',4,'3位決定戦','SUN HEARTS',83,'T-SMILE',61,'SUN HEARTS',{sourceConflict:true,sourcePrintedOpponent:'REDFORCES',correctedOpponent:'T-SMILE',correctionReason:'REDFORCESは決勝進出チームであり、トーナメント構造上3位決定戦の対戦相手は準決勝敗退のT-SMILEとなるため'}),
-  match('2026-07-25','A',4,'決勝','KAGO CLUB',52,'REDFORCES',35,'KAGO CLUB')
+  match('2026-07-25','B',2,'準決勝','REDFORCES',null,'T-SMILE',null,'T-SMILE',{winnerConfirmed:true,scoreConfirmed:false,sourceConfirmation:'大阪府バスケットボール協会U15部会 2026/07/25 公式発表でT-SMILE準優勝',requiresManualReview:true}),
+  match('2026-07-25','B',4,'3位決定戦','SUN HEARTS',null,'REDFORCES',null,null,{winnerConfirmed:false,scoreConfirmed:false,requiresManualReview:true,sourcePrintedScore:'83-61',reviewReason:'得点と左右のチーム対応はPDF視認による再確認が必要'}),
+  match('2026-07-25','A',4,'決勝','KAGO CLUB',null,'T-SMILE',null,'KAGO CLUB',{winnerConfirmed:true,scoreConfirmed:false,sourceConfirmation:'大阪府U15部会 2026/07/25 公式発表',requiresManualReview:true})
 ];
