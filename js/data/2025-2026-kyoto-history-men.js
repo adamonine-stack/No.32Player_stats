@@ -127,5 +127,7 @@ export const TEAMS_2026_KYOTO_JHS_SOUTAI_MEN=[
   team('詳徳中学校','ベスト8','B',['亀岡市立詳徳中学校','詳徳']),
   team('加茂川中学校','ベスト8','B',['京都市立加茂川中学校','加茂川','賀茂川中学校','賀茂川']),
   team('京都御池中学校','ベスト8','B',OIKE_ALIASES),
-  team('修学院中学校','ベスト8','B',SHUGAKUIN_ALIASES)
+  team('修学院中学校','ベスト8','B',SHUGAKUIN_ALIASES),
+  team('宇治中学校','ベスト16','C',UJI_ALIASES),
+  team('加悦中学校','ベスト16','C',['与謝野町立加悦中学校','加悦'])
 ];
