@@ -32,12 +32,12 @@ function eligible(team,row,event){
   if(/女子/u.test(String(team.category||'')))return false;
   if(category(team.category)&&!category(team.category).includes('U15'))return false;
   if(team.ageGroup&&/^U1[34]$/i.test(String(team.ageGroup)))return false;
-  if(team.teamType&&row.teamType&&team.teamType!==row.teamType)return false;
   return true;
 }
 function candidates(row,event,teams){
   const scoped=teams.filter(team=>eligible(team,row,event));
-  const exact=scoped.filter(team=>identity(row,team));
+  const compatibleType=team=>!team.teamType||!row.teamType||team.teamType===row.teamType;
+  const exact=scoped.filter(team=>identity(row,team)&&compatibleType(team));
   const similar=findSimilarHistoricalTeamCandidates(row,{...event.tournament,prefecture:teamPref(row,event)},scoped).filter(item=>!exact.some(team=>team.id===item.team.id));
   return {exact,similar};
 }
