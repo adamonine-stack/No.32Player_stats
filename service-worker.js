@@ -1,4 +1,4 @@
-const CACHE_NAME = 'r32-shell-20261117-standalone-tournament-v1';
+const CACHE_NAME = 'r32-shell-20261118-tournament-edit-v1';
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -14,6 +14,7 @@ const APP_SHELL = [
   "./js/ui/game-list-registration-status.js?v=20261019-foul-registration-v1",
   "./js/calculations/game-list-status-calculations.js",
   "./js/calculations/game-registration-calculations.js?v=20261101-v1",
+  "./js/calculations/tournament-edit-calculations.js?v=20261118-v1",
   "./assets/r32-background.png",
   "./assets/r32-bg-mobile.svg",
   "./assets/r32-bg-pc.svg",
@@ -42,7 +43,7 @@ const APP_SHELL = [
   "./styles/pc-optimization.css?v=20260819-pc-layout-v1",
   "./styles/period-calendar.css?v=20260811-v1",
   "./styles/quick-input.css",
-  "./styles/registration-standardization.css?v=20261117-standalone-v1",
+  "./styles/registration-standardization.css?v=20261118-tournament-edit-v1",
   "./styles/seasons.css?v=20260819-mobile-position-v2",
   "./styles/shot-registration.css?v=20261018-individual-court-list-v1",
   "./styles/stats-opponent-mobile-fixes.css?v=20260901-assist-history-select-v1",
@@ -62,7 +63,7 @@ const APP_SHELL = [
   "./js/ui/mobile-modal-viewport-fit.js?v=20260912-mobile-only-v1",
   "./js/ui/game-history-view-mode.js?v=20260830-category-colors-v1",
   "./js/ui/assist-history-selection.js?v=20260901-v1",
-  "./js/app.js?v=20261117-standalone-tournament-v1",
+  "./js/app.js?v=20261118-tournament-edit-v1",
   "./js/ui/team-detail-playing-time.js?v=20260908-quarter-min-v1",
   "./js/ui/quick-player-order.js?v=20260831-v1",
   "./js/ui/game-list-scroll-memory.js?v=20261013-modal-only-nav-v1",

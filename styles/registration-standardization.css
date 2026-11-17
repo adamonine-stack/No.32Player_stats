@@ -14,3 +14,13 @@
   .tournament-form-grid label{min-width:0}
 }
 @media(max-width:360px){.tournament-form-grid{grid-template-columns:minmax(0,1fr)}}
+
+/* Tournament management shares the existing list and form design. */
+.tournament-list-heading,.tournament-list-actions{justify-content:space-between;gap:10px;flex-wrap:wrap}
+.tournament-list-actions{margin:12px 0}
+.tournament-list-screen input[type="search"]{width:100%;min-width:0;box-sizing:border-box}
+.tournament-list-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 0;border-bottom:1px solid rgba(127,127,127,.25)}
+.tournament-list-row>div{min-width:0;flex:1}
+.tournament-list-row h3{margin:0 0 6px;font-size:16px;overflow-wrap:anywhere}
+.tournament-list-row p{margin:0;overflow-wrap:anywhere}
+.tournament-list-row>.btn{flex-shrink:0}
