@@ -1,4 +1,4 @@
-const CACHE_NAME = 'r32-shell-20261102-analysis-date-inline-v2';
+const CACHE_NAME = 'r32-shell-20261117-shot-edit-single-marker-v1';
 const APP_SHELL = [
   "./",
   "./index.html",
