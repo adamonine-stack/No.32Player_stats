@@ -33,7 +33,9 @@ function eligible(team,row,event){
   if(team.prefecture&&team.prefecture!==teamPref(row,event))return false;
   if(team.gender&&team.gender!=='男子')return false;
   if(/女子/u.test(String(team.category||'')))return false;
-  if(category(team.category)&&!category(team.category).includes('U15'))return false;
+  const expectedCategory=String(row.ageGroup||'U15').toUpperCase();
+  const existingCategory=category(team.category);
+  if(existingCategory&&(/U1[345]/.test(existingCategory))&&!existingCategory.includes(expectedCategory))return false;
   const wanted=String(row.ageGroup||'U15').toUpperCase();
   const existingAge=String(team.ageGroup||'').toUpperCase();
   if(existingAge&&/^U1[345]$/.test(existingAge)&&existingAge!==wanted)return false;
@@ -127,7 +129,7 @@ export async function applyKinki2026Results(plan,decisions={},progress=()=>{}){
       const teamData={
         teamName,normalizedTeamName:normalizeTeamNameForMatching(teamName),
         prefecture:teamPref(row,event),region:teamPref(row,event),gender:'男子',
-        category:selected?.category||'U15男子',ageGroup:selected?.ageGroup||row.ageGroup||'U15',
+        category:selected?.category||(row.ageGroup==='U14'?'U14男子':'U15男子'),ageGroup:selected?.ageGroup||row.ageGroup||'U15',
         teamType:selected?.teamType||row.teamType||'クラブチーム',
         aliases:[...new Set([...(selected?.aliases||[]),row.teamName,...(row.aliases||[])])],
         tournamentPlacements:placements,seasonRanks:ranks.seasonRanks,
