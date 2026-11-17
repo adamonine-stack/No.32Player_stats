@@ -3,6 +3,8 @@ import { calculateSeasonalTeamRank } from '../calculations/opponent-team-calcula
 import { normalizeTeamNameForMatching } from '../calculations/team-name-matching.js';
 import { findSimilarHistoricalTeamCandidates, findDuplicateHistoricalTournament, findExistingHistoricalPlacement } from '../calculations/historical-import-calculations.js';
 import { VERIFIED_2026_KINKI_RESULT_EVENTS } from '../data/2026-kinki-jwc-soutai-results-men.js';
+import { JWC_2026_ALL_TEAM_SUPPLEMENTS } from '../data/2026-kinki-jwc-all-teams-men.js';
+import { TOURNAMENT_2026_CBG_HYOGO_MEN, TEAMS_2026_CBG_HYOGO_MEN } from '../data/2026-cbg-hyogo-men.js';
 import { TOURNAMENT_2026_HYOGO_JHS_SOUTAI_MEN, TEAMS_2026_HYOGO_JHS_SOUTAI_MEN } from '../data/2026-hyogo-history-men.js';
 import { TOURNAMENT_2026_KYOTO_JHS_SOUTAI_MEN, TEAMS_2026_KYOTO_JHS_SOUTAI_MEN } from '../data/2025-2026-kyoto-history-men.js';
 import { TOURNAMENT_2026_SHIGA_JHS_SOUTAI_MEN, TEAMS_2026_SHIGA_JHS_SOUTAI_MEN } from '../data/2025-2026-shiga-history-men.js';
@@ -11,7 +13,8 @@ import { TOURNAMENT_2026_WAKAYAMA_JHS_SOUTAI_MEN, TEAMS_2026_WAKAYAMA_JHS_SOUTAI
 
 // Never infer unfinished results. The 2026 Kyoto JWC qualifier ends on Nov 22.
 export const KINKI_2026_EVENTS=[
-  ...VERIFIED_2026_KINKI_RESULT_EVENTS,
+  ...VERIFIED_2026_KINKI_RESULT_EVENTS.map(event=>({...event,teams:[...event.teams,...(JWC_2026_ALL_TEAM_SUPPLEMENTS[event.tournament.id]||[])]})),
+  {tournament:{...TOURNAMENT_2026_CBG_HYOGO_MEN,isOfficialGame:true},teams:TEAMS_2026_CBG_HYOGO_MEN},
   {tournament:TOURNAMENT_2026_HYOGO_JHS_SOUTAI_MEN,teams:TEAMS_2026_HYOGO_JHS_SOUTAI_MEN},
   {tournament:TOURNAMENT_2026_KYOTO_JHS_SOUTAI_MEN,teams:TEAMS_2026_KYOTO_JHS_SOUTAI_MEN},
   {tournament:TOURNAMENT_2026_SHIGA_JHS_SOUTAI_MEN,teams:TEAMS_2026_SHIGA_JHS_SOUTAI_MEN},
@@ -31,7 +34,13 @@ function eligible(team,row,event){
   if(team.gender&&team.gender!=='男子')return false;
   if(/女子/u.test(String(team.category||'')))return false;
   if(category(team.category)&&!category(team.category).includes('U15'))return false;
-  if(team.ageGroup&&/^U1[34]$/i.test(String(team.ageGroup)))return false;
+  const wanted=String(row.ageGroup||'U15').toUpperCase();
+  const existingAge=String(team.ageGroup||'').toUpperCase();
+  if(existingAge&&/^U1[345]$/.test(existingAge)&&existingAge!==wanted)return false;
+  // U14 or second-string entries must remain independent from the U15 first team.
+  const rowName=String(row.teamName||'').normalize('NFKC').toUpperCase();
+  const teamName=String(team.teamName||'').normalize('NFKC').toUpperCase();
+  if(/U14/.test(rowName)!==/U14/.test(teamName)&&(/U14/.test(rowName)||/U14/.test(teamName)))return false;
   return true;
 }
 function candidates(row,event,teams){
@@ -79,8 +88,11 @@ export async function applyKinki2026Results(plan,decisions={},progress=()=>{}){
     const existingTournament=findDuplicateHistoricalTournament(tournament,registered);
     const id=existingTournament?.id||tournament.id;
     if(!existingTournament){
-      await setDoc(doc(db,'tournaments',id),{...tournament,seasonId:'2026-27',updatedAt:serverTimestamp(),createdAt:serverTimestamp()});
-      registered.push({...tournament,id});stats.tournaments++;
+      await setDoc(doc(db,'tournaments',id),{...tournament,seasonId:'2026-27',isOfficialGame:true,officialMatchClassification:'official',updatedAt:serverTimestamp(),createdAt:serverTimestamp()});
+      registered.push({...tournament,id,isOfficialGame:true});stats.tournaments++;
+    }else if(existingTournament.isOfficialGame!==true){
+      await setDoc(doc(db,'tournaments',id),{isOfficialGame:true,officialMatchClassification:'official',updatedAt:serverTimestamp()},{merge:true});
+      existingTournament.isOfficialGame=true;
     }
     for(let index=0;index<event.teams.length;index++){
       const row=event.teams[index],key=tournament.id+':'+index,decision=decisions[key]||'';
@@ -92,26 +104,30 @@ export async function applyKinki2026Results(plan,decisions={},progress=()=>{}){
       const placementTournament={...tournament,id};
       const old=findExistingHistoricalPlacement(current,placementTournament);
       const source=tournament.source||null;
-      const rank=String(row.rank||'').toUpperCase()||null;
+      const finalVerified=row.resultConfirmed!==false&&row.placementConfirmed!==false;
+      const rank=finalVerified?(String(row.rank||'').toUpperCase()||null):null;
       const placement={
         id:old?.id||teamId+'-'+id,tournamentId:id,tournamentName:existingTournament?.name||tournament.name,
         year:2026,season:'2026-27',seasonId:'2026-27',generation:'2026-27',category:tournament.category,
         prefecture:teamPref(row,event),gender:'男子',tournamentLevel:tournament.tournamentLevel||'prefecture',
         tournamentType:tournament.type,placement:row.placementLabel,placementLabel:row.placementLabel,
         placementRank:rank,seasonRank:rank,rankValue:rank,
-        teamPowerEligible:tournament.teamPowerEligible!==false&&row.teamPowerEligible!==false,
-        source,sourceType:tournament.sourceType||'verifiedResult',resultConfirmed:true,
+        teamPowerEligible:finalVerified&&tournament.teamPowerEligible!==false&&row.teamPowerEligible!==false,
+        source,sourceType:row.sourceType||tournament.sourceType||'verifiedResult',
+        bracketSeed:row.bracketSeed??null,sourceUrl:row.sourceUrl||null,
+        placementConfirmed:finalVerified,resultConfirmed:finalVerified,
+        isOfficialGame:true,officialMatchClassification:'official',
         updatedAt:new Date().toISOString(),createdAt:old?.createdAt||new Date().toISOString(),
         sortOrder:old?.sortOrder??current.length
       };
-      if(old&&old.placementLabel===placement.placementLabel&&old.tournamentId===id&&old.resultConfirmed===true&&String(old.placementRank||old.rankValue||'')===String(rank||'')){stats.unchanged++;done++;progress(done,total);continue}
+      if(old&&old.placementLabel===placement.placementLabel&&old.tournamentId===id&&old.resultConfirmed===finalVerified&&old.isOfficialGame===true&&String(old.placementRank||old.rankValue||'')===String(rank||'')){stats.unchanged++;done++;progress(done,total);continue}
       const placements=old?current.map(p=>p===old?{...p,...placement}:p):[...current,placement];
       const ranks=calculateSeasonalTeamRank(placements,{currentSeason:'2026-27'});
       const teamName=selected?.teamName||row.teamName;
       const teamData={
         teamName,normalizedTeamName:normalizeTeamNameForMatching(teamName),
         prefecture:teamPref(row,event),region:teamPref(row,event),gender:'男子',
-        category:selected?.category||'U15男子',ageGroup:selected?.ageGroup||'U15',
+        category:selected?.category||'U15男子',ageGroup:selected?.ageGroup||row.ageGroup||'U15',
         teamType:selected?.teamType||row.teamType||'クラブチーム',
         aliases:[...new Set([...(selected?.aliases||[]),row.teamName,...(row.aliases||[])])],
         tournamentPlacements:placements,seasonRanks:ranks.seasonRanks,
