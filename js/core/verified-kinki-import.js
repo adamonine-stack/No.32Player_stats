@@ -1,4 +1,4 @@
-import { collection, doc, getDocs, setDoc, serverTimestamp } from './firebase.js';
+import { db, collection, doc, getDocs, setDoc, serverTimestamp } from './firebase.js';
 import { calculateSeasonalTeamRank } from '../calculations/opponent-team-calculations.js';
 import { normalizeTeamNameForMatching } from '../calculations/team-name-matching.js';
 import { findSimilarHistoricalTeamCandidates, findDuplicateHistoricalTournament, findExistingHistoricalPlacement } from '../calculations/historical-import-calculations.js';
@@ -50,7 +50,7 @@ function choose(row,event,teams,selection=''){
   return {team:null,ambiguous:false};
 }
 export async function planKinki2026Results(){
-  const [teamSnapshot,tournamentSnapshot]=await Promise.all([getDocs(collection((await import('./firebase.js')).db,'opponentTeams')),getDocs(collection((await import('./firebase.js')).db,'tournaments'))]);
+  const [teamSnapshot,tournamentSnapshot]=await Promise.all([getDocs(collection(db,'opponentTeams')),getDocs(collection(db,'tournaments'))]);
   const teams=teamSnapshot.docs.map(d=>({id:d.id,...d.data()})),registered=tournamentSnapshot.docs.map(d=>({id:d.id,...d.data()}));
   const reviews=[],rows=[],eventSummary=[];
   for(const event of KINKI_2026_EVENTS){
@@ -70,7 +70,6 @@ export async function planKinki2026Results(){
 }
 
 export async function applyKinki2026Results(plan,decisions={},progress=()=>{}){
-  const {db}=await import('./firebase.js');
   const workingTeams=[...plan.teams],registered=[...plan.registered],reused=new Set();
   const stats={newTeams:0,updatedTeams:0,newPlacements:0,updatedPlacements:0,unchanged:0,tournaments:0};
   let done=0;const total=KINKI_2026_EVENTS.reduce((s,event)=>s+event.teams.length,0);
@@ -105,7 +104,7 @@ export async function applyKinki2026Results(plan,decisions={},progress=()=>{}){
         updatedAt:new Date().toISOString(),createdAt:old?.createdAt||new Date().toISOString(),
         sortOrder:old?.sortOrder??current.length
       };
-      if(old&&old.placementLabel===placement.placementLabel&&old.tournamentId===id){stats.unchanged++;done++;progress(done,total);continue}
+      if(old&&old.placementLabel===placement.placementLabel&&old.tournamentId===id&&old.resultConfirmed===true&&String(old.placementRank||old.rankValue||'')===String(rank||'')){stats.unchanged++;done++;progress(done,total);continue}
       const placements=old?current.map(p=>p===old?{...p,...placement}:p):[...current,placement];
       const ranks=calculateSeasonalTeamRank(placements,{currentSeason:'2026-27'});
       const teamName=selected?.teamName||row.teamName;
