@@ -24,3 +24,7 @@
 .tournament-list-row h3{margin:0 0 6px;font-size:16px;overflow-wrap:anywhere}
 .tournament-list-row p{margin:0;overflow-wrap:anywhere}
 .tournament-list-row>.btn{flex-shrink:0}
+
+/* The title row reserves its right side for the season selector. */
+.tournament-list-entry{display:flex;justify-content:flex-end;margin:0 0 14px}
+.tournament-list-entry>.btn{min-width:120px;min-height:40px}
