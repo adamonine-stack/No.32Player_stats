@@ -35,7 +35,10 @@ function eligible(team,row,event){
   if(/女子/u.test(String(team.category||'')))return false;
   const expectedCategory=String(row.ageGroup||'U15').toUpperCase();
   const existingCategory=category(team.category);
-  if(existingCategory&&(/U1[345]/.test(existingCategory))&&!existingCategory.includes(expectedCategory))return false;
+  const declaredAge=String(team.ageGroup||'').toUpperCase();
+  // Older records sometimes label a U14 side as category U15 because it entered a U15 competition.
+  // Trust a specific ageGroup over that broad competition category.
+  if(!declaredAge&&existingCategory&&(/U1[345]/.test(existingCategory))&&!existingCategory.includes(expectedCategory))return false;
   const wanted=String(row.ageGroup||'U15').toUpperCase();
   const existingAge=String(team.ageGroup||'').toUpperCase();
   if(existingAge&&/^U1[345]$/.test(existingAge)&&existingAge!==wanted)return false;
@@ -90,7 +93,7 @@ export async function applyKinki2026Results(plan,decisions={},progress=()=>{}){
     const existingTournament=findDuplicateHistoricalTournament(tournament,registered);
     const id=existingTournament?.id||tournament.id;
     if(!existingTournament){
-      await setDoc(doc(db,'tournaments',id),{...tournament,seasonId:'2026-27',isOfficialGame:true,officialMatchClassification:'official',updatedAt:serverTimestamp(),createdAt:serverTimestamp()});
+      await setDoc(doc(db,'tournaments',id),{...tournament,seasonId:'season_2026_27',isOfficialGame:true,officialMatchClassification:'official',updatedAt:serverTimestamp(),createdAt:serverTimestamp()});
       registered.push({...tournament,id,isOfficialGame:true});stats.tournaments++;
     }else if(existingTournament.isOfficialGame!==true){
       await setDoc(doc(db,'tournaments',id),{isOfficialGame:true,officialMatchClassification:'official',updatedAt:serverTimestamp()},{merge:true});
@@ -110,7 +113,7 @@ export async function applyKinki2026Results(plan,decisions={},progress=()=>{}){
       const rank=finalVerified?(String(row.rank||'').toUpperCase()||null):null;
       const placement={
         id:old?.id||teamId+'-'+id,tournamentId:id,tournamentName:existingTournament?.name||tournament.name,
-        year:2026,season:'2026-27',seasonId:'2026-27',generation:'2026-27',category:tournament.category,
+        year:2026,season:'2026-27',seasonId:'season_2026_27',generation:'2026-27',category:tournament.category,
         prefecture:teamPref(row,event),gender:'男子',tournamentLevel:tournament.tournamentLevel||'prefecture',
         tournamentType:tournament.type,placement:row.placementLabel,placementLabel:row.placementLabel,
         placementRank:rank,seasonRank:rank,rankValue:rank,
