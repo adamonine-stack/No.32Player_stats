@@ -562,11 +562,25 @@ window.openKinki2026ImportMenu=async()=>{
         const stats=await applyKinki2026Results(plan,decisions,(done,total)=>{
           const progress=$('#kinkiImportProgress');if(progress)progress.textContent=done+' / '+total+' 件の大会成績を確認';
         });
-        let powerMessage='Team Powerの再計算完了';
-        try{await recalculatePersistedTeamRankAndPower('2026-27',['兵庫県','大阪府','京都府','滋賀県','奈良県','和歌山県'])}
-        catch(e){console.warn('KINKI_2026_RECALCULATE_FAILED',e);powerMessage='Team Power再計算未完了（設定から再計算してください）'}
-        modal('<h2>2026年度近畿エリア結果の登録完了</h2><p>新規大会：'+stats.tournaments+' / 新規チーム：'+stats.newTeams+' / 既存チーム更新：'+stats.updatedTeams+'</p><p>大会実績追加：'+stats.newPlacements+' / 大会実績更新：'+stats.updatedPlacements+' / 登録済みのため変更なし：'+stats.unchanged+'</p><p>'+escapeHtml(powerMessage)+'</p><button class="btn" id="closeModal">閉じる</button>');
+        let powerMessage='',powerFailed=false;
+        try{
+          const recalculation=await recalculatePersistedTeamRankAndPower('2026-27',['兵庫県','大阪府','京都府','滋賀県','奈良県','和歌山県']);
+          powerMessage='Team Power再計算完了：対象 '+recalculation.processed+' チーム、更新 '+recalculation.updated+' チーム、試合側ランク同期 '+recalculation.gameRanksUpdated+' 件';
+        }catch(e){
+          console.error('KINKI_2026_RECALCULATE_FAILED',e);
+          powerFailed=true;
+          powerMessage='Team Power再計算は未完了です。大会実績登録と区別して再実行してください。原因：'+(e?.message||String(e));
+        }
+        modal('<h2>2026年度近畿エリア大会実績の登録完了</h2><p>新規大会：'+stats.tournaments+' / 新規チーム：'+stats.newTeams+' / 既存チーム更新：'+stats.updatedTeams+'</p><p>大会実績追加：'+stats.newPlacements+' / 大会実績更新：'+stats.updatedPlacements+' / 登録済みのため変更なし：'+stats.unchanged+'</p><p>'+escapeHtml(powerMessage)+'</p>'+(powerFailed?'<button class="btn" id="retryKinkiPower">Team Powerだけ再計算</button>':'')+'<button class="btn ghost" id="closeModal">閉じる</button>');
         $('#closeModal').onclick=()=>{closeModal();location.reload()};
+        if(powerFailed)$('#retryKinkiPower').onclick=async()=>{
+          const retry=$('#retryKinkiPower');retry.disabled=true;retry.textContent='再計算中…';
+          try{
+            const outcome=await recalculatePersistedTeamRankAndPower('2026-27',['兵庫県','大阪府','京都府','滋賀県','奈良県','和歌山県']);
+            modal('<h2>Team Power再計算完了</h2><p>対象 '+outcome.processed+' チーム、更新 '+outcome.updated+' チーム、試合側ランク同期 '+outcome.gameRanksUpdated+' 件</p><button class="btn" id="closeModal">閉じる</button>');
+            $('#closeModal').onclick=()=>{closeModal();location.reload()};
+          }catch(error){console.error('KINKI_2026_POWER_RETRY_FAILED',error);toast('再計算失敗：'+(error?.message||String(error)));retry.disabled=false;retry.textContent='Team Powerだけ再計算'}
+        };
       }catch(error){
         console.error('KINKI_2026_IMPORT_FAILED',error);
         modal('<h2>大会結果の一部登録に失敗しました</h2><p>'+escapeHtml(error?.message||String(error))+'</p><p class="sub">保存済みの結果は残ります。再実行時に大会・チーム単位で重複登録を防ぎます。</p><button class="btn" id="closeModal">閉じる</button>');$('#closeModal').onclick=closeModal;
