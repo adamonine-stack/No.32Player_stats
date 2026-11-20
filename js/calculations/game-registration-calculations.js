@@ -36,6 +36,13 @@ export function gameTypeFields(selection) {
   return { gameType: selection, isOfficialGame: officialGameStatus(selection) };
 }
 
+// A targeted migration: never infer a game type from a different tournament name.
+export function exchangeMatchTournamentBackfill(game = {}) {
+  if (String(game?.tournament ?? '').trim() !== '交流戦') return null;
+  if (game?.gameType === 'exchange_match' && game?.isOfficialGame === false) return null;
+  return gameTypeFields('exchange_match');
+}
+
 export function selectedTournamentName(existingSelection, newName) {
   return String(existingSelection || '').trim() || String(newName || '').trim();
 }
