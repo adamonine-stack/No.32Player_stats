@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { GAME_TYPES, registeredTournamentNames, officialGameSelection, officialGameStatus, gameTypeFields, selectedTournamentName } from '../js/calculations/game-registration-calculations.js';
+import { GAME_TYPES, registeredTournamentNames, officialGameSelection, officialGameStatus, gameTypeFields, exchangeMatchTournamentBackfill, selectedTournamentName } from '../js/calculations/game-registration-calculations.js';
 
 test('registered tournaments combine game names, tournament records, and editing value', () => {
   const names = registeredTournamentNames(
@@ -45,4 +45,14 @@ test('old non-official and unset games are not silently assigned to an exchange 
   assert.deepEqual(gameTypeFields('unexpected'), {});
   assert.equal(officialGameSelection({ gameType: 'exchange_tournament', isOfficialGame: false }), 'exchange_tournament');
   assert.equal(officialGameSelection({ gameType: 'exchange_match', isOfficialGame: false }), 'exchange_match');
+});
+
+test('exchange-match backfill updates only games with the exact tournament name', () => {
+  assert.deepEqual(exchangeMatchTournamentBackfill({ tournament: '交流戦' }), { gameType: 'exchange_match', isOfficialGame: false });
+  assert.deepEqual(exchangeMatchTournamentBackfill({ tournament: ' 交流戦 ', isOfficialGame: true }), { gameType: 'exchange_match', isOfficialGame: false });
+  assert.deepEqual(exchangeMatchTournamentBackfill({ tournament: '交流戦', isOfficialGame: false }), { gameType: 'exchange_match', isOfficialGame: false });
+  assert.equal(exchangeMatchTournamentBackfill({ tournament: '交流戦', gameType: 'exchange_match', isOfficialGame: false }), null);
+  for (const name of ['交流大会', '交流戦大会', '交流戦 2026', '公式戦', '', null]) {
+    assert.equal(exchangeMatchTournamentBackfill({ tournament: name, gameType: 'official' }), null);
+  }
 });
