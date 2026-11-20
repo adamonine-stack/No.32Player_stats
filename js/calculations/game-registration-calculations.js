@@ -13,7 +13,11 @@ export function registeredTournamentNames(games = [], tournaments = [], currentN
   return [...names.values()].sort((a, b) => a.localeCompare(b, 'ja', { numeric: true }));
 }
 
+// Canonical game types. The old non-official flag cannot distinguish the two exchange formats.
+export const GAME_TYPES = Object.freeze(['official', 'exchange_tournament', 'exchange_match']);
+
 export function officialGameSelection(game = {}) {
+  if (GAME_TYPES.includes(game?.gameType)) return game.gameType;
   if (game?.isOfficialGame === true) return 'official';
   if (game?.isOfficialGame === false) return 'unofficial';
   return '';
@@ -21,9 +25,15 @@ export function officialGameSelection(game = {}) {
 
 export function officialGameStatus(selection) {
   if (selection === 'official') return true;
-  if (selection === 'unofficial') return false;
+  if (selection === 'exchange_tournament' || selection === 'exchange_match' || selection === 'unofficial') return false;
   // Never silently classify older games with no official-match flag.
   return null;
+}
+
+// On an unrelated edit, keep old undefined/ambiguous classifications untouched.
+export function gameTypeFields(selection) {
+  if (!GAME_TYPES.includes(selection)) return {};
+  return { gameType: selection, isOfficialGame: officialGameStatus(selection) };
 }
 
 export function selectedTournamentName(existingSelection, newName) {
