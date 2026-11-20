@@ -11,7 +11,7 @@ import { assistCandidates, isAssistEvent, isMadeEvent, nearbyMadeShots, planAssi
 import { commitAssistMutation } from './core/assist-play-store.js?v=20260908-quarter-session-v2';
 import { commitQuickStatMutation, commitQuickFreeThrowMutation } from './core/quick-history-store.js?v=20260908-quarter-session-v2';
 import { initializeOfflineSync, installOfflineSyncListeners, submitOfflineCapable, synchronizeOfflineOperations, confirmQuarterSession, confirmAllPendingSessions, quarterSessionStatus, discardPendingOperationsForGame, listPendingOperations, retryPendingOperation, deletePendingOperation } from './core/offline-sync.js?v=20260920-pending-manager-v1';
-import { auth, db, firestorePersistenceReady, signInWithEmailAndPassword, signOut, onAuthStateChanged, collection, doc, getDoc, getDocs, getDocsFromServer, setDoc, deleteDoc, onSnapshot, query, where, serverTimestamp } from "./core/firebase.js?v=20260901-scoped-reads-v1";
+import { auth, db, firestorePersistenceReady, signInWithEmailAndPassword, signOut, onAuthStateChanged, collection, doc, getDoc, getDocs, setDoc, deleteDoc, onSnapshot, query, where, serverTimestamp } from "./core/firebase.js?v=20260901-scoped-reads-v1";
 import { createListenerRegistry } from './data/listener-registry.js?v=20260901-scoped-reads-v1';
 import { auditR32Data } from './diagnostics/data-integrity.js?v=20260901-scoped-reads-v1';
 import { AUDIT_CONSISTENCY_MIGRATION_VERSION, normalizeTournamentPlacementRanks, planSafeStatQuarterCleanup } from './diagnostics/audit-consistency-migration.js?v=20260917-audit-consistency-v1';
