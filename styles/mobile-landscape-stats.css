@@ -295,16 +295,33 @@
   #modalRoot > .modal.quick-shot-modal > .card {
     display: grid;
     grid-template-columns: minmax(0, .94fr) minmax(0, 1.06fr);
-    grid-template-rows: auto auto minmax(0, 1fr);
-    grid-template-areas: "chosen chosen" "shothead shothead" "court panel";
-    gap: 3px 10px;
+    position: relative;
+    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-areas: "chosen chosen" "court panel";
+    gap: 4px 10px;
     overflow: hidden !important;
   }
-  .quick-shot-modal .quick-selected-player { grid-area: chosen; }
-  .quick-shot-modal .shot-modal-head { grid-area: shothead; align-items: center; }
-  .quick-shot-modal .shot-modal-head h2 { margin: 0; font-size: 16px; }
-  .quick-shot-modal .shot-modal-head .sub { margin: 0; font-size: 10px; }
-  .quick-shot-modal .shot-close { min-height: 34px; min-width: 42px; padding: 4px; }
+  /* Use the former title row for the court. Move Close beside Change in the player bar. */
+  #modalRoot > .modal.quick-shot-modal .quick-selected-player {
+    grid-area: chosen;
+    display: flex;
+    min-height: 42px;
+    margin: 0;
+    padding-right: 72px;
+  }
+  #modalRoot > .modal.quick-shot-modal .shot-modal-head {
+    position: absolute;
+    top: 10px;
+    right: 14px;
+    z-index: 2;
+    margin: 0 !important;
+  }
+  #modalRoot > .modal.quick-shot-modal .shot-modal-head > div { display: none; }
+  #modalRoot > .modal.quick-shot-modal .shot-close {
+    min-height: 36px;
+    min-width: 40px;
+    padding: 4px;
+  }
   #modalRoot > .modal.quick-shot-modal #shotCourtRoot {
     grid-area: court;
     display: grid;
