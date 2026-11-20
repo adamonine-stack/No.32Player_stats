@@ -8,6 +8,8 @@ on:
       - 'js/calculations/game-registration-calculations.js'
       - 'js/calculations/tournament-registration-calculations.js'
       - 'tests/game-registration.test.mjs'
+      - 'tests/mobile-landscape-stats.test.mjs'
+      - 'styles/mobile-landscape-stats.css'
       - 'tests/tournament-registration.test.mjs'
       - 'tests/2026-kinki-official-results.test.mjs'
       - 'js/data/2026-kinki-jwc-all-teams-men.js'
@@ -23,6 +25,8 @@ on:
       - 'js/calculations/game-registration-calculations.js'
       - 'js/calculations/tournament-registration-calculations.js'
       - 'tests/game-registration.test.mjs'
+      - 'tests/mobile-landscape-stats.test.mjs'
+      - 'styles/mobile-landscape-stats.css'
       - 'tests/tournament-registration.test.mjs'
       - 'tests/2026-kinki-official-results.test.mjs'
       - 'js/data/2026-kinki-jwc-all-teams-men.js'
@@ -48,4 +52,4 @@ jobs:
           node --check js/core/verified-kinki-import.js
           node --check js/data/2026-kinki-jwc-all-teams-men.js
       - name: Test tournament and game registration
-        run: node --test tests/game-registration.test.mjs tests/tournament-registration.test.mjs tests/2026-kinki-official-results.test.mjs
+        run: node --test tests/game-registration.test.mjs tests/tournament-registration.test.mjs tests/2026-kinki-official-results.test.mjs tests/mobile-landscape-stats.test.mjs
