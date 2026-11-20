@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { registeredTournamentNames, officialGameSelection, officialGameStatus, selectedTournamentName } from '../js/calculations/game-registration-calculations.js';
+import { GAME_TYPES, registeredTournamentNames, officialGameSelection, officialGameStatus, gameTypeFields, selectedTournamentName } from '../js/calculations/game-registration-calculations.js';
 
 test('registered tournaments combine game names, tournament records, and editing value', () => {
   const names = registeredTournamentNames(
@@ -25,4 +25,24 @@ test('official game selection preserves unset legacy games', () => {
   assert.equal(officialGameStatus('official'), true);
   assert.equal(officialGameStatus('unofficial'), false);
   assert.equal(officialGameStatus(''), null);
+});
+
+test('three game classifications are stored with the corresponding official flag', () => {
+  assert.deepEqual(GAME_TYPES, ['official', 'exchange_tournament', 'exchange_match']);
+  for (const [type, isOfficial] of [['official', true], ['exchange_tournament', false], ['exchange_match', false]]) {
+    const fields = gameTypeFields(type);
+    assert.deepEqual(fields, { gameType: type, isOfficialGame: isOfficial });
+    assert.equal(officialGameSelection(fields), type);
+    assert.equal(officialGameStatus(type), isOfficial);
+  }
+});
+
+test('old non-official and unset games are not silently assigned to an exchange category', () => {
+  assert.equal(officialGameSelection({ isOfficialGame: false }), 'unofficial');
+  assert.equal(officialGameSelection({}), '');
+  assert.deepEqual(gameTypeFields('unofficial'), {});
+  assert.deepEqual(gameTypeFields(''), {});
+  assert.deepEqual(gameTypeFields('unexpected'), {});
+  assert.equal(officialGameSelection({ gameType: 'exchange_tournament', isOfficialGame: false }), 'exchange_tournament');
+  assert.equal(officialGameSelection({ gameType: 'exchange_match', isOfficialGame: false }), 'exchange_match');
 });
