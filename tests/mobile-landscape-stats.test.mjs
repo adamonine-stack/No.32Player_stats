@@ -45,5 +45,6 @@ test('landscape quick-shot removes the title row, expands the court and keeps Cl
   assert.match(shotLayout, /\.shot-modal-head \{[\s\S]*?position: absolute;/);
   assert.match(shotLayout, /\.quick-selected-player \{[\s\S]*?padding-right: 72px;/);
   assert.match(shotLayout, /\.shot-close \{[\s\S]*?min-width: 40px;/);
+  assert.match(shotLayout, /\.quick-selected-player \{[\s\S]*?display: flex;/);
   assert.match(app, /class="btn ghost shot-close"/);
 });
