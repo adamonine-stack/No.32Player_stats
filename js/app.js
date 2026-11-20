@@ -11,7 +11,7 @@ import { assistCandidates, isAssistEvent, isMadeEvent, nearbyMadeShots, planAssi
 import { commitAssistMutation } from './core/assist-play-store.js?v=20260908-quarter-session-v2';
 import { commitQuickStatMutation, commitQuickFreeThrowMutation } from './core/quick-history-store.js?v=20260908-quarter-session-v2';
 import { initializeOfflineSync, installOfflineSyncListeners, submitOfflineCapable, synchronizeOfflineOperations, confirmQuarterSession, confirmAllPendingSessions, quarterSessionStatus, discardPendingOperationsForGame, listPendingOperations, retryPendingOperation, deletePendingOperation } from './core/offline-sync.js?v=20260920-pending-manager-v1';
-import { auth, db, firestorePersistenceReady, signInWithEmailAndPassword, signOut, onAuthStateChanged, collection, doc, getDoc, getDocs, setDoc, deleteDoc, onSnapshot, query, where, serverTimestamp } from "./core/firebase.js?v=20260901-scoped-reads-v1";
+import { auth, db, firestorePersistenceReady, signInWithEmailAndPassword, signOut, onAuthStateChanged, collection, doc, getDoc, getDocs, getDocsFromServer, setDoc, deleteDoc, onSnapshot, query, where, serverTimestamp } from "./core/firebase.js?v=20260901-scoped-reads-v1";
 import { createListenerRegistry } from './data/listener-registry.js?v=20260901-scoped-reads-v1';
 import { auditR32Data } from './diagnostics/data-integrity.js?v=20260901-scoped-reads-v1';
 import { AUDIT_CONSISTENCY_MIGRATION_VERSION, normalizeTournamentPlacementRanks, planSafeStatQuarterCleanup } from './diagnostics/audit-consistency-migration.js?v=20260917-audit-consistency-v1';
@@ -60,7 +60,7 @@ import { TOURNAMENT_2025_HYOGO_JHS_SOUTAI_MEN, TEAMS_2025_HYOGO_JHS_SOUTAI_MEN, 
 import { TOURNAMENT_2026_HYOGO_JHS_SOUTAI_MEN, TEAMS_2026_HYOGO_JHS_SOUTAI_MEN } from "./data/2026-hyogo-history-men.js?v=20260915-hyogo-2026-history-v1";
 import { findDuplicateHistoricalResultSet, findDuplicateHistoricalTournament, findExistingHistoricalPlacement, findSimilarHistoricalTeamCandidates } from "./calculations/historical-import-calculations.js?v=20260915-osaka-history-v3";
 import { findImportedTeamMatch, findExistingTournamentTeam, normalizeTeamNameForMatching, normalizeTournamentNameForMatching } from "./calculations/team-name-matching.js";
-import { registeredTournamentNames, officialGameSelection, gameTypeFields, selectedTournamentName } from "./calculations/game-registration-calculations.js?v=20261120-game-types-v1";
+import { registeredTournamentNames, officialGameSelection, gameTypeFields, exchangeMatchTournamentBackfill, selectedTournamentName } from "./calculations/game-registration-calculations.js?v=20261120-exchange-match-backfill-v1";
 import { buildStandaloneTournament, findDuplicateStandaloneTournament } from "./calculations/tournament-registration-calculations.js?v=20261117-v1";
 import { tournamentSeasonId, commitTournamentEdit } from "./calculations/tournament-edit-calculations.js?v=20261118-v1";
 import { planKinki2026Results, applyKinki2026Results } from './core/verified-kinki-import.js?v=20261118-v1';
@@ -157,7 +157,7 @@ async function openPendingOperationManager(){
   updatePendingManagerProgress();
 }
 window.addEventListener('r32-sync-status',event=>renderSyncStatus(event.detail));
-onAuthStateChanged(auth,async u=>{state.user=u; $('#pcLoginBtn').textContent=u?'ログアウト':'管理者としてログイン';await firestorePersistenceReady;await restoreLocalHistory(u).catch(error=>console.warn('Local history restore failed',error));syncOnce();if(u&&gamesSnapshotAuthoritative)await reconcileLoadedAuthoritativeGames(subscribedSeasonId||state.selectedSeasonId||state.activeSeasonId||DEFAULT_SEASON_ID);await initializeOfflineSync(u);ensureDataForView();render();if(u)ensureAuditConsistencyMigration().catch(error=>console.warn('Audit consistency migration failed',error)).then(()=>ensure2026CbgHyogoFinalImport()).catch(error=>console.warn('2026 CBG Hyogo import failed',error))});let did=false;function syncOnce(){if(!did){did=true;sync()}}
+onAuthStateChanged(auth,async u=>{state.user=u; $('#pcLoginBtn').textContent=u?'ログアウト':'管理者としてログイン';await firestorePersistenceReady;await restoreLocalHistory(u).catch(error=>console.warn('Local history restore failed',error));syncOnce();if(u&&gamesSnapshotAuthoritative)await reconcileLoadedAuthoritativeGames(subscribedSeasonId||state.selectedSeasonId||state.activeSeasonId||DEFAULT_SEASON_ID);await initializeOfflineSync(u);ensureDataForView();render();if(u)void ensureExchangeMatchGameTypeBackfill().catch(error=>{console.warn('Exchange match game type migration failed',error);toast('交流戦の区分一括更新に失敗しました。次回ログイン時に再試行します')});if(u)ensureAuditConsistencyMigration().catch(error=>console.warn('Audit consistency migration failed',error)).then(()=>ensure2026CbgHyogoFinalImport()).catch(error=>console.warn('2026 CBG Hyogo import failed',error))});let did=false;function syncOnce(){if(!did){did=true;sync()}}
 for(const id of ['cloudStatus','syncStatus'])$('#'+id)?.addEventListener('click',()=>latestSyncStatus.pending?openPendingOperationManager():synchronizeOfflineOperations());
 $('#pcLoginBtn').onclick=()=>state.user?logout():loginModal();
 function loginModal(){modal(`<h2>ログイン</h2><div class="grid"><label>メール<input id="loginEmail" autocomplete="username" type="email"></label><label>パスワード<input id="loginPass" autocomplete="current-password" type="password"></label><button class="btn" id="doLogin">ログイン</button><button class="btn ghost" id="closeModal">閉じる</button></div>`);$('#doLogin').onclick=async()=>{try{await signInWithEmailAndPassword(auth,$('#loginEmail').value,$('#loginPass').value);closeModal();toast('ログインしました')}catch(e){toast('ログイン失敗')}};$('#closeModal').onclick=closeModal}
@@ -2083,6 +2083,38 @@ window.apply2026RankingAndKinkiMen=apply2026RankingAndKinkiMen;
 window.consolidateHyogoOpponentTeams=consolidateHyogoOpponentTeams;
 window.openSeasonForm=()=>{if(!requireLogin())return;const previous=selectedSeason();modal(`<h2>新しい世代を作成</h2><div class="form-grid"><label>世代名<input id="seasonName" placeholder="2027-28"></label><label>開始年<input id="seasonStart" type="number" placeholder="2027"></label><label>終了年<input id="seasonEnd" type="number" placeholder="2028"></label></div><label class="season-carry"><input id="seasonCarry" type="checkbox" checked> ${escapeHtml(previous.name)}の選手を引き継ぐ</label><p class="sub">U13→U14、U14→U15、U15→非所属候補。試合・スタッツ・シュートはコピーしません。作成後に学年と背番号を編集できます。</p><div class="row"><button class="btn" id="createSeason">作成</button><button class="btn ghost" id="closeModal">閉じる</button></div>`);$('#closeModal').onclick=closeModal;$('#createSeason').onclick=async()=>{const name=$('#seasonName').value.trim(),startYear=Number($('#seasonStart').value),endYear=Number($('#seasonEnd').value),id=seasonIdForLabel(name);if(!/^\d{4}-\d{2}$/.test(name)||endYear<=startYear){toast('世代名と開始・終了年を確認してください');return}await setDoc(doc(db,'seasons',id),{id,name,startYear,endYear,sortOrder:Number(`${startYear}${String(endYear).slice(-2)}`),status:'future',createdAt:serverTimestamp(),updatedAt:serverTimestamp()},{merge:true});if($('#seasonCarry').checked){const sourceMemberships=new Map(state.playerSeasons.filter(item=>item.seasonId===previous.id).map(item=>[item.playerId,item]));for(const player of state.allPlayers){const next=carryPlayerSeason(sourceMemberships.get(player.id)||player);await setDoc(doc(db,'playerSeasons',`${player.id}_${id}`),{playerId:player.id,seasonId:id,...next,updatedAt:serverTimestamp()},{merge:true})}}closeModal();toast('新しい世代を作成しました')}};
 window.setActiveSeason=async id=>{if(!requireLogin())return;const next=state.seasons.find(item=>item.id===id);if(!next||!confirm(`${next.name}を現在の世代に設定しますか？`))return;for(const season of state.seasons){const status=season.id===id?'current':season.status==='current'?'past':season.status;await setDoc(doc(db,'seasons',season.id),{status,updatedAt:serverTimestamp()},{merge:true})}await setDoc(doc(db,'settings','app'),{activeSeasonId:id,updatedAt:serverTimestamp()},{merge:true});state.activeSeasonId=id;state.selectedSeasonId=id;setSelectedSeasonId(id);refreshSeasonScope();render();toast('現在の世代を変更しました')};
+// Run once for the whole database on an authenticated admin session, not per selected season.
+async function ensureExchangeMatchGameTypeBackfill() {
+  if (!state.user) return { skipped: 'not-authenticated' };
+  const settingsRef = doc(db, 'settings', 'app');
+  const settingsSnapshot = await getDoc(settingsRef);
+  if (Number(settingsSnapshot.data()?.exchangeMatchGameTypeBackfillVersion) >= 1) {
+    return { skipped: 'already-completed' };
+  }
+  // Server-only read prevents marking an incomplete offline cache as migrated.
+  const snapshot = await getDocsFromServer(collection(db, 'games'));
+  let matched = 0;
+  let updated = 0;
+  for (const record of snapshot.docs) {
+    const game = record.data();
+    if (String(game.tournament ?? '').trim() !== '交流戦') continue;
+    matched++;
+    const patch = exchangeMatchTournamentBackfill(game);
+    if (!patch) continue;
+    await setDoc(record.ref, { ...patch, updatedAt: serverTimestamp() }, { merge: true });
+    updated++;
+  }
+  // Mark complete only after every targeted write succeeds.
+  await setDoc(settingsRef, {
+    exchangeMatchGameTypeBackfillVersion: 1,
+    exchangeMatchGameTypeBackfillMatched: matched,
+    exchangeMatchGameTypeBackfillUpdated: updated,
+    exchangeMatchGameTypeBackfillAt: serverTimestamp()
+  }, { merge: true });
+  console.info('EXCHANGE_MATCH_GAME_TYPE_BACKFILL_COMPLETE', { matched, updated });
+  if (updated) toast(`大会名「交流戦」の試合区分を${updated}件更新しました`);
+  return { matched, updated };
+}
 async function fetchCollectionRows(name){const snapshot=await getDocs(collection(db,name));return snapshot.docs.map(item=>({id:item.id,...item.data()}))}
 window.rebuildPublicGameSummaries=async()=>{if(!requireLogin())return;if(!confirm('全試合の公開Summaryを原データから再構築しますか？'))return;toast('公開Summaryを再構築しています');const [games,stats,existing]=await Promise.all(['games','stats','publicGameSummaries'].map(fetchCollectionRows)),gameIds=new Set(games.map(game=>game.id));let written=0,deleted=0;for(const game of games){const summary=buildPublicGameSummary({...game,seasonId:effectiveSeasonId(game)},stats.filter(stat=>stat.gameId===game.id));await setDoc(doc(db,'publicGameSummaries',game.id),{...summary,updatedAt:serverTimestamp()},{merge:true});written++}for(const summary of existing){const gameId=summary.gameId||summary.id;if(gameIds.has(gameId))continue;await deleteDoc(doc(db,'publicGameSummaries',summary.id));deleted++}modal(`<h2>公開試合Summary再構築完了</h2><p>作成・更新：${written}件 / 不要Summary削除：${deleted}件</p><p class="sub">非ログインの試合一覧は、全試合分のSummaryが揃った時点で自動的に軽量Readへ切り替わります。</p><button class="btn" id="closeModal">閉じる</button>`);$('#closeModal').onclick=closeModal};
 async function loadAdminSourceData(){const [games,stats,playerSeasons,opponentTeams]=await Promise.all(['games','stats','playerSeasons','opponentTeams'].map(fetchCollectionRows));return {games,stats,playerSeasons,opponentTeams}}
