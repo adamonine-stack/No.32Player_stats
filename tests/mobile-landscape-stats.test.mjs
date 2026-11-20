@@ -11,7 +11,7 @@ test('landscape-specific stylesheet does not change portrait or desktop', () => 
   const opening = css.indexOf(gate);
   assert.ok(opening >= 0, 'all layout rules are gated by landscape, touch and viewport size');
   assert.equal(css.slice(0, opening).replace(/\/\*[\s\S]*?\*\//g, '').trim(), '');
-  assert.match(index, /styles\/mobile-landscape-stats\.css\?v=20261120-v1/);
+  assert.match(index, /styles\/mobile-landscape-stats\.css\?v=20261121-shot-court-v2/);
   assert.ok(!css.includes('@media (orientation: portrait)'));
 });
 
@@ -34,4 +34,16 @@ test('landscape touch phones get quick-entry layout and unchanged save behavior'
   assert.ok(css.includes('.quick-shot-modal #shotCourtRoot .shot-court'));
   assert.ok(css.includes('grid-template-columns: repeat(5, minmax(0, 1fr))'));
   assert.ok(app.includes("quickActionSheet(game,quarter,players.find(item=>item.id===button.dataset.quickPlayer),value)"));
+});
+
+test('landscape quick-shot removes the title row, expands the court and keeps Close accessible', () => {
+  const shotLayout = css.split('/* Shot input:')[1]?.split('/* Substitution editing:')[0] || '';
+  assert.match(shotLayout, /grid-template-rows: auto minmax\(0, 1fr\)/);
+  assert.match(shotLayout, /grid-template-areas: "chosen chosen" "court panel"/);
+  assert.doesNotMatch(shotLayout, /"shothead shothead"/);
+  assert.match(shotLayout, /\.shot-modal-head > div \{ display: none; \}/);
+  assert.match(shotLayout, /\.shot-modal-head \{[\s\S]*?position: absolute;/);
+  assert.match(shotLayout, /\.quick-selected-player \{[\s\S]*?padding-right: 72px;/);
+  assert.match(shotLayout, /\.shot-close \{[\s\S]*?min-width: 40px;/);
+  assert.match(app, /class="btn ghost shot-close"/);
 });
