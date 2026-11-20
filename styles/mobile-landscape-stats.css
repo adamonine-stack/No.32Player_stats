@@ -176,6 +176,8 @@
     min-width: 0;
     min-height: 0;
     margin: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
   }
   #modalRoot > .modal.quick-stats-home .quick-player {
     min-height: 0;
@@ -360,6 +362,39 @@
   #modalRoot > .modal.participation-substitution-modal h2 { font-size: 19px; }
   #modalRoot > .modal.participation-substitution-modal .row { margin-top: 7px; }
   #modalRoot > .modal.participation-substitution-modal .row .btn { min-height: 40px; }
+
+
+  /* Optional normal input is also full-width in landscape; quick input remains default. */
+  #modalRoot > .modal:has(#sfBody) {
+    padding: 5px max(7px, env(safe-area-inset-right)) max(5px, env(safe-area-inset-bottom)) max(7px, env(safe-area-inset-left)) !important;
+    place-items: stretch !important;
+  }
+  #modalRoot > .modal:has(#sfBody) > .card {
+    box-sizing: border-box;
+    width: 100% !important;
+    max-width: none !important;
+    max-height: calc(100dvh - 10px - env(safe-area-inset-bottom)) !important;
+    margin: 0 !important;
+    padding: 8px 10px !important;
+    overflow-y: auto !important;
+    border-radius: 10px !important;
+  }
+  #modalRoot > .modal:has(#sfBody) .quick-normal-switch { float: right; margin: 0; }
+  #modalRoot > .modal:has(#sfBody) .quick-normal-switch .btn { min-height: 34px; padding: 4px 8px; font-size: 11px; }
+  #modalRoot > .modal:has(#sfBody) h2 { margin: 0 0 3px !important; font-size: 17px; }
+  #modalRoot > .modal:has(#sfBody) .sub { margin: 1px 0; font-size: 10px; }
+  #modalRoot > .modal:has(#sfBody) #sfPlayer { width: min(350px, 100%); min-height: 35px; padding: 4px; }
+  #modalRoot > .modal:has(#sfBody) .quick-latest-history { margin: 4px 0; padding: 5px; }
+  #modalRoot > .modal:has(#sfBody) #sfBody .stats-form-grid {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 5px;
+  }
+  #modalRoot > .modal:has(#sfBody) #sfBody .stats-form-grid label { min-width: 0; font-size: 10px; }
+  #modalRoot > .modal:has(#sfBody) #sfBody .stats-form-grid input { min-width: 0; padding: 4px; font-size: 14px; }
+  #modalRoot > .modal:has(#sfBody) .stats-form-actions {
+    position: sticky; bottom: 0; z-index: 4; background: #101010; padding: 4px 0; margin-top: 5px;
+  }
+  #modalRoot > .modal:has(#sfBody) .stats-form-actions .btn { min-height: 36px; padding: 4px 8px; font-size: 12px; }
 
   /* Extremely short landscape screens may scroll locally rather than clip controls. */
   @media (max-height: 340px) {
