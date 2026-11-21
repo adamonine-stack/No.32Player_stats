@@ -1,0 +1,26 @@
+/*
+ * iPhone mobile navigation: keep the tab bar anchored to the real screen bottom.
+ * overflow-x:hidden on html/body creates a scrolling ancestor in WebKit,
+ * which can leave fixed elements above the screen bottom after search/rotation.
+ * Scope this to mobile only; preserve the existing tab styling and safe-area pad.
+ */
+@media screen and (max-width: 800px) {
+  @supports (overflow: clip) {
+    html, body {
+      overflow-x: clip !important;
+    }
+  }
+
+  body > #mobileNav.tabbar {
+    position: fixed !important;
+    top: auto !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    margin: 0 !important;
+    -webkit-transform: translate3d(0, 0, 0) !important;
+    transform: translate3d(0, 0, 0) !important;
+    z-index: 30;
+  }
+}

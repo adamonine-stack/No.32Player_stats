@@ -43,6 +43,9 @@ export function bindTargetPickers(gamesByPrefix) {
       const search=page.querySelector('[data-target-search]'),month=page.querySelector('[data-target-month]'),results=page.querySelector('.aggregation-target-results');
       const close=(restore=true)=>{
         document.removeEventListener('keydown',onKey);
+        // Explicitly release iOS search focus before removing the picker.
+        // Otherwise WebKit can leave the fixed bottom navigation at the keyboard height.
+        if (page.contains(document.activeElement)) document.activeElement.blur();
         page.remove();previous.forEach(({element,hidden})=>element.hidden=hidden);
         closeActivePicker=null;
         if(restore){window.scrollTo(0,scroll);trigger.focus({preventScroll:true})}
