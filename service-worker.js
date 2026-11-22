@@ -1,4 +1,4 @@
-const CACHE_NAME = 'r32-shell-20261118-kinki-results-v2';
+const CACHE_NAME = 'r32-shell-20261123-navigation-reset-v1';
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -63,7 +63,8 @@ const APP_SHELL = [
   "./js/ui/mobile-modal-viewport-fit.js?v=20260912-mobile-only-v1",
   "./js/ui/game-history-view-mode.js?v=20260830-category-colors-v1",
   "./js/ui/assist-history-selection.js?v=20260901-v1",
-  "./js/app.js?v=20261118-kinki-results-v2",
+  "./js/app.js?v=20261123-navigation-reset-v1",
+  "./js/ui/navigation-reset.js?v=20261123-navigation-reset-v1",
   "./js/core/verified-kinki-import.js",
   "./js/data/2026-kinki-jwc-soutai-results-men.js",
   "./js/data/2026-kinki-jwc-all-teams-men.js",

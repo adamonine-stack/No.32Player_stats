@@ -20,6 +20,7 @@ import { planHomeSummaryRefresh } from './calculations/home-summary-invalidation
 import { buildPublicGameSummary, hasCompletePublicGameSummaryCoverage } from './calculations/public-game-summary.js?v=20261025-action-status-v3';
 import { gameListRegistrationStatus, foulRegistrationQuarterCount, gameListActionStatus } from './calculations/game-list-status-calculations.js?v=20261025-action-status-v3';
 import { state } from "./core/state.js?v=20260915-settings-stable-v1";
+import { resetNavigationViewState } from './ui/navigation-reset.js?v=20261123-navigation-reset-v1';
 import { setGameSortDirection, setLastPlayerId, setSelectedSeasonId } from "./core/storage.js";
 import { num, pct, one, sumStats as sumStatsBase, derived, STAT_KEYS, getGameStatsRegistrationType, quarterKey, registeredQuarterNumbers, statHasRegisteredData } from "./calculations/stats-calculations.js";
 import { buildGameHistory, visibleGameHistory, groupGameHistory, historyActionOrderOverrides, createPlayEvent, historyInsertionOverrides, reconcileStatEvents } from "./calculations/game-event-calculations.js?v=20260908-quarter-session-v2";
@@ -65,7 +66,7 @@ import { buildStandaloneTournament, findDuplicateStandaloneTournament } from "./
 import { tournamentSeasonId, commitTournamentEdit } from "./calculations/tournament-edit-calculations.js?v=20261118-v1";
 import { planKinki2026Results, applyKinki2026Results } from './core/verified-kinki-import.js?v=20261118-v1';
 const quickInputStyles=document.createElement('link');quickInputStyles.rel='stylesheet';quickInputStyles.href='./styles/quick-input.css?v=20260908-quarter-session-v1';document.head.appendChild(quickInputStyles);
-if('serviceWorker' in navigator && !location.pathname.includes('/tests/'))navigator.serviceWorker.register('./service-worker.js?v=20261118-kinki-results-v2').catch(error=>console.warn('Service worker registration failed',error));
+if('serviceWorker' in navigator && !location.pathname.includes('/tests/'))navigator.serviceWorker.register('./service-worker.js?v=20261123-navigation-reset-v1').catch(error=>console.warn('Service worker registration failed',error));
 installOfflineSyncListeners();
 const nav=[['home','ホーム'],['players','選手'],['opponentTeams','対戦チーム'],['games','試合'],['stats','分析'],['team','チーム'],['settings','設定']];
 const navIcons={home:'home',players:'person',opponentTeams:'shield',games:'edit_note',stats:'bar_chart',team:'groups',settings:'settings'};
@@ -86,7 +87,22 @@ function seasonOptions(includeAll=false){const options=[...state.seasons].sort((
 function seasonSwitcher(){const season=selectedSeason(),past=state.selectedSeasonId!==state.activeSeasonId&&state.selectedSeasonId!==ALL_SEASONS_ID;return `<div class="season-switcher ${past?'past':''}"><label><span>世代：</span><select id="globalSeasonSelect">${seasonOptions(true)}</select></label>${past?`<small>過去世代：${escapeHtml(season.name)}</small>`:''}</div>`}
 function bindSeasonSwitcher(){const select=$('#globalSeasonSelect');if(select)select.onchange=event=>{state.selectedSeasonId=event.target.value;setSelectedSeasonId(state.selectedSeasonId);state.targetId='';state.teamTargetId='';state.analysisReturn=null;state.teamReturn=null;ensureSeasonSync();refreshSeasonScope();render()}}
 function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('show');setTimeout(()=>el.classList.remove('show'),1800)}
-function activateNavigationTab(tab){if(tab==='opponentTeams'&&state.tab==='opponentTeams'){window.scrollTo({top:0,behavior:'smooth'});return}if(tab==='opponentTeams'){state.selectedOpponentTeamId='';state.opponentTeamListReturnPosition=null}state.tab=tab;if(['opponentTeams','games','stats','team'].includes(tab))ensureOpponentTeamsSync();ensureDataForView();render();if(tab==='opponentTeams')requestAnimationFrame(()=>window.scrollTo({top:0,behavior:'auto'}))}
+function activateNavigationTab(tab){
+  if(!nav.some(([key])=>key===tab))return;
+  resetNavigationViewState(state,tab);
+  if(tab==='opponentTeams'){
+    opponentTeamSearch='';
+    opponentPrefectureFilter='';
+    opponentTeamSort='name';
+    opponentTeamTypeFilter='all';
+  }
+  activeDayPicker='';
+  activePeriodPicker={scope:'',field:''};
+  if(['opponentTeams','games','stats','team'].includes(tab))ensureOpponentTeamsSync();
+  ensureDataForView();
+  render();
+  requestAnimationFrame(()=>window.scrollTo({top:0,left:0,behavior:'auto'}));
+}
 function navRender(){for(const id of ['pcNav','mobileNav']){const n=$('#'+id);n.innerHTML=nav.map(([k,v])=>`<button class="${state.tab===k?'active':''}" data-tab="${k}"><span class="material-symbols-outlined">${navIcons[k]}</span><span>${v}</span></button>`).join('');n.querySelectorAll('button').forEach(b=>b.onclick=()=>activateNavigationTab(b.dataset.tab))}}
 const firestoreListeners=createListenerRegistry(),statsSources=new Map(),statsSignatures=new Map(),statsInitialKeys=new Set(),pendingSummaryPlayers=new Set(),pendingPublicGameSummaryIds=new Set();let serverGames=[];let subscribedSeasonId='',statsSeasonId='',homeSummaryKey='',summaryRefreshTimer=null,gamesSnapshotReady=false,gamesSnapshotAuthoritative=false,publicGameSummarySeasonId='',publicGameSummarySnapshotReady=false,publicGameSummaryRefreshTimer=null;const desiredStatsKeys=new Set();if(!Array.isArray(state.publicGameSummaries))state.publicGameSummaries=[];
 function scopedCollection(name,seasonId){return seasonId===ALL_SEASONS_ID?collection(db,name):query(collection(db,name),where('seasonId','==',seasonId))}
