@@ -61,7 +61,7 @@ import { TOURNAMENT_2025_HYOGO_JHS_SOUTAI_MEN, TEAMS_2025_HYOGO_JHS_SOUTAI_MEN, 
 import { TOURNAMENT_2026_HYOGO_JHS_SOUTAI_MEN, TEAMS_2026_HYOGO_JHS_SOUTAI_MEN } from "./data/2026-hyogo-history-men.js?v=20260915-hyogo-2026-history-v1";
 import { findDuplicateHistoricalResultSet, findDuplicateHistoricalTournament, findExistingHistoricalPlacement, findSimilarHistoricalTeamCandidates } from "./calculations/historical-import-calculations.js?v=20260915-osaka-history-v3";
 import { findImportedTeamMatch, findExistingTournamentTeam, normalizeTeamNameForMatching, normalizeTournamentNameForMatching } from "./calculations/team-name-matching.js";
-import { registeredTournamentNames, officialGameSelection, gameTypeFields, exchangeMatchTournamentBackfill, selectedTournamentName } from "./calculations/game-registration-calculations.js?v=20261120-exchange-match-backfill-v1";
+import { registeredTournamentNames, officialGameSelection, gameTypeFields, exchangeMatchTournamentBackfill, exchangeMatchTournamentCleanup, tournamentNameForGame, selectedTournamentName } from "./calculations/game-registration-calculations.js?v=20261123-exchange-name-cleanup-v1";
 import { buildStandaloneTournament, findDuplicateStandaloneTournament } from "./calculations/tournament-registration-calculations.js?v=20261117-v1";
 import { tournamentSeasonId, commitTournamentEdit } from "./calculations/tournament-edit-calculations.js?v=20261118-v1";
 import { planKinki2026Results, applyKinki2026Results } from './core/verified-kinki-import.js?v=20261118-v1';
@@ -173,7 +173,7 @@ async function openPendingOperationManager(){
   updatePendingManagerProgress();
 }
 window.addEventListener('r32-sync-status',event=>renderSyncStatus(event.detail));
-onAuthStateChanged(auth,async u=>{state.user=u; $('#pcLoginBtn').textContent=u?'ログアウト':'管理者としてログイン';await firestorePersistenceReady;await restoreLocalHistory(u).catch(error=>console.warn('Local history restore failed',error));syncOnce();if(u&&gamesSnapshotAuthoritative)await reconcileLoadedAuthoritativeGames(subscribedSeasonId||state.selectedSeasonId||state.activeSeasonId||DEFAULT_SEASON_ID);await initializeOfflineSync(u);ensureDataForView();render();if(u)void ensureExchangeMatchGameTypeBackfill().catch(error=>{console.warn('Exchange match game type migration failed',error);toast('交流戦の区分一括更新に失敗しました。次回ログイン時に再試行します')});if(u)ensureAuditConsistencyMigration().catch(error=>console.warn('Audit consistency migration failed',error)).then(()=>ensure2026CbgHyogoFinalImport()).catch(error=>console.warn('2026 CBG Hyogo import failed',error))});let did=false;function syncOnce(){if(!did){did=true;sync()}}
+onAuthStateChanged(auth,async u=>{state.user=u; $('#pcLoginBtn').textContent=u?'ログアウト':'管理者としてログイン';await firestorePersistenceReady;await restoreLocalHistory(u).catch(error=>console.warn('Local history restore failed',error));syncOnce();if(u&&gamesSnapshotAuthoritative)await reconcileLoadedAuthoritativeGames(subscribedSeasonId||state.selectedSeasonId||state.activeSeasonId||DEFAULT_SEASON_ID);await initializeOfflineSync(u);ensureDataForView();render();if(u)void ensureExchangeMatchGameTypeBackfill().then(()=>ensureExchangeMatchTournamentCleanup()).catch(error=>{console.warn('Exchange match tournament cleanup failed',error);toast('交流戦の大会名一括修正に失敗しました。次回ログイン時に再試行します')});if(u)ensureAuditConsistencyMigration().catch(error=>console.warn('Audit consistency migration failed',error)).then(()=>ensure2026CbgHyogoFinalImport()).catch(error=>console.warn('2026 CBG Hyogo import failed',error))});let did=false;function syncOnce(){if(!did){did=true;sync()}}
 for(const id of ['cloudStatus','syncStatus'])$('#'+id)?.addEventListener('click',()=>latestSyncStatus.pending?openPendingOperationManager():synchronizeOfflineOperations());
 $('#pcLoginBtn').onclick=()=>state.user?logout():loginModal();
 function loginModal(){modal(`<h2>ログイン</h2><div class="grid"><label>メール<input id="loginEmail" autocomplete="username" type="email"></label><label>パスワード<input id="loginPass" autocomplete="current-password" type="password"></label><button class="btn" id="doLogin">ログイン</button><button class="btn ghost" id="closeModal">閉じる</button></div>`);$('#doLogin').onclick=async()=>{try{await signInWithEmailAndPassword(auth,$('#loginEmail').value,$('#loginPass').value);closeModal();toast('ログインしました')}catch(e){toast('ログイン失敗')}};$('#closeModal').onclick=closeModal}
@@ -1144,8 +1144,10 @@ function gameForm(g={}){
     const durationMinutes=Math.max(1,num($('#gQuarterDuration').value)||DEFAULT_QUARTER_DURATION_MINUTES);
     const selectedGameType=$('#gGameType').value;
      const selectedGameTypeFields=gameTypeFields(selectedGameType);
+     const proposedTournament=selectedTournamentName($('#gTourSelect').value,$('#gTour').value);
+     if(proposedTournament==='交流戦' && selectedGameType!=='exchange_match'){toast('大会名「交流戦」は試合区分「交流戦」の場合のみ使用できます');return;}
      if(!g.id&&!Object.keys(selectedGameTypeFields).length){toast('試合区分を選択してください');return}
-     const gameCategory=$('#gCategory').value,gameSeasonId=effectiveSeasonId(g,state.selectedSeasonId),data={seasonId:gameSeasonId,date:newDate,quarters:qCount,quarterCount:qCount,quarterDurationMinutes:durationMinutes,quarterDurationSeconds:durationMinutes*60,statsRegistrationType:selectedType,...(!g.id?{shotRegistrationMode:'detail',registrationDefaultsVersion:2,participationMode:'required'}:{}),category:gameCategory,tournament:selectedTournamentName($('#gTourSelect').value,$('#gTour').value),...selectedGameTypeFields,opponent:opponentName,opponentTeamId:team?.id||g.opponentTeamId||null,opponentTeamName:opponentName,opponentPrefecture:team?.prefecture||g.opponentPrefecture||null,opponentRankAtGame:rankForGame({seasonId:gameSeasonId},team)||team?.calculatedRank||null,ownScore:finalScore.team,oppScore:finalScore.opponent,finalScore:{team:finalScore.team,opponent:finalScore.opponent},sameDateOrder:shouldPromote?0:sameDateOrderValue(g),updatedAt:serverTimestamp()};
+     const gameCategory=$('#gCategory').value,gameSeasonId=effectiveSeasonId(g,state.selectedSeasonId),data={seasonId:gameSeasonId,date:newDate,quarters:qCount,quarterCount:qCount,quarterDurationMinutes:durationMinutes,quarterDurationSeconds:durationMinutes*60,statsRegistrationType:selectedType,...(!g.id?{shotRegistrationMode:'detail',registrationDefaultsVersion:2,participationMode:'required'}:{}),category:gameCategory,tournament:tournamentNameForGame(selectedGameType,proposedTournament),...selectedGameTypeFields,opponent:opponentName,opponentTeamId:team?.id||g.opponentTeamId||null,opponentTeamName:opponentName,opponentPrefecture:team?.prefecture||g.opponentPrefecture||null,opponentRankAtGame:rankForGame({seasonId:gameSeasonId},team)||team?.calculatedRank||null,ownScore:finalScore.team,oppScore:finalScore.opponent,finalScore:{team:finalScore.team,opponent:finalScore.opponent},sameDateOrder:shouldPromote?0:sameDateOrderValue(g),updatedAt:serverTimestamp()};
     // A renamed selection must not retain a link to the previous tournament.
     data.tournamentId = g.tournament === data.tournament ? (g.tournamentId || null) : null;
     if(scoreData.quarterScores)data.quarterScores=scoreData.quarterScores;
@@ -2101,6 +2103,59 @@ window.apply2026RankingAndKinkiMen=apply2026RankingAndKinkiMen;
 window.consolidateHyogoOpponentTeams=consolidateHyogoOpponentTeams;
 window.openSeasonForm=()=>{if(!requireLogin())return;const previous=selectedSeason();modal(`<h2>新しい世代を作成</h2><div class="form-grid"><label>世代名<input id="seasonName" placeholder="2027-28"></label><label>開始年<input id="seasonStart" type="number" placeholder="2027"></label><label>終了年<input id="seasonEnd" type="number" placeholder="2028"></label></div><label class="season-carry"><input id="seasonCarry" type="checkbox" checked> ${escapeHtml(previous.name)}の選手を引き継ぐ</label><p class="sub">U13→U14、U14→U15、U15→非所属候補。試合・スタッツ・シュートはコピーしません。作成後に学年と背番号を編集できます。</p><div class="row"><button class="btn" id="createSeason">作成</button><button class="btn ghost" id="closeModal">閉じる</button></div>`);$('#closeModal').onclick=closeModal;$('#createSeason').onclick=async()=>{const name=$('#seasonName').value.trim(),startYear=Number($('#seasonStart').value),endYear=Number($('#seasonEnd').value),id=seasonIdForLabel(name);if(!/^\d{4}-\d{2}$/.test(name)||endYear<=startYear){toast('世代名と開始・終了年を確認してください');return}await setDoc(doc(db,'seasons',id),{id,name,startYear,endYear,sortOrder:Number(`${startYear}${String(endYear).slice(-2)}`),status:'future',createdAt:serverTimestamp(),updatedAt:serverTimestamp()},{merge:true});if($('#seasonCarry').checked){const sourceMemberships=new Map(state.playerSeasons.filter(item=>item.seasonId===previous.id).map(item=>[item.playerId,item]));for(const player of state.allPlayers){const next=carryPlayerSeason(sourceMemberships.get(player.id)||player);await setDoc(doc(db,'playerSeasons',`${player.id}_${id}`),{playerId:player.id,seasonId:id,...next,updatedAt:serverTimestamp()},{merge:true})}}closeModal();toast('新しい世代を作成しました')}};
 window.setActiveSeason=async id=>{if(!requireLogin())return;const next=state.seasons.find(item=>item.id===id);if(!next||!confirm(`${next.name}を現在の世代に設定しますか？`))return;for(const season of state.seasons){const status=season.id===id?'current':season.status==='current'?'past':season.status;await setDoc(doc(db,'seasons',season.id),{status,updatedAt:serverTimestamp()},{merge:true})}await setDoc(doc(db,'settings','app'),{activeSeasonId:id,updatedAt:serverTimestamp()},{merge:true});state.activeSeasonId=id;state.selectedSeasonId=id;setSelectedSeasonId(id);refreshSeasonScope();render();toast('現在の世代を変更しました')};
+// Independent, admin-only one-time cleanup after the game-type migration.
+// Back up just the targeted tournament fields and retain all other game data.
+async function ensureExchangeMatchTournamentCleanup() {
+  if (!state.user) return { skipped: 'not-authenticated' };
+  const settingsRef = doc(db, 'settings', 'app');
+  const settingsSnapshot = await getDoc(settingsRef);
+  if (Number(settingsSnapshot.data()?.exchangeMatchTournamentCleanupVersion) >= 1) return { skipped: 'already-completed' };
+  const snapshot = await getDocsFromServer(collection(db, 'games'));
+  const targets = snapshot.docs.filter(record => String(record.data().tournament ?? '').trim() === '交流戦');
+  // Abort before any writes if even one candidate has a conflicting game type.
+  for (const record of targets) exchangeMatchTournamentCleanup(record.data());
+  if (targets.length) {
+    const backupRef = doc(db, 'r32MaintenanceBackups', '20261123_exchange_match_tournament_cleanup_v1');
+    await runTransaction(db, async transaction => {
+      const previous = await transaction.get(backupRef);
+      if (!previous.exists()) {
+        transaction.set(backupRef, {
+          kind: 'clear-generic-exchange-match-tournament',
+          createdAt: serverTimestamp(),
+          operatorUid: state.user.uid,
+          matchesAtStart: targets.length,
+          originals: targets.map(record => ({
+            id: record.id, tournament: record.data().tournament,
+            tournamentId: record.data().tournamentId ?? null,
+            gameType: record.data().gameType,
+            isOfficialGame: record.data().isOfficialGame
+          }))
+        });
+      }
+    });
+  }
+  let updated = 0;
+  for (const record of targets) {
+    const changed = await runTransaction(db, async transaction => {
+      const current = await transaction.get(record.ref);
+      if (!current.exists()) return false;
+      const patch = exchangeMatchTournamentCleanup(current.data());
+      if (!patch) return false;
+      transaction.update(record.ref, { ...patch, updatedAt: serverTimestamp() });
+      return true;
+    });
+    if (changed) updated++;
+  }
+  await setDoc(settingsRef, {
+    exchangeMatchTournamentCleanupVersion: 1,
+    exchangeMatchTournamentCleanupMatched: targets.length,
+    exchangeMatchTournamentCleanupUpdated: updated,
+    exchangeMatchTournamentCleanupAt: serverTimestamp()
+  }, { merge: true });
+  console.info('EXCHANGE_MATCH_TOURNAMENT_CLEANUP_COMPLETE', { matched: targets.length, updated });
+  if (updated) toast(`交流戦${updated}試合の大会名を空白にしました`);
+  return { matched: targets.length, updated };
+}
 // Run once for the whole database on an authenticated admin session, not per selected season.
 async function ensureExchangeMatchGameTypeBackfill() {
   if (!state.user) return { skipped: 'not-authenticated' };

@@ -46,3 +46,18 @@ export function exchangeMatchTournamentBackfill(game = {}) {
 export function selectedTournamentName(existingSelection, newName) {
   return String(existingSelection || '').trim() || String(newName || '').trim();
 }
+
+/** Clear the generic tournament label only for a confirmed exchange match. */
+export function exchangeMatchTournamentCleanup(game = {}) {
+  if (String(game?.tournament ?? '').trim() !== '交流戦') return null;
+  if (game?.gameType !== 'exchange_match' || game?.isOfficialGame !== false) {
+    throw new Error('大会名「交流戦」の試合区分を確認できません。修正を中止します。');
+  }
+  return { tournament: '', tournamentId: null };
+}
+
+/** New games must not recreate 交流戦 as a tournament name. */
+export function tournamentNameForGame(gameType, name) {
+  const value = String(name ?? '').trim();
+  return gameType === 'exchange_match' && value === '交流戦' ? '' : value;
+}

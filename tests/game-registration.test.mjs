@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { GAME_TYPES, registeredTournamentNames, officialGameSelection, officialGameStatus, gameTypeFields, exchangeMatchTournamentBackfill, selectedTournamentName } from '../js/calculations/game-registration-calculations.js';
+import { GAME_TYPES, registeredTournamentNames, officialGameSelection, officialGameStatus, gameTypeFields, exchangeMatchTournamentBackfill, exchangeMatchTournamentCleanup, tournamentNameForGame, selectedTournamentName } from '../js/calculations/game-registration-calculations.js';
 
 test('registered tournaments combine game names, tournament records, and editing value', () => {
   const names = registeredTournamentNames(
@@ -55,4 +55,19 @@ test('exchange-match backfill updates only games with the exact tournament name'
   for (const name of ['交流大会', '交流戦大会', '交流戦 2026', '公式戦', '', null]) {
     assert.equal(exchangeMatchTournamentBackfill({ tournament: name, gameType: 'official' }), null);
   }
+});
+
+test('cleanup of tournament 交流戦 only affects already classified exchange matches', () => {
+  assert.deepEqual(exchangeMatchTournamentCleanup({tournament:'交流戦',gameType:'exchange_match',isOfficialGame:false}),{tournament:'',tournamentId:null});
+  assert.deepEqual(exchangeMatchTournamentCleanup({tournament:' 交流戦 ',tournamentId:'old',gameType:'exchange_match',isOfficialGame:false}),{tournament:'',tournamentId:null});
+  for (const tournament of ['', '交流大会', '交流戦2026', 'その他'])
+    assert.equal(exchangeMatchTournamentCleanup({tournament,gameType:'exchange_match',isOfficialGame:false}),null);
+  for (const game of [{gameType:'official',isOfficialGame:true}, {gameType:'exchange_tournament',isOfficialGame:false}, {isOfficialGame:false}, {gameType:'exchange_match',isOfficialGame:true}])
+    assert.throws(()=>exchangeMatchTournamentCleanup({tournament:'交流戦',...game}),/試合区分/);
+});
+test('new exchange matches never write 交流戦 as a tournament name', () => {
+  assert.equal(tournamentNameForGame('exchange_match',' 交流戦 '),'');
+  assert.equal(tournamentNameForGame('exchange_match','交流戦大会'),'交流戦大会');
+  assert.equal(tournamentNameForGame('exchange_tournament','交流戦'),'交流戦');
+  assert.equal(tournamentNameForGame('official','大会A'),'大会A');
 });

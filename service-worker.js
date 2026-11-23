@@ -1,4 +1,4 @@
-const CACHE_NAME = 'r32-shell-20261123-navigation-reset-v1';
+const CACHE_NAME = 'r32-shell-20261123-exchange-name-cleanup-v1';
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -13,7 +13,7 @@ const APP_SHELL = [
   "./js/ui/pending-history-rehydrate.js?v=20261025-test-repair-v1",
   "./js/ui/game-list-registration-status.js?v=20261019-foul-registration-v1",
   "./js/calculations/game-list-status-calculations.js",
-  "./js/calculations/game-registration-calculations.js?v=20261101-v1",
+  "./js/calculations/game-registration-calculations.js?v=20261123-exchange-name-cleanup-v1",
   "./js/calculations/tournament-edit-calculations.js?v=20261118-v1",
   "./assets/r32-background.png",
   "./assets/r32-bg-mobile.svg",
@@ -63,7 +63,7 @@ const APP_SHELL = [
   "./js/ui/mobile-modal-viewport-fit.js?v=20260912-mobile-only-v1",
   "./js/ui/game-history-view-mode.js?v=20260830-category-colors-v1",
   "./js/ui/assist-history-selection.js?v=20260901-v1",
-  "./js/app.js?v=20261123-navigation-reset-v1",
+  "./js/app.js?v=20261123-exchange-name-cleanup-v1",
   "./js/ui/navigation-reset.js?v=20261123-navigation-reset-v1",
   "./js/core/verified-kinki-import.js",
   "./js/data/2026-kinki-jwc-soutai-results-men.js",
