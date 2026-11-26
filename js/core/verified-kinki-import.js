@@ -3,7 +3,7 @@ import { calculateSeasonalTeamRank, isValidTournamentAchievement } from '../calc
 import { normalizeTeamNameForMatching } from '../calculations/team-name-matching.js';
 import { findSimilarHistoricalTeamCandidates, findDuplicateHistoricalTournament, findExistingHistoricalPlacement } from '../calculations/historical-import-calculations.js';
 import { VERIFIED_2026_KINKI_RESULT_EVENTS } from '../data/2026-kinki-jwc-soutai-results-men.js';
-import { JWC_2026_ALL_TEAM_SUPPLEMENTS } from '../data/2026-kinki-jwc-all-teams-men.js';
+import { JWC_2026_ALL_TEAM_SUPPLEMENTS, HYOGO_2026_JWC_FINAL_ROWS } from '../data/2026-kinki-jwc-all-teams-men.js?v=20261126-hyogo-final-v2';
 import { TOURNAMENT_2026_CBG_HYOGO_MEN, TEAMS_2026_CBG_HYOGO_MEN } from '../data/2026-cbg-hyogo-men.js';
 import { TOURNAMENT_2026_HYOGO_JHS_SOUTAI_MEN, TEAMS_2026_HYOGO_JHS_SOUTAI_MEN } from '../data/2026-hyogo-history-men.js';
 import { TOURNAMENT_2026_KYOTO_JHS_SOUTAI_MEN, TEAMS_2026_KYOTO_JHS_SOUTAI_MEN } from '../data/2025-2026-kyoto-history-men.js';
@@ -13,7 +13,7 @@ import { TOURNAMENT_2026_WAKAYAMA_JHS_SOUTAI_MEN, TEAMS_2026_WAKAYAMA_JHS_SOUTAI
 
 // Never infer unfinished results. The 2026 Kyoto JWC qualifier ends on Nov 22.
 export const KINKI_2026_EVENTS=[
-  ...VERIFIED_2026_KINKI_RESULT_EVENTS.map(event=>({...event,teams:[...event.teams,...(JWC_2026_ALL_TEAM_SUPPLEMENTS[event.tournament.id]||[])]})),
+  ...VERIFIED_2026_KINKI_RESULT_EVENTS.map(event=>event.tournament.id==='2026-hyogo-jwc-qualifier-men'?{tournament:{...event.tournament,resultScope:'公式最終トーナメント77枠（棄権2枠含む）'},teams:HYOGO_2026_JWC_FINAL_ROWS}:{...event,teams:[...event.teams,...(JWC_2026_ALL_TEAM_SUPPLEMENTS[event.tournament.id]||[])]}),
   {tournament:{...TOURNAMENT_2026_CBG_HYOGO_MEN,isOfficialGame:true},teams:TEAMS_2026_CBG_HYOGO_MEN},
   {tournament:TOURNAMENT_2026_HYOGO_JHS_SOUTAI_MEN,teams:TEAMS_2026_HYOGO_JHS_SOUTAI_MEN},
   {tournament:TOURNAMENT_2026_KYOTO_JHS_SOUTAI_MEN,teams:TEAMS_2026_KYOTO_JHS_SOUTAI_MEN},
@@ -63,11 +63,11 @@ function choose(row,event,teams,selection=''){
   if(found.exact.length||found.similar.length)return {team:null,ambiguous:true};
   return {team:null,ambiguous:false};
 }
-export async function planKinki2026Results(){
+export async function planKinki2026Results(events=KINKI_2026_EVENTS){
   const [teamSnapshot,tournamentSnapshot]=await Promise.all([getDocs(collection(db,'opponentTeams')),getDocs(collection(db,'tournaments'))]);
   const teams=teamSnapshot.docs.map(d=>({id:d.id,...d.data()})),registered=tournamentSnapshot.docs.map(d=>({id:d.id,...d.data()}));
   const reviews=[],rows=[],eventSummary=[];
-  for(const event of KINKI_2026_EVENTS){
+  for(const event of events){
     const registeredTournament=findDuplicateHistoricalTournament(event.tournament,registered);
     let changed=0,already=0;
     for(let index=0;index<event.teams.length;index++){
@@ -75,19 +75,19 @@ export async function planKinki2026Results(){
       const selected=found.exact.length===1?found.exact[0]:null;
       const duplicate=selected&&findExistingHistoricalPlacement(selected.tournamentPlacements||[],registeredTournament||event.tournament);
       const record={key:event.tournament.id+':'+index,eventId:event.tournament.id,index,teamName:imported.teamName,placementLabel:imported.placementLabel,selectedId:selected?.id||'',duplicate:Boolean(duplicate),candidates:[...found.exact,...found.similar.map(item=>item.team)].map(team=>({id:team.id,teamName:team.teamName,prefecture:team.prefecture||''}))};
-      rows.push(record);if(!duplicate)changed++;else already++;
-      if(!duplicate&&(!selected&&(record.candidates.length>0||found.exact.length>1)))reviews.push(record);
+      rows.push(record);if(!duplicate || duplicate.placementLabel!==imported.placementLabel || duplicate.resultConfirmed!==true || duplicate.bracketSeed!==imported.bracketSeed)changed++;else already++;
+      if(!selected&&(record.candidates.length>0||found.exact.length>1))reviews.push(record);
     }
     eventSummary.push({id:event.tournament.id,name:event.tournament.shortName||event.tournament.name,total:event.teams.length,changed,already,registered:Boolean(registeredTournament)});
   }
   return {teams,registered,rows,reviews,eventSummary};
 }
 
-export async function applyKinki2026Results(plan,decisions={},progress=()=>{}){
+export async function applyKinki2026Results(plan,decisions={},progress=()=>{},events=KINKI_2026_EVENTS,{skipAmbiguous=false}={}){
   const workingTeams=[...plan.teams],registered=[...plan.registered],reused=new Set();
-  const stats={newTeams:0,updatedTeams:0,newPlacements:0,updatedPlacements:0,unchanged:0,tournaments:0};
-  let done=0;const total=KINKI_2026_EVENTS.reduce((s,event)=>s+event.teams.length,0);
-  for(const event of KINKI_2026_EVENTS){
+  const stats={newTeams:0,updatedTeams:0,newPlacements:0,updatedPlacements:0,unchanged:0,tournaments:0,skipped:[]};
+  let done=0;const total=events.reduce((s,event)=>s+event.teams.length,0);
+  for(const event of events){
     const tournament=event.tournament;
     if(tournament.resultConfirmed!==true||tournament.resultStatus&&tournament.resultStatus!=='completed')continue;
     const existingTournament=findDuplicateHistoricalTournament(tournament,registered);
@@ -99,12 +99,15 @@ export async function applyKinki2026Results(plan,decisions={},progress=()=>{}){
       await setDoc(doc(db,'tournaments',id),{isOfficialGame:true,officialMatchClassification:'official',updatedAt:serverTimestamp()},{merge:true});
       existingTournament.isOfficialGame=true;
     }
+    const usedTeamIds=new Set();
     for(let index=0;index<event.teams.length;index++){
       const row=event.teams[index],key=tournament.id+':'+index,decision=decisions[key]||'';
       const selection=choose(row,event,workingTeams,decision);
-      if(selection.ambiguous)throw Error('チーム名の照合確認が必要です: '+row.teamName);
+      if(selection.ambiguous || (selection.team && usedTeamIds.has(selection.team.id))){if(skipAmbiguous){stats.skipped.push(row.teamName);done++;progress(done,total);continue;}throw Error('チーム名の照合確認が必要です: '+row.teamName);}
       const selected=selection.team,created=!selected;
-      const teamId=selected?.id||('2026-kinki-result-'+tournament.id+'-'+String(index+1).padStart(2,'0'));
+      const baseId='2026-kinki-result-'+tournament.id+'-'+encodeURIComponent(normalizeTeamNameForMatching(row.teamName));
+      let teamId=selected?.id||baseId;let suffix=1;while(!selected&&workingTeams.some(t=>t.id===teamId))teamId=baseId+'-'+(++suffix);
+      usedTeamIds.add(teamId);
       const current=selected?.tournamentPlacements||[];
       const placementTournament={...tournament,id};
       const old=findExistingHistoricalPlacement(current,placementTournament);
@@ -129,7 +132,7 @@ export async function applyKinki2026Results(plan,decisions={},progress=()=>{}){
       if(old && !finalVerified && isValidTournamentAchievement(old) && old.placementConfirmed!==false){
         stats.unchanged++;done++;progress(done,total);continue;
       }
-      if(old&&old.placementLabel===placement.placementLabel&&old.tournamentId===id&&old.resultConfirmed===finalVerified&&old.placementConfirmed===finalVerified&&old.teamPowerEligible===placement.teamPowerEligible&&old.isOfficialGame===true&&String(old.placementRank||old.rankValue||'')===String(rank||'')){stats.unchanged++;done++;progress(done,total);continue}
+      if(old&&old.placementLabel===placement.placementLabel&&old.tournamentId===id&&old.resultConfirmed===finalVerified&&old.bracketSeed===placement.bracketSeed&&old.placementConfirmed===finalVerified&&old.teamPowerEligible===placement.teamPowerEligible&&old.isOfficialGame===true&&String(old.placementRank||old.rankValue||'')===String(rank||'')){stats.unchanged++;done++;progress(done,total);continue}
       const placements=old?current.map(p=>p===old?{...p,...placement}:p):[...current,placement];
       const ranks=calculateSeasonalTeamRank(placements,{currentSeason:'2026-27'});
       const teamName=selected?.teamName||row.teamName;
