@@ -64,7 +64,7 @@ import { findImportedTeamMatch, findExistingTournamentTeam, normalizeTeamNameFor
 import { registeredTournamentNames, officialGameSelection, gameTypeFields, exchangeMatchTournamentBackfill, exchangeMatchTournamentCleanup, tournamentNameForGame, selectedTournamentName } from "./calculations/game-registration-calculations.js?v=20261123-exchange-name-cleanup-v1";
 import { buildStandaloneTournament, findDuplicateStandaloneTournament } from "./calculations/tournament-registration-calculations.js?v=20261117-v1";
 import { tournamentSeasonId, commitTournamentEdit } from "./calculations/tournament-edit-calculations.js?v=20261118-v1";
-import { KINKI_2026_EVENTS, planKinki2026Results, applyKinki2026Results } from './core/verified-kinki-import.js?v=20261126-kyoto-final-v2';
+import { KINKI_2026_EVENTS, planKinki2026Results, applyKinki2026Results } from './core/verified-kinki-import.js?v=20261126-osaka-final-v1';
 const quickInputStyles=document.createElement('link');quickInputStyles.rel='stylesheet';quickInputStyles.href='./styles/quick-input.css?v=20260908-quarter-session-v1';document.head.appendChild(quickInputStyles);
 if('serviceWorker' in navigator && !location.pathname.includes('/tests/'))navigator.serviceWorker.register('./service-worker.js?v=20261123-navigation-reset-v1').catch(error=>console.warn('Service worker registration failed',error));
 installOfflineSyncListeners();
@@ -173,7 +173,7 @@ async function openPendingOperationManager(){
   updatePendingManagerProgress();
 }
 window.addEventListener('r32-sync-status',event=>renderSyncStatus(event.detail));
-onAuthStateChanged(auth,async u=>{state.user=u; $('#pcLoginBtn').textContent=u?'ログアウト':'管理者としてログイン';await firestorePersistenceReady;await restoreLocalHistory(u).catch(error=>console.warn('Local history restore failed',error));syncOnce();if(u&&gamesSnapshotAuthoritative)await reconcileLoadedAuthoritativeGames(subscribedSeasonId||state.selectedSeasonId||state.activeSeasonId||DEFAULT_SEASON_ID);await initializeOfflineSync(u);ensureDataForView();render();if(u)void ensureExchangeMatchGameTypeBackfill().then(()=>ensureExchangeMatchTournamentCleanup()).catch(error=>{console.warn('Exchange match tournament cleanup failed',error);toast('交流戦の大会名一括修正に失敗しました。次回ログイン時に再試行します')});if(u)ensureAuditConsistencyMigration().catch(error=>console.warn('Audit consistency migration failed',error)).then(()=>ensure2026CbgHyogoFinalImport()).catch(error=>console.warn('2026 CBG Hyogo import failed',error)).then(()=>ensureHyogo2026JwcFinalImport()).catch(error=>{console.warn('Hyogo JWC final import failed',error);toast('兵庫JWC成績反映に失敗しました。設定から再実行できます')}).then(()=>ensureWakayama2026JwcFinalImport()).catch(error=>{console.warn('Wakayama JWC final import failed',error);toast('和歌山JWC成績反映に失敗しました。設定から再実行できます')}).then(()=>ensureKyoto2026JwcFinalImport()).catch(error=>{console.warn('Kyoto JWC final import failed',error);toast('京都JWC成績反映に失敗しました。設定から再実行できます')})});let did=false;function syncOnce(){if(!did){did=true;sync()}}
+onAuthStateChanged(auth,async u=>{state.user=u; $('#pcLoginBtn').textContent=u?'ログアウト':'管理者としてログイン';await firestorePersistenceReady;await restoreLocalHistory(u).catch(error=>console.warn('Local history restore failed',error));syncOnce();if(u&&gamesSnapshotAuthoritative)await reconcileLoadedAuthoritativeGames(subscribedSeasonId||state.selectedSeasonId||state.activeSeasonId||DEFAULT_SEASON_ID);await initializeOfflineSync(u);ensureDataForView();render();if(u)void ensureExchangeMatchGameTypeBackfill().then(()=>ensureExchangeMatchTournamentCleanup()).catch(error=>{console.warn('Exchange match tournament cleanup failed',error);toast('交流戦の大会名一括修正に失敗しました。次回ログイン時に再試行します')});if(u)ensureAuditConsistencyMigration().catch(error=>console.warn('Audit consistency migration failed',error)).then(()=>ensure2026CbgHyogoFinalImport()).catch(error=>console.warn('2026 CBG Hyogo import failed',error)).then(()=>ensureHyogo2026JwcFinalImport()).catch(error=>{console.warn('Hyogo JWC final import failed',error);toast('兵庫JWC成績反映に失敗しました。設定から再実行できます')}).then(()=>ensureWakayama2026JwcFinalImport()).catch(error=>{console.warn('Wakayama JWC final import failed',error);toast('和歌山JWC成績反映に失敗しました。設定から再実行できます')}).then(()=>ensureKyoto2026JwcFinalImport()).catch(error=>{console.warn('Kyoto JWC final import failed',error);toast('京都JWC成績反映に失敗しました。設定から再実行できます')}).then(()=>ensureOsaka2026JwcFinalImport()).catch(error=>{console.warn('Osaka JWC final import failed',error);toast('大阪JWC成績反映に失敗しました。設定から再実行できます')})});let did=false;function syncOnce(){if(!did){did=true;sync()}}
 for(const id of ['cloudStatus','syncStatus'])$('#'+id)?.addEventListener('click',()=>latestSyncStatus.pending?openPendingOperationManager():synchronizeOfflineOperations());
 $('#pcLoginBtn').onclick=()=>state.user?logout():loginModal();
 function loginModal(){modal(`<h2>ログイン</h2><div class="grid"><label>メール<input id="loginEmail" autocomplete="username" type="email"></label><label>パスワード<input id="loginPass" autocomplete="current-password" type="password"></label><button class="btn" id="doLogin">ログイン</button><button class="btn ghost" id="closeModal">閉じる</button></div>`);$('#doLogin').onclick=async()=>{try{await signInWithEmailAndPassword(auth,$('#loginEmail').value,$('#loginPass').value);closeModal();toast('ログインしました')}catch(e){toast('ログイン失敗')}};$('#closeModal').onclick=closeModal}
@@ -605,12 +605,28 @@ async function ensureKyoto2026JwcFinalImport(){
     toast(stats.skipped.length?`京都JWC：${39-stats.skipped.length}/39チーム反映。残り${stats.skipped.length}件は設定から照合してください`:'京都JWC 全39チームの成績・Team Power反映完了');
   }finally{kyotoJwcImportRunning=false}
 }
+const OSAKA_2026_JWC_FINAL_VERSION='20261126-osaka-jwc-final-v1';
+const osaka2026JwcEvents=()=>KINKI_2026_EVENTS.filter(event=>event.tournament.id==='2026-osaka-jwc-qualifier-men');
+let osakaJwcImportRunning=false;
+async function ensureOsaka2026JwcFinalImport(){
+  if(!state.user||osakaJwcImportRunning)return;
+  osakaJwcImportRunning=true;
+  try{
+    const ref=doc(db,'settings','app'),snapshot=await getDoc(ref);
+    if(snapshot.data()?.osaka2026JwcFinalVersion===OSAKA_2026_JWC_FINAL_VERSION)return;
+    const events=osaka2026JwcEvents(),plan=await planKinki2026Results(events);
+    const stats=await applyKinki2026Results(plan,{},()=>{},events,{skipAmbiguous:true});
+    const power=await recalculatePersistedTeamRankAndPower('2026-27',['大阪府']);
+    await setDoc(ref,{osaka2026JwcFinalVersion:stats.skipped.length?'pending-review':OSAKA_2026_JWC_FINAL_VERSION,osaka2026JwcFinalReport:{...stats,powerUpdated:power.updated,powerProcessed:power.processed},osaka2026JwcFinalAt:serverTimestamp()},{merge:true});
+    toast(stats.skipped.length?`大阪JWC：${162-stats.skipped.length}/162チーム反映。残り${stats.skipped.length}件は設定から照合してください`:'大阪JWC 全162チームの成績・Team Power反映完了');
+  }finally{osakaJwcImportRunning=false}
+}
 window.openKinki2026ImportMenu=async(scope='all')=>{
   if(!requireLogin())return;
   modal('<h2>2026年度 近畿エリア大会</h2><p>既存登録状況とチーム名を照合しています…</p>');
   try{
-    if(hyogoJwcImportRunning||wakayamaJwcImportRunning||kyotoJwcImportRunning){closeModal();toast('JWCを自動反映中です');return;}
-    const events=scope==='hyogoJwc'?hyogo2026JwcEvents():scope==='wakayamaJwc'?wakayama2026JwcEvents():scope==='kyotoJwc'?kyoto2026JwcEvents():KINKI_2026_EVENTS;
+    if(hyogoJwcImportRunning||wakayamaJwcImportRunning||kyotoJwcImportRunning||osakaJwcImportRunning){closeModal();toast('JWCを自動反映中です');return;}
+    const events=scope==='hyogoJwc'?hyogo2026JwcEvents():scope==='wakayamaJwc'?wakayama2026JwcEvents():scope==='kyotoJwc'?kyoto2026JwcEvents():scope==='osakaJwc'?osaka2026JwcEvents():KINKI_2026_EVENTS;
     const plan=await planKinki2026Results(events);
     const total=plan.eventSummary.reduce((sum,item)=>sum+item.changed,0);
     const pending=plan.reviews;
@@ -632,10 +648,11 @@ window.openKinki2026ImportMenu=async(scope='all')=>{
         },events);
         let powerMessage='',powerFailed=false;
         try{
-          const recalculation=await recalculatePersistedTeamRankAndPower('2026-27',scope==='hyogoJwc'?['兵庫県']:scope==='wakayamaJwc'?['和歌山県']:scope==='kyotoJwc'?['京都府']:['兵庫県','大阪府','京都府','滋賀県','奈良県','和歌山県']);
+          const recalculation=await recalculatePersistedTeamRankAndPower('2026-27',scope==='hyogoJwc'?['兵庫県']:scope==='wakayamaJwc'?['和歌山県']:scope==='kyotoJwc'?['京都府']:scope==='osakaJwc'?['大阪府']:['兵庫県','大阪府','京都府','滋賀県','奈良県','和歌山県']);
           if(scope==='hyogoJwc')await setDoc(doc(db,'settings','app'),{hyogo2026JwcFinalVersion:HYOGO_2026_JWC_FINAL_VERSION,hyogo2026JwcFinalReport:{...stats,powerUpdated:recalculation.updated,powerProcessed:recalculation.processed},hyogo2026JwcFinalAt:serverTimestamp()},{merge:true});
           if(scope==='wakayamaJwc')await setDoc(doc(db,'settings','app'),{wakayama2026JwcFinalVersion:WAKAYAMA_2026_JWC_FINAL_VERSION,wakayama2026JwcFinalReport:{...stats,powerUpdated:recalculation.updated,powerProcessed:recalculation.processed},wakayama2026JwcFinalAt:serverTimestamp()},{merge:true});
           if(scope==='kyotoJwc')await setDoc(doc(db,'settings','app'),{kyoto2026JwcFinalVersion:KYOTO_2026_JWC_FINAL_VERSION,kyoto2026JwcFinalReport:{...stats,powerUpdated:recalculation.updated,powerProcessed:recalculation.processed},kyoto2026JwcFinalAt:serverTimestamp()},{merge:true});
+          if(scope==='osakaJwc')await setDoc(doc(db,'settings','app'),{osaka2026JwcFinalVersion:OSAKA_2026_JWC_FINAL_VERSION,osaka2026JwcFinalReport:{...stats,powerUpdated:recalculation.updated,powerProcessed:recalculation.processed},osaka2026JwcFinalAt:serverTimestamp()},{merge:true});
           powerMessage='Team Power再計算完了：対象 '+recalculation.processed+' チーム、更新 '+recalculation.updated+' チーム、試合側ランク同期 '+recalculation.gameRanksUpdated+' 件';
         }catch(e){
           console.error('KINKI_2026_RECALCULATE_FAILED',e);
@@ -647,10 +664,11 @@ window.openKinki2026ImportMenu=async(scope='all')=>{
         if(powerFailed)$('#retryKinkiPower').onclick=async()=>{
           const retry=$('#retryKinkiPower');retry.disabled=true;retry.textContent='再計算中…';
           try{
-            const outcome=await recalculatePersistedTeamRankAndPower('2026-27',scope==='hyogoJwc'?['兵庫県']:scope==='wakayamaJwc'?['和歌山県']:scope==='kyotoJwc'?['京都府']:['兵庫県','大阪府','京都府','滋賀県','奈良県','和歌山県']);
+            const outcome=await recalculatePersistedTeamRankAndPower('2026-27',scope==='hyogoJwc'?['兵庫県']:scope==='wakayamaJwc'?['和歌山県']:scope==='kyotoJwc'?['京都府']:scope==='osakaJwc'?['大阪府']:['兵庫県','大阪府','京都府','滋賀県','奈良県','和歌山県']);
             if(scope==='hyogoJwc')await setDoc(doc(db,'settings','app'),{hyogo2026JwcFinalVersion:HYOGO_2026_JWC_FINAL_VERSION,hyogo2026JwcFinalReport:{...stats,powerUpdated:outcome.updated,powerProcessed:outcome.processed},hyogo2026JwcFinalAt:serverTimestamp()},{merge:true});
           if(scope==='wakayamaJwc')await setDoc(doc(db,'settings','app'),{wakayama2026JwcFinalVersion:WAKAYAMA_2026_JWC_FINAL_VERSION,wakayama2026JwcFinalReport:{...stats,powerUpdated:outcome.updated,powerProcessed:outcome.processed},wakayama2026JwcFinalAt:serverTimestamp()},{merge:true});
           if(scope==='kyotoJwc')await setDoc(doc(db,'settings','app'),{kyoto2026JwcFinalVersion:KYOTO_2026_JWC_FINAL_VERSION,kyoto2026JwcFinalReport:{...stats,powerUpdated:outcome.updated,powerProcessed:outcome.processed},kyoto2026JwcFinalAt:serverTimestamp()},{merge:true});
+          if(scope==='osakaJwc')await setDoc(doc(db,'settings','app'),{osaka2026JwcFinalVersion:OSAKA_2026_JWC_FINAL_VERSION,osaka2026JwcFinalReport:{...stats,powerUpdated:outcome.updated,powerProcessed:outcome.processed},osaka2026JwcFinalAt:serverTimestamp()},{merge:true});
             modal('<h2>Team Power再計算完了</h2><p>対象 '+outcome.processed+' チーム、更新 '+outcome.updated+' チーム、試合側ランク同期 '+outcome.gameRanksUpdated+' 件</p><button class="btn" id="closeModal">閉じる</button>');
             $('#closeModal').onclick=()=>{closeModal();location.reload()};
           }catch(error){console.error('KINKI_2026_POWER_RETRY_FAILED',error);toast('再計算失敗：'+(error?.message||String(error)));retry.disabled=false;retry.textContent='Team Powerだけ再計算'}
@@ -669,7 +687,7 @@ window.openKinki2026ImportMenu=async(scope='all')=>{
 function settingsView(){
   const rows=[...state.seasons].sort((a,b)=>b.sortOrder-a.sortOrder).map(item=>`<div class="season-admin-row"><b>${escapeHtml(item.name)}</b><span>${item.status}${item.id===state.activeSeasonId?' / 現在':''}</span>${state.user&&item.id!==state.activeSeasonId?`<button class="btn small ghost" onclick="setActiveSeason('${item.id}')">現在の世代に設定</button>`:''}</div>`).join('');
   const generationActions=state.user?'<div class="row"><button class="btn" onclick="openSeasonForm()">新しい世代を作成</button><button class="btn ghost" onclick="backupSeasonData()">migration前バックアップ</button><button class="btn ghost" onclick="migrateSeasonData()">Season migration</button></div>':'';
-  const adminActions=state.user?'<button class="btn" onclick="rebuildPublicGameSummaries()">公開試合Summaryを再構築</button><button class="btn" onclick="recalculateAllSeasonRanks()">全チームのランク・Power再計算</button><button class="btn ghost" onclick="openKinki2026ImportMenu()">2026近畿・総体・JWC・CBG結果を反映</button><button class="btn ghost" onclick="openKinki2026ImportMenu(\'hyogoJwc\')">2026兵庫JWC最終結果を反映</button><button class="btn ghost" onclick="openKinki2026ImportMenu(\'wakayamaJwc\')">2026和歌山JWC最終結果を反映</button><button class="btn ghost" onclick="openKinki2026ImportMenu(\'kyotoJwc\')">2026京都JWC最終結果を反映</button>':'';
+  const adminActions=state.user?'<button class="btn" onclick="rebuildPublicGameSummaries()">公開試合Summaryを再構築</button><button class="btn" onclick="recalculateAllSeasonRanks()">全チームのランク・Power再計算</button><button class="btn ghost" onclick="openKinki2026ImportMenu()">2026近畿・総体・JWC・CBG結果を反映</button><button class="btn ghost" onclick="openKinki2026ImportMenu(\'hyogoJwc\')">2026兵庫JWC最終結果を反映</button><button class="btn ghost" onclick="openKinki2026ImportMenu(\'wakayamaJwc\')">2026和歌山JWC最終結果を反映</button><button class="btn ghost" onclick="openKinki2026ImportMenu(\'kyotoJwc\')">2026京都JWC最終結果を反映</button><button class="btn ghost" onclick="openKinki2026ImportMenu(\'osakaJwc\')">2026大阪JWC最終結果を反映</button>':'';
   return `<div class="card"><h2>設定</h2><section class="season-admin"><div class="section-title">チーム世代</div>${rows}${generationActions}</section><p class="sub">表示世代の切替と「現在の世代に設定」は別の操作です。</p><div class="row"><button class="btn ghost" onclick="location.reload()">再読み込み</button>${adminActions}</div></div>`;
 }
 function bindUpperFilters(){
