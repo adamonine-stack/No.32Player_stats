@@ -101,40 +101,106 @@ export const HYOGO_2026_JWC_FINAL_ROWS=HYOGO_FINAL_TABLE.map(([bracketSeed,teamN
   sourceType:'officialHyogoJwc2026FinalBracket',sourceUrl:'https://www.hyogo-jhs-basketball.net/_files/ugd/7b84d6_705b4913120a480581c138f089974a4b.pdf'
 }));
 const HYOGO=HYOGO_2026_JWC_FINAL_ROWS.filter(row=>![19,59,40,39,1,77,20,58].includes(row.bracketSeed));
-// 大阪: 府協会U15部会公式決勝トーナメントに列記されているチーム。
-// 元PDFは左右2列でテキスト化すると数チームが連結するため、明確に独立して読めた名称のみ収録。
-// 1〜4位は既存データ側にあり、この配列から除外する。
-const OSAKA_NAMES=[
- 'REDFORCES','SUN HEARTS','門真市立第二中学校','NEXT HEROES',
- "K's LEO BASKETBALL CLUB",'RISING STAR','吹田市立佐井寺中学校',
- '大阪市立東陽中学校','大阪市立宮原中学校','EDGE','豊中市立第十三中学校',
- '吹田市立第一中学校','monolith U15','大阪エヴェッサU15','大阪市立東淀中学校',
- 'SHINE','東大阪市立石切中学校','SPARTANS','大阪市立港中学校','GRITS',
- 'SecretBase U15','明星中学校','吹田市立第五中学校','ディノニクスU15',
- '大阪市立港南中学校','大阪市立阪南中学校','Sparkle Basketball Club',
- 'BC Alma枚方',"T's CROWS",'吹田市立千里丘中学校','大阪市立今市中学校',
- '東大阪市立花園中学校','寝屋川BC','大阪市立長吉中学校',
- '泉大津ジュニアバスケットボールクラブ','大阪市立文の里中学校',
- '大阪市立東生野中学校','東大阪市立新喜多中学校','八尾市立上之島中学校',
- 'BLACK UNICORN','B☆MAX','八尾市立東中学校','吹田市立第六中学校',
- '大阪市立三国中学校','RED FROGS','ANGRY OWLS','Osaka Firefly',
- '大阪市立新北島中学校','大阪市立大正中央中学校','RGS','ENERGY',
- '大阪市立大正東中学校','大阪市立住之江中学校','近大付属中学校',
- '八上ワイルドキャッツU-15','NEXTEST','大阪GOLDEN EGG','sHow time',
- 'GORILLAS','大東市立住道中学校','B-NETZ','茨木市立天王中学校',
- '大阪市立大和川中学校','FRONTIER SPIRITS U15','大阪市立今津中学校',
- '大阪市立住吉中学校','大阪市立大宮中学校','大阪市立蒲生中学校',
- '摂津市立第四中学校','大東市立谷川中学校','枚方市立枚方中学校',
- 'EL.DRAGON U-15','大阪市立茨田北中学校','なみはやバスケットボールクラブ',
- '大阪市立新豊崎中学校','大阪市立美津島中学校',
- 'HOS','IBARAKI BASKETBALL CLUB','大阪市立南中学校','TEAM GRIT',
- 'CLUB SPIRITS','HOOPERS','大阪市立大正西中学校','高槻市立第十中学校',
- 'RAW STONES','東大阪市立金岡中学校','Sw!tch U15','大阪市立巽中学校'
+// 大阪府公式資料：地区予選男子154チーム（1〜7頁）と決勝トーナメント男子92チーム（91試合）。
+// 重複84チームを統合した162チーム。決勝進出チームは最終到達段階のみ。
+// 大阪エヴェッサBユースとクラブは別チーム。地区予選順位欄には矛盾があるため、決勝表への掲載有無で敗退を判定。
+const OSAKA_FINAL_GROUPS=[
+  [
+    "優勝",
+    "KAGO CLUB"
+  ],
+  [
+    "準優勝",
+    "AIR"
+  ],
+  [
+    "ベスト4",
+    "EAST.O.ACADEMY U15 TEAM|T-SMILE BASKETBALL TEAM U15"
+  ],
+  [
+    "ベスト8",
+    "RGS|ANGRY OWLS|RED FROGS|REDFORCES"
+  ],
+  [
+    "ベスト16",
+    "CLUB SPIRITS|sHow time|泉大津ジュニアバスケットボールクラブ|豊中市立第十三中学校|EL.DRAGON U-15|FRONTIER SPIRITS U15|大阪市立東生野中学校|大阪エヴェッサU15"
+  ],
+  [
+    "ベスト32",
+    "Sw!tch U15|大阪市立新豊崎中学校|摂津市立第四中学校|大阪市立三国中学校|寝屋川ＢＣ|吹田市立千里丘中学校|大阪市立東淀中学校|SUNHEARTS|TEAM GRIT|大阪市立蒲生中学校|Osaka Firefly|NEXTEST|大阪市立長吉中学校|明星中学校|吹田市立第五中学校|RISING STAR"
+  ],
+  [
+    "ベスト64",
+    "RAW STONES|枚方市立枚方中学校|大阪市立大宮中学校|B-NETZ|大阪市立住之江中学校|八上ワイルドキャッツU-15|大阪市立大正東中学校|BLACK UNICORN|大阪市立文の里中学校|Alma|SecretBase U15|大阪市立港南中学校|大阪市立港中学校|K'sLEO BASKETBALL CLUB|高槻市立第十中学校|HOOPERS|IBARAKI BASKETBALL CLUB|大東市立谷川中学校|近畿大学附属中学校|ENERGY|大阪GOLDEN EGG|B☆MAX|東大阪市立花園中学校|T's CROWS|GRITS|EDGE|SPARTANS|門真市立第二中学校"
+  ],
+  [
+    "決勝トーナメント1回戦敗退",
+    "大阪市立大正西中学校|大阪市立南中学校|大阪市立茨田北中学校|HOS|大阪市立大和川中学校|大阪市立今津中学校|大阪市立新北島中学校|GORILLAS|東大阪市立新喜多中学校|八尾市立東中学校|大阪市立阪南中学校|ディノニクスU15|東大阪市立石切中学校|monolith U15|吹田市立佐井寺中学校|大阪市立宮原中学校|東大阪市立金岡中学校|大阪市立巽中学校|なみはやバスケットボールクラブ|大阪市立美津島中学校|茨木市立天王中学校|大阪市立住吉中学校|大阪市立大正中央中学校|大東市立住道中学校|八尾市立上之島中学校|吹田市立第六中学校|Sparkle Basketball Club|大阪市立今市中学校|SHINE|吹田市立第一中学校|NEXT HEROES|大阪市立東陽中学校"
+  ],
+  [
+    "地区予選敗退",
+    "D SELECT|E.M.B.C U15|GOLDEN BEARS Jr.|Golden Wombats|HOSOGO GIBSONS|SkyHookU15|TAKATSU CLUB U15|八尾市立亀井中学校|八尾市立八尾中学校|八尾市立大正中学校|八尾市立曙川中学校|八尾市立高安小中学校|八尾市立龍華中学校|北大阪HORNETS|吹田市立南千里中学校|吹田市立山田中学校|吹田市立片山中学校|吹田市立第三中学校|吹田市立第二中学校|吹田市立豊津中学校|吹田市立青山台中学校|堺市立長尾中学校|大東市立諸福中学校|大阪エヴェッサU-15（クラブ）|大阪市立三稜中学校|大阪市立井高野中学校|大阪市立八阪中学校|大阪市立南港北中学校|大阪市立城陽中学校|大阪市立夕陽丘中学校|大阪市立大池中学校|大阪市立天下茶屋中学校|大阪市立平野北中学校|大阪市立成南中学校|大阪市立新北野中学校|大阪市立旭陽中学校|大阪市立東住吉中学校|大阪市立松虫中学校|大阪市立桜宮中学校|大阪市立歌島中学校|大阪市立淡路中学校|大阪市立花乃井中学校|大阪市立菫中学校|大阪市立西中学校|大阪市立高津中学校|大阪市立鯰江中学校|大阪市立鶴見橋中学校|大阪金剛インターナショナル中学校|太子町立中学校|寝屋川市立第一中学校|東大阪市立上小阪中学校|東大阪市立小阪中学校|東大阪市立枚岡中学校|東大阪市立義務教育学校くすは縄手南校|東大阪市立長瀬中学校|枚方市立楠葉中学校|枚方市立第四中学校|柏原市立堅下南中学校|池田市立池田中学校|羽曳野市立河原城中学校|羽曳野市立高鷲南中学校|茨木市立平田中学校|豊中市立第十五中学校|関西大学中等部|関西大学第一中学校|高槻市立柳川中学校|高槻市立第三中学校|高槻市立第六中学校|高槻市立芝谷中学校|高槻市立阿武野中学校"
+  ]
 ];
-const OSAKA=[...new Set(OSAKA_NAMES)].map(teamName=>officialEntry(teamName,{
-  sourceType:'osakaU15OfficialFinalBracketNames',
-  sourceUrl:'https://u15.osakabasketball.jp/wp/wp-content/uploads/2026/11/U15選手権-結果（男子）-1.pdf'
-}));
+const OSAKA_ALIASES={
+  "KAGO CLUB": [
+    "KAGO"
+  ],
+  "EAST.O.ACADEMY U15 TEAM": [
+    "EAST.O.ACADEMY",
+    "EAST O ACADEMY"
+  ],
+  "T-SMILE BASKETBALL TEAM U15": [
+    "T-SMILE",
+    "Tスマ"
+  ],
+  "Alma": [
+    "BC Alma枚方",
+    "BC Alma",
+    "Alma枚方"
+  ],
+  "SUNHEARTS": [
+    "SUN HEARTS"
+  ],
+  "SecretBase U15": [
+    "Secret Base",
+    "Secret Base U15"
+  ],
+  "近畿大学附属中学校": [
+    "近大付属中学校",
+    "近大附属中学校",
+    "近大附属"
+  ],
+  "IBARAKI BASKETBALL CLUB": [
+    "IBBC"
+  ],
+  "K'sLEO BASKETBALL CLUB": [
+    "K's LEO BASKETBALL CLUB"
+  ],
+  "大阪エヴェッサU15": [
+    "大阪エヴェッサU15（Bユース）",
+    "大阪エヴェッサ Bユース"
+  ],
+  "大阪エヴェッサU-15（クラブ）": [
+    "大阪エヴェッサ クラブ",
+    "大阪エヴェッサU15クラブ"
+  ],
+  "SkyHookU15": [
+    "SkyHook U15"
+  ],
+  "寝屋川ＢＣ": [
+    "寝屋川BC"
+  ]
+};
+export const OSAKA_2026_JWC_FINAL_ROWS=OSAKA_FINAL_GROUPS.flatMap(([placementLabel,names])=>names.split('|').map(teamName=>({
+  ...officialEntry(teamName),aliases:OSAKA_ALIASES[teamName]||[],
+  teamType:/中学校|中等部|小中学校|義務教育学校/u.test(teamName)?'中学校':'クラブチーム',
+  placementLabel,placementConfirmed:true,resultConfirmed:true,teamPowerEligible:true,
+  rank:placementLabel==='優勝'?'S':placementLabel==='準優勝'?'A+':placementLabel==='ベスト4'?'A':placementLabel==='ベスト8'?'B':placementLabel==='ベスト16'?'C':placementLabel==='ベスト32'?'D':'E',
+  sourceType:placementLabel==='地区予選敗退'?'officialOsakaJwc2026DistrictResults':'officialOsakaJwc2026FinalBracket',
+  sourceUrl:placementLabel==='地区予選敗退'?null:'https://u15.osakabasketball.jp/wp/wp-content/uploads/2026/11/U15選手権-結果（男子）-1.pdf'
+})));
+const OSAKA=OSAKA_2026_JWC_FINAL_ROWS.filter(row=>!['優勝','準優勝','ベスト4'].includes(row.placementLabel));
 // 滋賀: 当該ページは勝ち上がりの一部に左右表記のずれがあるため、敗退段階は未確定。
 const SHIGA=['ジュニアボーラーズ','JUMP','REDNEX.','Re:Bloom','GENESIS','SILVER SHARKS','NINJA AIRS'].map(teamName=>officialEntry(teamName,{
   sourceUrl:'http://shiga.japanbasketball.jp/U15/img/2026JWC_boy.pdf'
@@ -182,6 +248,5 @@ export const JWC_2026_ALL_TEAM_SUPPLEMENTS={
 };
 export const JWC_2026_UNRESOLVED={
   '2026-hyogo-jwc-qualifier-men':{unknownSeeds:[],note:'全77枠の名称・最終到達順位を公式最終表で照合済み'},
-  '2026-osaka-jwc-qualifier-men':{note:'全チーム名称確認を優先。PDFブラケット内の多くの敗退ラウンドは位置対応未検証'},
   '2026-shiga-jwc-qualifier-men':{note:'PDFブラケットの一部対応・得点に矛盾。ベスト4以外は敗退順位未検証'}
 };
