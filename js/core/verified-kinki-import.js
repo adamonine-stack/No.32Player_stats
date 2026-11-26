@@ -3,7 +3,7 @@ import { calculateSeasonalTeamRank, isValidTournamentAchievement } from '../calc
 import { normalizeTeamNameForMatching } from '../calculations/team-name-matching.js';
 import { findSimilarHistoricalTeamCandidates, findDuplicateHistoricalTournament, findExistingHistoricalPlacement } from '../calculations/historical-import-calculations.js';
 import { VERIFIED_2026_KINKI_RESULT_EVENTS } from '../data/2026-kinki-jwc-soutai-results-men.js?v=20261126-kyoto-final-v2';
-import { JWC_2026_ALL_TEAM_SUPPLEMENTS, HYOGO_2026_JWC_FINAL_ROWS, WAKAYAMA_2026_JWC_FINAL_ROWS } from '../data/2026-kinki-jwc-all-teams-men.js?v=20261126-wakayama-final-v1';
+import { JWC_2026_ALL_TEAM_SUPPLEMENTS, HYOGO_2026_JWC_FINAL_ROWS, WAKAYAMA_2026_JWC_FINAL_ROWS, OSAKA_2026_JWC_FINAL_ROWS } from '../data/2026-kinki-jwc-all-teams-men.js?v=20261126-osaka-final-v1';
 import { TOURNAMENT_2026_CBG_HYOGO_MEN, TEAMS_2026_CBG_HYOGO_MEN } from '../data/2026-cbg-hyogo-men.js';
 import { TOURNAMENT_2026_HYOGO_JHS_SOUTAI_MEN, TEAMS_2026_HYOGO_JHS_SOUTAI_MEN } from '../data/2026-hyogo-history-men.js';
 import { TOURNAMENT_2026_KYOTO_JHS_SOUTAI_MEN, TEAMS_2026_KYOTO_JHS_SOUTAI_MEN } from '../data/2025-2026-kyoto-history-men.js';
@@ -13,7 +13,7 @@ import { TOURNAMENT_2026_WAKAYAMA_JHS_SOUTAI_MEN, TEAMS_2026_WAKAYAMA_JHS_SOUTAI
 
 // Never infer unverified results. Kyoto 2026 JWC finished Nov 22; official Term1–3 results cover all 39 men's teams.
 export const KINKI_2026_EVENTS=[
-  ...VERIFIED_2026_KINKI_RESULT_EVENTS.map(event=>event.tournament.id==='2026-hyogo-jwc-qualifier-men'?{tournament:{...event.tournament,resultScope:'公式最終トーナメント77枠（棄権2枠含む）'},teams:HYOGO_2026_JWC_FINAL_ROWS}:event.tournament.id==='2026-wakayama-jwc-qualifier-men'?{tournament:{...event.tournament,resultScope:'公式最終トーナメント男子17チーム・16試合'},teams:WAKAYAMA_2026_JWC_FINAL_ROWS}:{...event,teams:[...event.teams,...(JWC_2026_ALL_TEAM_SUPPLEMENTS[event.tournament.id]||[])]}),
+  ...VERIFIED_2026_KINKI_RESULT_EVENTS.map(event=>event.tournament.id==='2026-hyogo-jwc-qualifier-men'?{tournament:{...event.tournament,resultScope:'公式最終トーナメント77枠（棄権2枠含む）'},teams:HYOGO_2026_JWC_FINAL_ROWS}:event.tournament.id==='2026-wakayama-jwc-qualifier-men'?{tournament:{...event.tournament,resultScope:'公式最終トーナメント男子17チーム・16試合'},teams:WAKAYAMA_2026_JWC_FINAL_ROWS}:event.tournament.id==='2026-osaka-jwc-qualifier-men'?{tournament:{...event.tournament,resultScope:'公式地区予選・決勝トーナメント男子162チーム',placementMethod:'district-and-final-bracket',source:{organization:'大阪府バスケットボール協会U15',document:'添付公式PDF 2026大阪府U15選手権予選結果・U15選手権-結果（男子）-1',verified:true}},teams:OSAKA_2026_JWC_FINAL_ROWS}:{...event,teams:[...event.teams,...(JWC_2026_ALL_TEAM_SUPPLEMENTS[event.tournament.id]||[])]}),
   {tournament:{...TOURNAMENT_2026_CBG_HYOGO_MEN,isOfficialGame:true},teams:TEAMS_2026_CBG_HYOGO_MEN},
   {tournament:TOURNAMENT_2026_HYOGO_JHS_SOUTAI_MEN,teams:TEAMS_2026_HYOGO_JHS_SOUTAI_MEN},
   {tournament:TOURNAMENT_2026_KYOTO_JHS_SOUTAI_MEN,teams:TEAMS_2026_KYOTO_JHS_SOUTAI_MEN},
@@ -95,7 +95,7 @@ export async function applyKinki2026Results(plan,decisions={},progress=()=>{},ev
     if(!existingTournament){
       await setDoc(doc(db,'tournaments',id),{...tournament,seasonId:'season_2026_27',isOfficialGame:true,officialMatchClassification:'official',updatedAt:serverTimestamp(),createdAt:serverTimestamp()});
       registered.push({...tournament,id,isOfficialGame:true});stats.tournaments++;
-    }else if(tournament.id==='2026-kyoto-jwc-qualifier-men'&&existingTournament.resultScope!==tournament.resultScope){
+    }else if(['2026-kyoto-jwc-qualifier-men','2026-osaka-jwc-qualifier-men'].includes(tournament.id)&&existingTournament.resultScope!==tournament.resultScope){
       const resultPatch={resultScope:tournament.resultScope,placementMethod:tournament.placementMethod,resultConfirmed:true,resultStatus:'completed',source:tournament.source,isOfficialGame:true,officialMatchClassification:'official',updatedAt:serverTimestamp()};
       await setDoc(doc(db,'tournaments',id),resultPatch,{merge:true});
       Object.assign(existingTournament,resultPatch);
