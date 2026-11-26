@@ -1,4 +1,4 @@
-// 2026-11-17: 公開済みの男子大会確定結果のみ収録。女子・未終了の京都府JWC予選は含めない。
+// 男子大会の確認済み確定結果のみ収録。京都府JWCは2026-11-22終了、上位4チームを収録。
 const source=(organization,pageUrl,document)=>({organization,pageUrl,document,verified:true});
 const make=(id,name,shortName,prefecture,level,sourceData,teams,extra={})=>({
   tournament:{
@@ -27,6 +27,13 @@ export const VERIFIED_2026_KINKI_RESULT_EVENTS=[
      ['BRAVEBIRDS',null,'7位・ベスト8',['BRAVE BIRDS']],
      ['Three B',null,'8位・ベスト8',['ThreeB']]],
     {endDate:'2026-11-15',resultScope:'公式発表 1位〜8位'}),
+  make('2026-kyoto-jwc-qualifier-men','2026年度 第7回全国U15バスケットボール選手権大会 京都府予選 男子','2026 Jr.ウインターカップ京都府予選 男子','京都府','prefecture',
+    source('日本バスケットボール協会（決勝）・家造.net（準決勝・3位決定戦）','https://juniorwintercup.japanbasketball.jp/2026-27/schedule/pref/','2026-11-22 京都府男子決勝・上位4チーム結果 https://www.iezo.net/forum/basketball-j/155251/'),
+    [['KYOTO DREAMERS',null,'優勝',['KYOTODREAMERS','京都ドリーマーズ']],
+     ['京都精華学園中学校',null,'準優勝',['京都精華学園中','京都精華学園','京都精華'],'中学校'],
+     ['BIG TURTLES',null,'3位',['BIGTURTLES']],
+     ['B.UNITE',null,'4位',['B UNITE','BUNITE']]],
+    {endDate:'2026-11-22',resultScope:'男子上位4チーム確定・その他順位未取得'}),
   make('2026-osaka-jwc-qualifier-men','2026年度 第7回全国U15バスケットボール選手権大会 大阪府予選 男子','2026 Jr.ウインターカップ大阪府予選 男子','大阪府','prefecture',
     source('大阪府バスケットボール協会U15','https://www.iezo.net/forum/basketball-j/155243/','2026年度男子準決勝・決勝（大阪府協会への原資料リンクあり）'),
     [['KAGO CLUB',null,'優勝',['KAGO']],
@@ -78,5 +85,5 @@ export const VERIFIED_2026_KINKI_RESULT_EVENTS=[
      ['打出中学校','滋賀県','予選リーグ敗退',['打出'],'中学校']],
     {endDate:'2026-08-06',resultScope:'男子12チーム（上位4・予選リーグ敗退8）'})
 ];
-// 2026京都府Jr.ウインターカップ予選は11/22の決勝が未終了なので、確定データに入れない。
-export const PENDING_2026_KYOTO_JWC_MEN={prefecture:'京都府',finalDate:'2026-11-22',source:'https://www.iezo.net/forum/basketball-j/155251/'};
+// 互換用の旧定数。京都府JWCは上位4チームが確認済みで、その他の順位は未取得。
+export const PENDING_2026_KYOTO_JWC_MEN={prefecture:'京都府',finalDate:'2026-11-22',resultStatus:'completed',resultScope:'top-four-only',source:'https://www.iezo.net/forum/basketball-j/155251/'};
