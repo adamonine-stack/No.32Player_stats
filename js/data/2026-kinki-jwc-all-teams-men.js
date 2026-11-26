@@ -14,7 +14,7 @@ const known=(teamName,placementLabel,extra={})=>({
   teamPowerEligible:true,...extra
 });
 // 兵庫県公式最終トーナメント表（2026-11-15、添付 202611151636398.pdf）を勝ち上がり線と得点で照合。
-// 77枠。13番は取消線・0点のため棄権として記録し、Power対象外とする。
+// 77枠。13番・75番は取消線・0点のため棄権として記録し、Power対象外とする。
 const HYOGO_FINAL_TABLE=[
   [1,"センターサークル","5位・ベスト8",["センターサークル"]],
   [2,"MIRRORS","ベスト64"],
@@ -90,14 +90,14 @@ const HYOGO_FINAL_TABLE=[
   [72,"team DENY","ベスト64"],
   [73,"尼崎市立塚口中学校","ベスト32"],
   [74,"BELUGA","ベスト64"],
-  [75,"A.C.T. BASKETBALL CLUB 2026","1回戦敗退"],
+  [75,"A.C.T. BASKETBALL CLUB 2026","棄権（出場なし）"],
   [76,"DREAMSEEKER","ベスト64"],
   [77,"明石市立望海中学校","6位・ベスト8",["望海中学校","望海"]]
 ];
 export const HYOGO_2026_JWC_FINAL_ROWS=HYOGO_FINAL_TABLE.map(([bracketSeed,teamName,placementLabel,aliases=[]])=>({
   ...officialEntry(teamName),aliases,bracketSeed,placementLabel,placementConfirmed:true,resultConfirmed:true,
-  teamPowerEligible:bracketSeed!==13,
-  rank:placementLabel==='優勝'?'S':placementLabel==='準優勝'?'A+':/^[34]位/.test(placementLabel)?'A':/ベスト8/.test(placementLabel)?'B':/ベスト16/.test(placementLabel)?'C':/ベスト32/.test(placementLabel)?'D':bracketSeed===13?null:'E',
+  teamPowerEligible:![13,75].includes(bracketSeed),
+  rank:placementLabel==='優勝'?'S':placementLabel==='準優勝'?'A+':/^[34]位/.test(placementLabel)?'A':/ベスト8/.test(placementLabel)?'B':/ベスト16/.test(placementLabel)?'C':/ベスト32/.test(placementLabel)?'D':[13,75].includes(bracketSeed)?null:'E',
   sourceType:'officialHyogoJwc2026FinalBracket',sourceUrl:'https://www.hyogo-jhs-basketball.net/_files/ugd/7b84d6_705b4913120a480581c138f089974a4b.pdf'
 }));
 const HYOGO=HYOGO_2026_JWC_FINAL_ROWS.filter(row=>![19,59,40,39,1,77,20,58].includes(row.bracketSeed));
