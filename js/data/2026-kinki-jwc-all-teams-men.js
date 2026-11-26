@@ -143,20 +143,35 @@ const SHIGA=['ジュニアボーラーズ','JUMP','REDNEX.','Re:Bloom','GENESIS'
 const NARA=['BANZAI jr.','Rafioants','ARAN ARDENT','PIRATES'].map(teamName=>known(teamName,'ベスト8',{
   sourceUrl:'https://www.iezo.net/forum/basketball-j/155259/'
 }));
-// 和歌山は1予備戦・8二回戦・4準々決勝・2準決勝・決勝を確認済み。
-const WAKAYAMA=[
- ...['Gr’ｓ','Jr御坊','有和中学校','GLÄNZ'].map(teamName=>known(teamName,'ベスト8',{
-   sourceUrl:'https://wakayama.pba-japanbasketball.jp/u15/game/5412/',
-   teamType:/中学校/.test(teamName)?'中学校':'クラブチーム'
- })),
- ...['JOKER','高雄中学校','adorare second','ブランリオン','LaissezFaireJr.','W','GLÄNZZWEI','ONELYSwakayama'].map(teamName=>known(teamName,'ベスト16',{
-   sourceUrl:'https://wakayama.pba-japanbasketball.jp/u15/game/5412/',
-   teamType:/中学校/.test(teamName)?'中学校':'クラブチーム'
- })),
- known('ASLEAD有田','ベスト32',{
-   sourceUrl:'https://wakayama.pba-japanbasketball.jp/u15/game/5412/'
- })
+// 和歌山県協会公式最終組合せ・得点結果（2026-11-09公開）を照合。男子17枠・16試合。
+// 3位決定戦は実施されていないため準決勝敗退2チームはベスト4。
+const WAKAYAMA_FINAL_TABLE=[
+  [1,"JOKER","ベスト16",[]],
+  [2,"adorare","優勝",["ADORARE"]],
+  [3,"ASLEAD有田","ベスト32",["ASLEAD 有田"]],
+  [4,"高雄中学校","ベスト16",["高雄中"]],
+  [5,"Gr’ｓ","ベスト8",["Gr’s","Gr's"]],
+  [6,"RED KINGS","ベスト4",["REDKINGS"]],
+  [7,"adorare second","ベスト16",["adoraresecond"]],
+  [8,"Jr御坊","ベスト8",["Jr 御坊"]],
+  [9,"ブランリオン","ベスト16",[]],
+  [10,"Laissez Faire Jr.","ベスト16",["LaissezFaireJr.","Lassez Faire Jr.","LassezFaire jr."]],
+  [11,"ROOKIES","準優勝",[]],
+  [12,"W","ベスト16",[]],
+  [13,"有和中学校","ベスト8",["有和中"]],
+  [14,"GLÄNZ","ベスト8",["GLANZ"]],
+  [15,"GLÄNZ ZWEI","ベスト16",["GLÄNZZWEI","GLANZ ZWEI"]],
+  [16,"ONELYS wakayama U15","ベスト16",["ONELYSwakayama","ONELYSwakayamaU15"]],
+  [17,"G-LiGAR","ベスト4",["GLiGAR","G-LIGAR"]]
 ];
+export const WAKAYAMA_2026_JWC_FINAL_ROWS=WAKAYAMA_FINAL_TABLE.map(([bracketSeed,teamName,placementLabel,aliases])=>({
+  ...known(teamName,placementLabel,{aliases,bracketSeed,
+    rank:placementLabel==='優勝'?'S':placementLabel==='準優勝'?'A+':placementLabel==='ベスト4'?'A':placementLabel==='ベスト8'?'B':placementLabel==='ベスト16'?'C':'D',
+    sourceType:'officialWakayamaJwc2026FinalBracket',
+    sourceUrl:'https://wakayama.pba-japanbasketball.jp/wp-content/uploads/2026/11/U15senshuken_kachi.pdf'
+  })
+}));
+const WAKAYAMA=WAKAYAMA_2026_JWC_FINAL_ROWS.filter(row=>![2,6,11,17].includes(row.bracketSeed));
 // Source presentation differences are aliases, not extra teams. No result invented for Kyoto unfinished qualifier.
 export const JWC_2026_ALL_TEAM_SUPPLEMENTS={
   '2026-hyogo-jwc-qualifier-men':HYOGO,
