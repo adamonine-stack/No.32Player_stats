@@ -201,10 +201,29 @@ export const OSAKA_2026_JWC_FINAL_ROWS=OSAKA_FINAL_GROUPS.flatMap(([placementLab
   sourceUrl:placementLabel==='地区予選敗退'?null:'https://u15.osakabasketball.jp/wp/wp-content/uploads/2026/11/U15選手権-結果（男子）-1.pdf'
 })));
 const OSAKA=OSAKA_2026_JWC_FINAL_ROWS.filter(row=>!['優勝','準優勝','ベスト4'].includes(row.placementLabel));
-// 滋賀: 当該ページは勝ち上がりの一部に左右表記のずれがあるため、敗退段階は未確定。
-const SHIGA=['ジュニアボーラーズ','JUMP','REDNEX.','Re:Bloom','GENESIS','SILVER SHARKS','NINJA AIRS'].map(teamName=>officialEntry(teamName,{
-  sourceUrl:'http://shiga.japanbasketball.jp/U15/img/2026JWC_boy.pdf'
+// 滋賀県協会公式最終表（添付261108_JWC_boy.pdf、2026-11-08）。男子13枠・12試合。
+// 3位は2チーム。LFとLakeForce、滋賀レイクスU15NextとU15は独立した出場枠。
+const SHIGA_FINAL_TABLE=[
+  [1,"LakeForce","優勝",["Lake Force","LAKE FORCE"]],
+  [2,"JUMP","ベスト8",[]],
+  [3,"REDNEX. Jr","ベスト16",["REDNEX.","REDNEX Jr"]],
+  [4,"滋賀レイクスU15Next","ベスト8",["滋賀レイクス U15 Next"]],
+  [5,"LF","ベスト16",[]],
+  [6,"TBA PHEONIX","3位",["TBA PHOENIX"]],
+  [7,"ジュニアボーラーズ","ベスト8",[]],
+  [8,"Re:Bloom","ベスト16",[]],
+  [9,"IBS Boy","3位",["IBS Boyz"]],
+  [10,"GENESIS","ベスト16",[]],
+  [11,"SILVER SHARKS","ベスト8",[]],
+  [12,"NINJA AIRS U15","ベスト16",["NINJA AIRS"]],
+  [13,"滋賀レイクスU15","準優勝",["滋賀レイクス","滋賀レイクス U15"]]
+];
+export const SHIGA_2026_JWC_FINAL_ROWS=SHIGA_FINAL_TABLE.map(([bracketSeed,teamName,placementLabel,aliases])=>({
+  ...officialEntry(teamName),bracketSeed,aliases,placementLabel,placementConfirmed:true,resultConfirmed:true,teamPowerEligible:true,
+  rank:placementLabel==='優勝'?'S':placementLabel==='準優勝'?'A+':placementLabel==='3位'?'A':placementLabel==='ベスト8'?'B':'C',
+  sourceType:'officialShigaJwc2026FinalBracket',sourceUrl:null
 }));
+const SHIGA=SHIGA_2026_JWC_FINAL_ROWS.filter(row=>!['優勝','準優勝','3位'].includes(row.placementLabel));
 // 奈良県公式最終表（添付PDF 男子2頁、2026-11-15）。8チーム7試合。
 // 準々決勝 56-42,47-39,54-56,72-55、準決勝 54-40,61-96、決勝 36-42。
 const NARA_FINAL_TABLE=[
@@ -252,7 +271,7 @@ export const WAKAYAMA_2026_JWC_FINAL_ROWS=WAKAYAMA_FINAL_TABLE.map(([bracketSeed
   })
 }));
 const WAKAYAMA=WAKAYAMA_2026_JWC_FINAL_ROWS.filter(row=>![2,6,11,17].includes(row.bracketSeed));
-// Source presentation differences are aliases, not extra teams. No result invented for Kyoto unfinished qualifier.
+// Source presentation differences are aliases, not extra teams. All Kyoto and Shiga results are now verified from supplied official PDFs.
 export const JWC_2026_ALL_TEAM_SUPPLEMENTS={
   '2026-hyogo-jwc-qualifier-men':HYOGO,
   '2026-osaka-jwc-qualifier-men':OSAKA,
@@ -262,5 +281,5 @@ export const JWC_2026_ALL_TEAM_SUPPLEMENTS={
 };
 export const JWC_2026_UNRESOLVED={
   '2026-hyogo-jwc-qualifier-men':{unknownSeeds:[],note:'全77枠の名称・最終到達順位を公式最終表で照合済み'},
-  '2026-shiga-jwc-qualifier-men':{note:'PDFブラケットの一部対応・得点に矛盾。ベスト4以外は敗退順位未検証'}
+  '2026-shiga-jwc-qualifier-men':{unknownSeeds:[],note:'添付公式最終表で全13枠の順位・敗退段階を確認済み'}
 };
