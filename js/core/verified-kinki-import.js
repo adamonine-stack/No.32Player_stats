@@ -2,7 +2,7 @@ import { db, collection, doc, getDocs, setDoc, serverTimestamp } from './firebas
 import { calculateSeasonalTeamRank, isValidTournamentAchievement } from '../calculations/opponent-team-calculations.js';
 import { normalizeTeamNameForMatching } from '../calculations/team-name-matching.js';
 import { findSimilarHistoricalTeamCandidates, findDuplicateHistoricalTournament, findExistingHistoricalPlacement } from '../calculations/historical-import-calculations.js';
-import { VERIFIED_2026_KINKI_RESULT_EVENTS } from '../data/2026-kinki-jwc-soutai-results-men.js?v=20261126-kyoto-top4-v1';
+import { VERIFIED_2026_KINKI_RESULT_EVENTS } from '../data/2026-kinki-jwc-soutai-results-men.js?v=20261126-kyoto-final-v2';
 import { JWC_2026_ALL_TEAM_SUPPLEMENTS, HYOGO_2026_JWC_FINAL_ROWS, WAKAYAMA_2026_JWC_FINAL_ROWS } from '../data/2026-kinki-jwc-all-teams-men.js?v=20261126-wakayama-final-v1';
 import { TOURNAMENT_2026_CBG_HYOGO_MEN, TEAMS_2026_CBG_HYOGO_MEN } from '../data/2026-cbg-hyogo-men.js';
 import { TOURNAMENT_2026_HYOGO_JHS_SOUTAI_MEN, TEAMS_2026_HYOGO_JHS_SOUTAI_MEN } from '../data/2026-hyogo-history-men.js';
@@ -11,7 +11,7 @@ import { TOURNAMENT_2026_SHIGA_JHS_SOUTAI_MEN, TEAMS_2026_SHIGA_JHS_SOUTAI_MEN }
 import { TOURNAMENT_2026_NARA_JHS_SOUTAI_MEN, TEAMS_2026_NARA_JHS_SOUTAI_MEN } from '../data/2025-2026-nara-history-men.js';
 import { TOURNAMENT_2026_WAKAYAMA_JHS_SOUTAI_MEN, TEAMS_2026_WAKAYAMA_JHS_SOUTAI_MEN } from '../data/2025-2026-wakayama-history-men.js';
 
-// Never infer unverified results. Kyoto 2026 JWC finished Nov 22; only confirmed top four are currently included.
+// Never infer unverified results. Kyoto 2026 JWC finished Nov 22; official Term1–3 results cover all 39 men's teams.
 export const KINKI_2026_EVENTS=[
   ...VERIFIED_2026_KINKI_RESULT_EVENTS.map(event=>event.tournament.id==='2026-hyogo-jwc-qualifier-men'?{tournament:{...event.tournament,resultScope:'公式最終トーナメント77枠（棄権2枠含む）'},teams:HYOGO_2026_JWC_FINAL_ROWS}:event.tournament.id==='2026-wakayama-jwc-qualifier-men'?{tournament:{...event.tournament,resultScope:'公式最終トーナメント男子17チーム・16試合'},teams:WAKAYAMA_2026_JWC_FINAL_ROWS}:{...event,teams:[...event.teams,...(JWC_2026_ALL_TEAM_SUPPLEMENTS[event.tournament.id]||[])]}),
   {tournament:{...TOURNAMENT_2026_CBG_HYOGO_MEN,isOfficialGame:true},teams:TEAMS_2026_CBG_HYOGO_MEN},
