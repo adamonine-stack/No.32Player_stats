@@ -13,38 +13,94 @@ const known=(teamName,placementLabel,extra={})=>({
   rank:/ベスト8/.test(placementLabel)?'B':/ベスト16/.test(placementLabel)?'C':/ベスト32/.test(placementLabel)?'D':null,
   teamPowerEligible:true,...extra
 });
-// 兵庫: 2026年男子JWC公式77枠。#42の名称は公式最終表の再抽出で team DENY と確認。
-// 上位8位は 2026-kinki-jwc-soutai-results-men.js に登録済み。
-const HYOGO_ALL=[
- [1,'センターサークル'],[2,'MIRRORS'],[3,'VLakers Basketball Club U14 男子'],
- [4,'SAKURA PRESS 男子'],[5,'COULEUR'],[6,'ZENITH'],[7,'甲南中学校'],
- [8,'B-LION'],[9,'Falcons U15 basketball club team'],[10,'ARMS'],
- [11,'G.Dark Horse'],[12,'BAYCROWN JUNIOR'],[13,'BAMBOO Shoot U15'],[14,'神戸HOPES'],
- [15,'WEST RIVER'],[16,'YFT PRESTO'],[17,'B.P.F ACADEMY'],[18,'Dpro Laluz'],
- [19,'神戸ストークスU15'],[20,'BRAVE BIRDS'],[21,'ZERO'],[22,'ICE'],
- [23,'EPIC BASKETBALL CLUB U14'],[24,'中崎B.B.C. U15'],[25,'HDC Academy Cranes'],
- [26,'えびす'],[27,'尼崎市立大庄中学校'],[28,'えびすTHIRD'],
- [29,'U15 ドリームメーカーズ'],[30,'神戸ブライアンツ'],[31,'All Blacks'],[32,'BELUGA'],
- [33,'Turkeys 2nd'],[34,'VLakers Basketball Club U15 男子'],[35,'V-WAVE'],[36,'Westrick'],
- [37,'VEARTH'],[38,'HYOGO KOREA'],[39,'ゴッド ドア'],[40,'NorthWave'],
- [41,'池田バスケットボールクラブ'],[42,'team DENY'],
- [43,'DIVE basketball academy'],[44,'DRAGON basketball'],[45,'WINGS'],
- [46,'明石市立野々池中学校'],[47,'KARTER'],[48,'Grow wings'],
- [49,'EPIC BASKETBALL CLUB U15'],[50,'西神戸ユニバース'],[51,'BCJ Academy'],
- [52,'DunkGo Club'],[53,'UNICORN BASKETBALL CLUB'],[54,'BRUINS ashiya'],
- [55,'Improve Basketball Club'],[56,'SKYBLUEZ BASKETBALL CLUB'],
- [57,'神戸ストークスU14'],[58,'Three B'],[59,'BRAVEBIRDS U14'],[60,'Three B U14'],
- [61,'えびすSECOND'],[62,'SAMURAI'],[63,'FightingArts'],[64,'TURKEYS'],
- [65,'RIVER WEST'],[66,'Kobe Center Circle'],[67,'RED PIECE'],[68,'GOAT'],
- [69,'cantera karter'],[70,'Kobe Center Circle 2'],[71,'Wild Wolves'],
- [72,'報徳学園中学校'],[73,'尼崎市立塚口中学校'],[74,'U14 ゴッドドア'],
- [75,'A.C.T. BASKETBALL CLUB 2026'],[76,'DREAMSEEKER'],[77,'明石市立望海中学校']
+// 兵庫県公式最終トーナメント表（2026-11-15、添付 202611151636398.pdf）を勝ち上がり線と得点で照合。
+// 77枠。13番は取消線・0点のため棄権として記録し、Power対象外とする。
+const HYOGO_FINAL_TABLE=[
+  [1,"センターサークル","5位・ベスト8",["センターサークル"]],
+  [2,"MIRRORS","ベスト64"],
+  [3,"VLakers Basketball Club U14 男子","1回戦敗退",["VLakers U14"]],
+  [4,"SAKURA PRESS 男子","ベスト32",["SAKURA PRESS"]],
+  [5,"COULEUR","ベスト64"],
+  [6,"ZENITH","ベスト64"],
+  [7,"甲南中学校","ベスト32"],
+  [8,"B-LION","ベスト64"],
+  [9,"Falcons U15 basketball club team","ベスト16"],
+  [10,"ARMS","ベスト16"],
+  [11,"G.Dark Horse","1回戦敗退"],
+  [12,"BAYCROWN JUNIOR","ベスト64"],
+  [13,"BAMBOO Shoot U15","棄権（出場なし）"],
+  [14,"神戸HOPES","ベスト32"],
+  [15,"WEST RIVER","ベスト64"],
+  [16,"YFT PRESTO","ベスト32"],
+  [17,"B.P.F ACADEMY","ベスト64"],
+  [18,"Dpro Laluz","1回戦敗退"],
+  [19,"神戸ストークスU15","優勝",["神戸ストークス","神戸ストークス U15"]],
+  [20,"BRAVE BIRDS","7位・ベスト8",["BRAVEBIRDS"]],
+  [21,"ZERO","1回戦敗退"],
+  [22,"ICE","ベスト64"],
+  [23,"EPIC BASKETBALL CLUB U14","ベスト64"],
+  [24,"中崎B.B.C. U15","ベスト32"],
+  [25,"HDC Academy Cranes","ベスト16"],
+  [26,"えびす","ベスト64"],
+  [27,"尼崎市立大庄中学校","ベスト64"],
+  [28,"えびすTHIRD","1回戦敗退"],
+  [29,"U15 ドリームメーカーズ","ベスト32"],
+  [30,"神戸ブライアンツ","ベスト64"],
+  [31,"All Blacks","1回戦敗退"],
+  [32,"U14 ゴッドドア","ベスト32"],
+  [33,"Turkeys 2nd","ベスト64"],
+  [34,"VLakers Basketball Club U15 男子","ベスト16"],
+  [35,"V-WAVE","ベスト32"],
+  [36,"Westrick","ベスト64"],
+  [37,"VEARTH","ベスト64"],
+  [38,"HYOGO KOREA","1回戦敗退"],
+  [39,"報徳学園中学校","4位",["報德学園中学校","報徳学園"]],
+  [40,"NorthWave","3位",["North Wave","NorthWave U15"]],
+  [41,"池田バスケットボールクラブ","1回戦敗退"],
+  [42,"BRAVEBIRDS U14","ベスト64",["BRAVE BIRDS U14"]],
+  [43,"DIVE basketball academy","ベスト32"],
+  [44,"DRAGON basketball","ベスト64"],
+  [45,"WINGS","ベスト32"],
+  [46,"明石市立野々池中学校","ベスト64"],
+  [47,"KARTER","ベスト16"],
+  [48,"Grow wings","ベスト64"],
+  [49,"EPIC BASKETBALL CLUB U15","ベスト32"],
+  [50,"西神戸ユニバース","ベスト64"],
+  [51,"BCJ Academy","1回戦敗退"],
+  [52,"DunkGo Club","ベスト16"],
+  [53,"UNICORN BASKETBALL CLUB","ベスト64"],
+  [54,"BRUINS ashiya","ベスト32"],
+  [55,"Improve Basketball Club","ベスト64"],
+  [56,"SKYBLUEZ BASKETBALL CLUB","1回戦敗退"],
+  [57,"神戸ストークスU14","ベスト64"],
+  [58,"Three B","8位・ベスト8"],
+  [59,"ゴッド ドア","準優勝",["ゴッドドア","GODDOOR"]],
+  [60,"Three B U14","ベスト64"],
+  [61,"えびすSECOND","1回戦敗退"],
+  [62,"SAMURAI","ベスト32"],
+  [63,"FightingArts","ベスト64"],
+  [64,"TURKEYS","ベスト16"],
+  [65,"RIVER WEST","ベスト64"],
+  [66,"Kobe Center Circle","ベスト64"],
+  [67,"RED PIECE","1回戦敗退"],
+  [68,"GOAT","ベスト32"],
+  [69,"cantera karter","ベスト16"],
+  [70,"Kobe Center Circle 2","ベスト64"],
+  [71,"Wild Wolves","ベスト32"],
+  [72,"team DENY","ベスト64"],
+  [73,"尼崎市立塚口中学校","ベスト32"],
+  [74,"BELUGA","ベスト64"],
+  [75,"A.C.T. BASKETBALL CLUB 2026","1回戦敗退"],
+  [76,"DREAMSEEKER","ベスト64"],
+  [77,"明石市立望海中学校","6位・ベスト8",["望海中学校","望海"]]
 ];
-const HYOGO_TOP_SEEDS=new Set([1,19,20,39,40,58,72,77]);
-const HYOGO=HYOGO_ALL.filter(([seed])=>!HYOGO_TOP_SEEDS.has(seed)).map(([bracketSeed,teamName])=>officialEntry(teamName,{
-  bracketSeed,sourceType:'officialHyogoJwc2026FinalBracket',
-  sourceUrl:'https://www.hyogo-jhs-basketball.net/_files/ugd/7b84d6_705b4913120a480581c138f089974a4b.pdf'
+export const HYOGO_2026_JWC_FINAL_ROWS=HYOGO_FINAL_TABLE.map(([bracketSeed,teamName,placementLabel,aliases=[]])=>({
+  ...officialEntry(teamName),aliases,bracketSeed,placementLabel,placementConfirmed:true,resultConfirmed:true,
+  teamPowerEligible:bracketSeed!==13,
+  rank:placementLabel==='優勝'?'S':placementLabel==='準優勝'?'A+':/^[34]位/.test(placementLabel)?'A':/ベスト8/.test(placementLabel)?'B':/ベスト16/.test(placementLabel)?'C':/ベスト32/.test(placementLabel)?'D':bracketSeed===13?null:'E',
+  sourceType:'officialHyogoJwc2026FinalBracket',sourceUrl:'https://www.hyogo-jhs-basketball.net/_files/ugd/7b84d6_705b4913120a480581c138f089974a4b.pdf'
 }));
+const HYOGO=HYOGO_2026_JWC_FINAL_ROWS.filter(row=>![19,59,40,39,1,77,20,58].includes(row.bracketSeed));
 // 大阪: 府協会U15部会公式決勝トーナメントに列記されているチーム。
 // 元PDFは左右2列でテキスト化すると数チームが連結するため、明確に独立して読めた名称のみ収録。
 // 1〜4位は既存データ側にあり、この配列から除外する。
@@ -110,7 +166,7 @@ export const JWC_2026_ALL_TEAM_SUPPLEMENTS={
   '2026-wakayama-jwc-qualifier-men':WAKAYAMA
 };
 export const JWC_2026_UNRESOLVED={
-  '2026-hyogo-jwc-qualifier-men':{unknownSeeds:[],note:'全77枠の名称を収録。上位8以外の敗退ラウンドは未検証'},
+  '2026-hyogo-jwc-qualifier-men':{unknownSeeds:[],note:'全77枠の名称・最終到達順位を公式最終表で照合済み'},
   '2026-osaka-jwc-qualifier-men':{note:'全チーム名称確認を優先。PDFブラケット内の多くの敗退ラウンドは位置対応未検証'},
   '2026-shiga-jwc-qualifier-men':{note:'PDFブラケットの一部対応・得点に矛盾。ベスト4以外は敗退順位未検証'}
 };
