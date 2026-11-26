@@ -205,10 +205,24 @@ const OSAKA=OSAKA_2026_JWC_FINAL_ROWS.filter(row=>!['優勝','準優勝','ベス
 const SHIGA=['ジュニアボーラーズ','JUMP','REDNEX.','Re:Bloom','GENESIS','SILVER SHARKS','NINJA AIRS'].map(teamName=>officialEntry(teamName,{
   sourceUrl:'http://shiga.japanbasketball.jp/U15/img/2026JWC_boy.pdf'
 }));
-// 奈良は全8チームのトーナメント結果を確認済み。残り4チーム=初戦敗退。
-const NARA=['BANZAI jr.','Rafioants','ARAN ARDENT','PIRATES'].map(teamName=>known(teamName,'ベスト8',{
-  sourceUrl:'https://www.iezo.net/forum/basketball-j/155259/'
+// 奈良県公式最終表（添付PDF 男子2頁、2026-11-15）。8チーム7試合。
+// 準々決勝 56-42,47-39,54-56,72-55、準決勝 54-40,61-96、決勝 36-42。
+const NARA_FINAL_TABLE=[
+  [1,"バンビシャス奈良U15","準優勝",["バンビシャス奈良"]],
+  [2,"BANZAI junior","ベスト8",["BANZAI jr.","BANZAI jr","BANZAI"]],
+  [3,"Esperanza HEGURI","ベスト4",["EsperanzaHEGURI"]],
+  [4,"Rafio ants","ベスト8",["Rafioants"]],
+  [5,"ARAN ARDENT ACADEMY","ベスト8",["ARAN ARDENT"]],
+  [6,"NARA FUTURE","ベスト4",["NARAFUTURE"]],
+  [7,"サンシャインズ","優勝",[]],
+  [8,"PIRATES U15","ベスト8",["PIRATES"]]
+];
+export const NARA_2026_JWC_FINAL_ROWS=NARA_FINAL_TABLE.map(([bracketSeed,teamName,placementLabel,aliases])=>({
+  ...officialEntry(teamName),bracketSeed,aliases,placementLabel,placementConfirmed:true,resultConfirmed:true,teamPowerEligible:true,
+  rank:placementLabel==='優勝'?'S':placementLabel==='準優勝'?'A+':placementLabel==='ベスト4'?'A':'B',
+  sourceType:'officialNaraJwc2026FinalBracket',sourceUrl:null
 }));
+const NARA=NARA_2026_JWC_FINAL_ROWS.filter(row=>row.placementLabel==='ベスト8');
 // 和歌山県協会公式最終組合せ・得点結果（2026-11-09公開）を照合。男子17枠・16試合。
 // 3位決定戦は実施されていないため準決勝敗退2チームはベスト4。
 const WAKAYAMA_FINAL_TABLE=[
