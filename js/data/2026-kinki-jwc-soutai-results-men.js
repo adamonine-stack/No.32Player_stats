@@ -1,4 +1,4 @@
-// 男子大会の確認済み確定結果のみ収録。京都府JWCは2026-11-22終了、上位4チームを収録。
+// 男子大会の確認済み確定結果のみ収録。京都府JWCは2026-11-22終了、男子39チームを収録。
 const source=(organization,pageUrl,document)=>({organization,pageUrl,document,verified:true});
 const make=(id,name,shortName,prefecture,level,sourceData,teams,extra={})=>({
   tournament:{
@@ -11,7 +11,7 @@ const make=(id,name,shortName,prefecture,level,sourceData,teams,extra={})=>({
   },
   teams:teams.map(([teamName,prefectureOverride,placementLabel,aliases=[],teamType='クラブチーム'])=>({
     teamName, prefecture:prefectureOverride||prefecture, placementLabel,aliases,teamType,ageGroup:'U15',
-    rank:placementLabel==='優勝'?'S':placementLabel==='準優勝'?'A+':/3位|4位|ベスト4/.test(placementLabel)?'A':/ベスト8|5位|6位|7位|8位/.test(placementLabel)?'B':'E'
+    rank:placementLabel==='優勝'?'S':placementLabel==='準優勝'?'A+':/3位|4位|ベスト4/.test(placementLabel)?'A':/ベスト8|5位|6位|7位|8位/.test(placementLabel)?'B':/ベスト16/.test(placementLabel)?'C':/ベスト32/.test(placementLabel)?'D':'E'
   }))
 });
 
@@ -28,12 +28,47 @@ export const VERIFIED_2026_KINKI_RESULT_EVENTS=[
      ['Three B',null,'8位・ベスト8',['ThreeB']]],
     {endDate:'2026-11-15',resultScope:'公式発表 1位〜8位'}),
   make('2026-kyoto-jwc-qualifier-men','2026年度 第7回全国U15バスケットボール選手権大会 京都府予選 男子','2026 Jr.ウインターカップ京都府予選 男子','京都府','prefecture',
-    source('日本バスケットボール協会（決勝）・家造.net（準決勝・3位決定戦）','https://juniorwintercup.japanbasketball.jp/2026-27/schedule/pref/','2026-11-22 京都府男子決勝・上位4チーム結果 https://www.iezo.net/forum/basketball-j/155251/'),
-    [['KYOTO DREAMERS',null,'優勝',['KYOTODREAMERS','京都ドリーマーズ']],
-     ['京都精華学園中学校',null,'準優勝',['京都精華学園中','京都精華学園','京都精華'],'中学校'],
-     ['BIG TURTLES',null,'3位',['BIGTURTLES']],
-     ['B.UNITE',null,'4位',['B UNITE','BUNITE']]],
-    {endDate:'2026-11-22',resultScope:'男子上位4チーム確定・その他順位未取得'}),
+    source('京都府バスケットボール協会','https://kbba.jp/','添付公式PDF Term1最終結果（男子1〜4頁）、Term2結果（男子）、Term3最終結果（男子1〜2頁）'),
+    [["KYOTO DREAMERS",null,"優勝",["KYOTODREAMERS","京都ドリーマーズ"],"クラブチーム"],
+     ["京都精華学園中学校",null,"準優勝",["京都精華学園中","京都精華学園","京都精華"],"中学校"],
+     ["BIG TURTLES",null,"3位",["BIGTURTLES"],"クラブチーム"],
+     ["B.UNITE",null,"4位",["B UNITE","BUNITE"],"クラブチーム"],
+     ["チーム舞鶴",null,"5位",[],"クラブチーム"],
+     ["OTSA Shields",null,"6位",[],"クラブチーム"],
+     ["FUBC",null,"7位",[],"クラブチーム"],
+     ["京都フェニックス",null,"8位",[],"クラブチーム"],
+     ["京都neo advance",null,"ベスト16相当（Term2代表決定戦敗退）",["京都ネオアドバンス"],"クラブチーム"],
+     ["京都ハンナリーズU15",null,"ベスト16相当（Term2代表決定戦敗退）",["京都ハンナリーズ U15"],"クラブチーム"],
+     ["詳徳中学校",null,"ベスト16相当（Term2初戦敗退）",["詳徳"],"中学校"],
+     ["京都LYCAONS",null,"ベスト16相当（Term2初戦敗退）",[],"クラブチーム"],
+     ["Risicare",null,"ベスト16相当（Term2初戦敗退）",["リジカーレ"],"クラブチーム"],
+     ["TITANS",null,"ベスト16相当（Term2初戦敗退）",[],"クラブチーム"],
+     ["@z",null,"ベスト32相当（Term1沿線代表決定戦敗退）",["＠ｚ"],"クラブチーム"],
+     ["亀岡中学校",null,"ベスト32相当（Term1沿線代表決定戦敗退）",["亀岡"],"中学校"],
+     ["Les Ailes",null,"ベスト32相当（Term1沿線代表決定戦敗退）",[],"クラブチーム"],
+     ["Hop",null,"ベスト32相当（Term1沿線代表決定戦敗退）",[],"クラブチーム"],
+     ["LOOP",null,"ベスト32相当（Term1沿線代表決定戦敗退）",[],"クラブチーム"],
+     ["藤森中学校",null,"ベスト32相当（Term1沿線代表決定戦敗退）",["藤森"],"中学校"],
+     ["GRiT U15",null,"ベスト32相当（Term1沿線代表決定戦敗退）",[],"クラブチーム"],
+     ["宇治ジュニア",null,"ベスト32相当（Term1沿線代表決定戦敗退）",[],"クラブチーム"],
+     ["PHOENIX",null,"ベスト32相当（Term1代表決定戦の1つ前で敗退）",[],"クラブチーム"],
+     ["MJ",null,"ベスト32相当（Term1代表決定戦の1つ前で敗退）",[],"クラブチーム"],
+     ["西京極中学校",null,"ベスト32相当（Term1代表決定戦の1つ前で敗退）",["西京極"],"中学校"],
+     ["洛星中学校",null,"ベスト32相当（Term1代表決定戦の1つ前で敗退）",["洛星"],"中学校"],
+     ["Apache",null,"ベスト32相当（Term1代表決定戦の1つ前で敗退）",[],"クラブチーム"],
+     ["YAMASHIRO EAGLES",null,"ベスト32相当（Term1代表決定戦の1つ前で敗退）",[],"クラブチーム"],
+     ["黄檗アストラル",null,"ベスト32相当（Term1代表決定戦の1つ前で敗退）",[],"クラブチーム"],
+     ["BLAST",null,"ベスト32相当（Term1代表決定戦の1つ前で敗退）",[],"クラブチーム"],
+     ["西京高等学校附属中学校",null,"Term1予選敗退（代表決定戦の2つ以上前）",["西京附属","西京附属中学校"],"中学校"],
+     ["龍谷大学付属平安中学校",null,"Term1予選敗退（代表決定戦の2つ以上前）",["龍谷平安","龍谷大平安中学校"],"中学校"],
+     ["鳳徳Phoenix",null,"Term1予選敗退（代表決定戦の2つ以上前）",[],"クラブチーム"],
+     ["双ヶ丘中学校",null,"Term1予選敗退（代表決定戦の2つ以上前）",["双ヶ丘"],"中学校"],
+     ["大宅中学校",null,"Term1予選敗退（代表決定戦の2つ以上前）",["大宅"],"中学校"],
+     ["桂中学校",null,"Term1予選敗退（代表決定戦の2つ以上前）",["桂"],"中学校"],
+     ["KYOTO SKILL ACADEMY",null,"Term1予選敗退（代表決定戦の2つ以上前）",[],"クラブチーム"],
+     ["S.B.C",null,"Term1予選敗退（代表決定戦の2つ以上前）",["SBC"],"クラブチーム"],
+     ["YAMASHIRO UNITED",null,"Term1予選敗退（代表決定戦の2つ以上前）",[],"クラブチーム"]],
+    {endDate:'2026-11-22',resultScope:'男子39チーム（Term1 33チーム＋Term3シード6チーム）・公式1〜8位、その他は敗退段階とPower換算相当',placementMethod:'official-final-top8-and-stage-equivalent-for-other-teams'}),
   make('2026-osaka-jwc-qualifier-men','2026年度 第7回全国U15バスケットボール選手権大会 大阪府予選 男子','2026 Jr.ウインターカップ大阪府予選 男子','大阪府','prefecture',
     source('大阪府バスケットボール協会U15','https://www.iezo.net/forum/basketball-j/155243/','2026年度男子準決勝・決勝（大阪府協会への原資料リンクあり）'),
     [['KAGO CLUB',null,'優勝',['KAGO']],
@@ -85,5 +120,5 @@ export const VERIFIED_2026_KINKI_RESULT_EVENTS=[
      ['打出中学校','滋賀県','予選リーグ敗退',['打出'],'中学校']],
     {endDate:'2026-08-06',resultScope:'男子12チーム（上位4・予選リーグ敗退8）'})
 ];
-// 互換用の旧定数。京都府JWCは上位4チームが確認済みで、その他の順位は未取得。
-export const PENDING_2026_KYOTO_JWC_MEN={prefecture:'京都府',finalDate:'2026-11-22',resultStatus:'completed',resultScope:'top-four-only',source:'https://www.iezo.net/forum/basketball-j/155251/'};
+// 互換用の旧定数。京都府JWCは男子全39チーム確認済み。
+export const PENDING_2026_KYOTO_JWC_MEN={prefecture:'京都府',finalDate:'2026-11-22',resultStatus:'completed',resultScope:'all-39-men',source:'https://www.iezo.net/forum/basketball-j/155251/'};
