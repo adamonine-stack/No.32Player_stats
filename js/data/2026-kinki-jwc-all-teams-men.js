@@ -13,7 +13,7 @@ const known=(teamName,placementLabel,extra={})=>({
   rank:/ベスト8/.test(placementLabel)?'B':/ベスト16/.test(placementLabel)?'C':/ベスト32/.test(placementLabel)?'D':null,
   teamPowerEligible:true,...extra
 });
-// 兵庫: 2026年男子JWC公式77枠。#42はPDF文字抽出で判読不能のため、誤登録せず保留。
+// 兵庫: 2026年男子JWC公式77枠。#42の名称は公式最終表の再抽出で team DENY と確認。
 // 上位8位は 2026-kinki-jwc-soutai-results-men.js に登録済み。
 const HYOGO_ALL=[
  [1,'センターサークル'],[2,'MIRRORS'],[3,'VLakers Basketball Club U14 男子'],
@@ -27,7 +27,7 @@ const HYOGO_ALL=[
  [29,'U15 ドリームメーカーズ'],[30,'神戸ブライアンツ'],[31,'All Blacks'],[32,'BELUGA'],
  [33,'Turkeys 2nd'],[34,'VLakers Basketball Club U15 男子'],[35,'V-WAVE'],[36,'Westrick'],
  [37,'VEARTH'],[38,'HYOGO KOREA'],[39,'ゴッド ドア'],[40,'NorthWave'],
- [41,'池田バスケットボールクラブ'],
+ [41,'池田バスケットボールクラブ'],[42,'team DENY'],
  [43,'DIVE basketball academy'],[44,'DRAGON basketball'],[45,'WINGS'],
  [46,'明石市立野々池中学校'],[47,'KARTER'],[48,'Grow wings'],
  [49,'EPIC BASKETBALL CLUB U15'],[50,'西神戸ユニバース'],[51,'BCJ Academy'],
@@ -110,7 +110,7 @@ export const JWC_2026_ALL_TEAM_SUPPLEMENTS={
   '2026-wakayama-jwc-qualifier-men':WAKAYAMA
 };
 export const JWC_2026_UNRESOLVED={
-  '2026-hyogo-jwc-qualifier-men':{unknownSeeds:[42],note:'公式77枠のうち組合せ番号42のチーム名はテキスト抽出不能'},
+  '2026-hyogo-jwc-qualifier-men':{unknownSeeds:[],note:'全77枠の名称を収録。上位8以外の敗退ラウンドは未検証'},
   '2026-osaka-jwc-qualifier-men':{note:'全チーム名称確認を優先。PDFブラケット内の多くの敗退ラウンドは位置対応未検証'},
   '2026-shiga-jwc-qualifier-men':{note:'PDFブラケットの一部対応・得点に矛盾。ベスト4以外は敗退順位未検証'}
 };
