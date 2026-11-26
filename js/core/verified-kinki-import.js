@@ -1,5 +1,5 @@
 import { db, collection, doc, getDocs, setDoc, serverTimestamp } from './firebase.js';
-import { calculateSeasonalTeamRank } from '../calculations/opponent-team-calculations.js';
+import { calculateSeasonalTeamRank, isValidTournamentAchievement } from '../calculations/opponent-team-calculations.js';
 import { normalizeTeamNameForMatching } from '../calculations/team-name-matching.js';
 import { findSimilarHistoricalTeamCandidates, findDuplicateHistoricalTournament, findExistingHistoricalPlacement } from '../calculations/historical-import-calculations.js';
 import { VERIFIED_2026_KINKI_RESULT_EVENTS } from '../data/2026-kinki-jwc-soutai-results-men.js';
@@ -125,7 +125,11 @@ export async function applyKinki2026Results(plan,decisions={},progress=()=>{}){
         updatedAt:new Date().toISOString(),createdAt:old?.createdAt||new Date().toISOString(),
         sortOrder:old?.sortOrder??current.length
       };
-      if(old&&old.placementLabel===placement.placementLabel&&old.tournamentId===id&&old.resultConfirmed===finalVerified&&old.isOfficialGame===true&&String(old.placementRank||old.rankValue||'')===String(rank||'')){stats.unchanged++;done++;progress(done,total);continue}
+      // A bracket entry without a verified final placement must never overwrite an already confirmed result.
+      if(old && !finalVerified && isValidTournamentAchievement(old) && old.placementConfirmed!==false){
+        stats.unchanged++;done++;progress(done,total);continue;
+      }
+      if(old&&old.placementLabel===placement.placementLabel&&old.tournamentId===id&&old.resultConfirmed===finalVerified&&old.placementConfirmed===finalVerified&&old.teamPowerEligible===placement.teamPowerEligible&&old.isOfficialGame===true&&String(old.placementRank||old.rankValue||'')===String(rank||'')){stats.unchanged++;done++;progress(done,total);continue}
       const placements=old?current.map(p=>p===old?{...p,...placement}:p):[...current,placement];
       const ranks=calculateSeasonalTeamRank(placements,{currentSeason:'2026-27'});
       const teamName=selected?.teamName||row.teamName;
