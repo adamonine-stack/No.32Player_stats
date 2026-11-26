@@ -95,6 +95,10 @@ export async function applyKinki2026Results(plan,decisions={},progress=()=>{},ev
     if(!existingTournament){
       await setDoc(doc(db,'tournaments',id),{...tournament,seasonId:'season_2026_27',isOfficialGame:true,officialMatchClassification:'official',updatedAt:serverTimestamp(),createdAt:serverTimestamp()});
       registered.push({...tournament,id,isOfficialGame:true});stats.tournaments++;
+    }else if(tournament.id==='2026-kyoto-jwc-qualifier-men'&&existingTournament.resultScope!==tournament.resultScope){
+      const resultPatch={resultScope:tournament.resultScope,placementMethod:tournament.placementMethod,resultConfirmed:true,resultStatus:'completed',source:tournament.source,isOfficialGame:true,officialMatchClassification:'official',updatedAt:serverTimestamp()};
+      await setDoc(doc(db,'tournaments',id),resultPatch,{merge:true});
+      Object.assign(existingTournament,resultPatch);
     }else if(existingTournament.isOfficialGame!==true){
       await setDoc(doc(db,'tournaments',id),{isOfficialGame:true,officialMatchClassification:'official',updatedAt:serverTimestamp()},{merge:true});
       existingTournament.isOfficialGame=true;
