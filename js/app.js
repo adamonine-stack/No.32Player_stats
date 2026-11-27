@@ -758,6 +758,13 @@ function duplicateOpponentReferencePatch(record, source, target) {
   return patch;
 }
 
+function comparableOpponentMergeRecord(record) {
+  return JSON.stringify(record, (_key, value) => {
+    if (!value || Array.isArray(value) || Object.getPrototypeOf(value) !== Object.prototype) return value;
+    return Object.fromEntries(Object.keys(value).sort().map(key => [key, value[key]]));
+  });
+}
+
 async function mergeReviewedOpponentPair(source, target) {
   const names = ['games', 'tournamentGames', 'publicGameSummaries'];
   const rows = await Promise.all(names.map(readOpponentMergeCollection));
@@ -773,7 +780,8 @@ async function mergeReviewedOpponentPair(source, target) {
     if (!from.exists() || !to.exists()) throw new Error('チーム情報が変更されました。候補を開き直してください。');
     const currentSource = {...from.data(), id: from.id};
     const currentTarget = {...to.data(), id: to.id};
-    if (JSON.stringify(currentSource) !== JSON.stringify(source) || JSON.stringify(currentTarget) !== JSON.stringify(target)) {
+    if (comparableOpponentMergeRecord(currentSource) !== comparableOpponentMergeRecord(source) ||
+        comparableOpponentMergeRecord(currentTarget) !== comparableOpponentMergeRecord(target)) {
       throw new Error('チーム情報が変更されました。候補を開き直してください。');
     }
     const targetPlacements = new Map(opponentPlacements(currentTarget)
