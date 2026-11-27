@@ -720,10 +720,140 @@ window.openKinki2026ImportMenu=async(scope='all')=>{
   }
 };
 
+
+const duplicateOpponentPairs = [
+  ['和歌山県', 'クラブチーム', 'ASLEAD有田'],
+  ['和歌山県', '中学校', '海南市立海南第三中学校'],
+  ['和歌山県', '中学校', '岩出市立岩出中学校'],
+  ['和歌山県', '中学校', '近畿大学附属和歌山中学校'],
+  ['和歌山県', '中学校', '新宮市立城南中学校'],
+  ['大阪府', '中学校', '阪南中学校'],
+  ['和歌山県', 'クラブチーム', 'JOKER', 'JORKER'],
+  ['大阪府', 'クラブチーム', 'Switch! U15', 'Sw!tch U15'],
+];
+
+function duplicateOpponentCandidates(teams, [prefecture, type, name, variant]) {
+  return teams.filter(team => team.prefecture === prefecture && (
+    (team.teamName === name && opponentTeamTypeLabel(opponentTeamTypeKey(team)) === type) ||
+    (variant && team.teamName === variant)
+  ));
+}
+
+async function readOpponentMergeCollection(name) {
+  const snapshot = await getDocsFromServer(collection(db, name));
+  return snapshot.docs.map(item => ({...item.data(), id: item.id}));
+}
+
+function duplicateOpponentReferencePatch(record, source, target) {
+  const patch = opponentReferencePatch(record, source, target);
+  const linkedNames = {
+    opponent: 'opponentTeamId', opponentTeamName: 'opponentTeamId',
+    teamA: 'teamAId', teamB: 'teamBId', winner: 'winnerTeamId', loser: 'loserTeamId',
+  };
+  for (const [nameField, idField] of Object.entries(linkedNames)) {
+    if (record[idField] === source.id) patch[nameField] = target.teamName;
+    else if (record[idField] || !['opponent', 'opponentTeamName'].includes(nameField)) delete patch[nameField];
+    else delete patch[nameField];
+  }
+  return patch;
+}
+
+async function mergeReviewedOpponentPair(source, target) {
+  const names = ['games', 'tournamentGames', 'publicGameSummaries'];
+  const rows = await Promise.all(names.map(readOpponentMergeCollection));
+  const changes = rows.flatMap((records, index) => records
+    .filter(record => Object.keys(duplicateOpponentReferencePatch(record, source, target)).length)
+    .map(record => doc(db, names[index], record.id)));
+  const sourceRef = doc(db, 'opponentTeams', source.id);
+  const targetRef = doc(db, 'opponentTeams', target.id);
+  await runTransaction(db, async transaction => {
+    const [from, to, ...references] = await Promise.all(
+      [sourceRef, targetRef, ...changes].map(ref => transaction.get(ref))
+    );
+    if (!from.exists() || !to.exists()) throw new Error('チーム情報が変更されました。候補を開き直してください。');
+    const currentSource = {...from.data(), id: from.id};
+    const currentTarget = {...to.data(), id: to.id};
+    if (JSON.stringify(currentSource) !== JSON.stringify(source) || JSON.stringify(currentTarget) !== JSON.stringify(target)) {
+      throw new Error('チーム情報が変更されました。候補を開き直してください。');
+    }
+    const targetPlacements = new Map(opponentPlacements(currentTarget)
+      .filter(item => item.tournamentId).map(item => [item.tournamentId, item]));
+    for (const item of opponentPlacements(currentSource)) {
+      const other = targetPlacements.get(item.tournamentId);
+      const label = result => result.placementLabel || result.placement || '';
+      if (other && isValidTournamentAchievement(item) && isValidTournamentAchievement(other) && label(item) !== label(other)) {
+        throw new Error('同じ大会に異なる順位が登録されています。大会記録を照合してください。');
+      }
+    }
+    const combined = mergeOpponentTeamRecords(currentTarget, currentSource);
+    combined.tournamentPlacements = combined.tournamentPlacements.map(item =>
+      isValidTournamentAchievement(item) ? item : opponentPlacements(currentSource).find(other =>
+        item.tournamentId && item.tournamentId === other.tournamentId && isValidTournamentAchievement(other)
+      ) || item
+    );
+    delete combined.id;
+    transaction.set(targetRef, {...combined, updatedAt: serverTimestamp()}, {merge: true});
+    for (const item of references) {
+      if (!item.exists()) continue;
+      const patch = duplicateOpponentReferencePatch(item.data(), currentSource, currentTarget);
+      if (Object.keys(patch).length) transaction.update(item.ref, patch);
+    }
+    transaction.delete(sourceRef);
+  });
+  return recalculatePersistedTeamRankAndPower(state.activeSeasonId || '2026-27');
+}
+
+window.openDuplicateOpponentReview = async () => {
+  if (!requireLogin()) return;
+  try {
+    const teams = await readOpponentMergeCollection('opponentTeams');
+    const groups = duplicateOpponentPairs.map(pair => ({pair, teams: duplicateOpponentCandidates(teams, pair)}))
+      .filter(group => group.teams.length === 2 && (!group.pair[3] || new Set(group.teams.map(team => team.teamName)).size === 2));
+    const details = team => escapeHtml(opponentPlacements(team).map(item =>
+      [item.tournamentName || item.competitionName || item.tournamentId, item.placementLabel || item.placement].filter(Boolean).join(' ')
+    ).join(' / ') || '大会記録なし');
+    const rows = groups.map(({pair, teams}, index) =>
+      '<section class="card"><h3>' + escapeHtml(pair[0] + ' ' + pair.slice(2).join(' / ')) + '</h3>' +
+      teams.map((team, i) => '<p><b>' + (i + 1) + '. ' + escapeHtml(team.teamName) + '</b>　名簿 ' +
+        opponentPlayers(team).length + '人<br>' + details(team) + '</p>').join('') +
+      '<label>残す登録<select data-merge-target="' + index + '"><option value="">選択してください</option>' +
+      teams.map((team, i) => '<option value="' + i + '">' + (i + 1) + '. ' + escapeHtml(team.teamName) + '</option>').join('') +
+      '</select></label><button class="btn" data-merge-pair="' + index + '">統合する</button></section>'
+    ).join('');
+    modal('<h2>重複対戦チームの統合</h2>' + (rows || '<p>表示対象の重複候補はありません。</p>') +
+      '<button class="btn ghost" id="closeModal">閉じる</button>');
+    $('#closeModal').onclick = closeModal;
+    let running = false;
+    document.querySelectorAll('[data-merge-pair]').forEach(button => {
+      button.onclick = async () => {
+        const index = Number(button.dataset.mergePair);
+        const selection = document.querySelector('[data-merge-target="' + index + '"]').value;
+        if (running || selection === '') return;
+        const targetIndex = Number(selection);
+        const [source, target] = [groups[index].teams[1 - targetIndex], groups[index].teams[targetIndex]];
+        if (!confirm(source.teamName + ' の成績・名簿・試合参照を選択した登録に移し、重複登録を削除しますか？')) return;
+        running = true;
+        button.disabled = true;
+        try {
+          await mergeReviewedOpponentPair(source, target);
+          toast('統合とTeam Powerの再計算が完了しました');
+          await window.openDuplicateOpponentReview();
+        } catch (error) {
+          toast('統合または再計算を完了できませんでした。' + (error?.message || String(error)));
+          running = false;
+          button.disabled = false;
+        }
+      };
+    });
+  } catch (error) {
+    toast('候補の取得に失敗しました。' + (error?.message || String(error)));
+  }
+};
+
 function settingsView(){
   const rows=[...state.seasons].sort((a,b)=>b.sortOrder-a.sortOrder).map(item=>`<div class="season-admin-row"><b>${escapeHtml(item.name)}</b><span>${item.status}${item.id===state.activeSeasonId?' / 現在':''}</span>${state.user&&item.id!==state.activeSeasonId?`<button class="btn small ghost" onclick="setActiveSeason('${item.id}')">現在の世代に設定</button>`:''}</div>`).join('');
   const generationActions=state.user?'<div class="row"><button class="btn" onclick="openSeasonForm()">新しい世代を作成</button><button class="btn ghost" onclick="backupSeasonData()">migration前バックアップ</button><button class="btn ghost" onclick="migrateSeasonData()">Season migration</button></div>':'';
-  const adminActions=state.user?'<button class="btn" onclick="rebuildPublicGameSummaries()">公開試合Summaryを再構築</button><button class="btn" onclick="recalculateAllSeasonRanks()">全チームのランク・Power再計算</button><button class="btn ghost" onclick="openKinki2026ImportMenu()">2026近畿・総体・JWC・CBG結果を反映</button><button class="btn ghost" onclick="openKinki2026ImportMenu(\'hyogoJwc\')">2026兵庫JWC最終結果を反映</button><button class="btn ghost" onclick="openKinki2026ImportMenu(\'wakayamaJwc\')">2026和歌山JWC最終結果を反映</button><button class="btn ghost" onclick="openKinki2026ImportMenu(\'kyotoJwc\')">2026京都JWC最終結果を反映</button><button class="btn ghost" onclick="openKinki2026ImportMenu(\'osakaJwc\')">2026大阪JWC最終結果を反映</button><button class="btn ghost" onclick="openKinki2026ImportMenu(\'naraJwc\')">2026奈良JWC最終結果を反映</button><button class="btn ghost" onclick="openKinki2026ImportMenu(\'shigaJwc\')">2026滋賀JWC最終結果を反映</button>':'';
+  const adminActions=state.user?'<button class="btn" onclick="rebuildPublicGameSummaries()">公開試合Summaryを再構築</button><button class="btn ghost" onclick="openDuplicateOpponentReview()">重複対戦チームの統合</button><button class="btn" onclick="recalculateAllSeasonRanks()">全チームのランク・Power再計算</button><button class="btn ghost" onclick="openKinki2026ImportMenu()">2026近畿・総体・JWC・CBG結果を反映</button><button class="btn ghost" onclick="openKinki2026ImportMenu(\'hyogoJwc\')">2026兵庫JWC最終結果を反映</button><button class="btn ghost" onclick="openKinki2026ImportMenu(\'wakayamaJwc\')">2026和歌山JWC最終結果を反映</button><button class="btn ghost" onclick="openKinki2026ImportMenu(\'kyotoJwc\')">2026京都JWC最終結果を反映</button><button class="btn ghost" onclick="openKinki2026ImportMenu(\'osakaJwc\')">2026大阪JWC最終結果を反映</button><button class="btn ghost" onclick="openKinki2026ImportMenu(\'naraJwc\')">2026奈良JWC最終結果を反映</button><button class="btn ghost" onclick="openKinki2026ImportMenu(\'shigaJwc\')">2026滋賀JWC最終結果を反映</button>':'';
   return `<div class="card"><h2>設定</h2><section class="season-admin"><div class="section-title">チーム世代</div>${rows}${generationActions}</section><p class="sub">表示世代の切替と「現在の世代に設定」は別の操作です。</p><div class="row"><button class="btn ghost" onclick="location.reload()">再読み込み</button>${adminActions}</div></div>`;
 }
 function bindUpperFilters(){
